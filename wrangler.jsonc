@@ -1,0 +1,21 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "bilibili-creator-insights",
+  "main": "worker/index.ts",
+  "compatibility_date": "2026-08-04",
+  "assets": { "not_found_handling": "single-page-application" },
+  "triggers": { "crons": ["*/15 * * * *", "7 */6 * * *", "21 3 * * *"] },
+  "d1_databases": [
+    { "binding": "DB", "database_name": "bilibili-insights", "database_id": "REPLACE_AFTER_CREATE", "migrations_dir": "migrations" }
+  ],
+  "r2_buckets": [
+    { "binding": "BUCKET", "bucket_name": "bilibili-insights-private" }
+  ],
+  "vars": {
+    "APP_ORIGIN": "http://localhost:5173",
+    "DEEPSEEK_MODEL": "deepseek-v4-flash",
+    "AI_DAILY_CNY_LIMIT": "1",
+    "AI_MONTHLY_CNY_LIMIT": "5"
+  },
+  "observability": { "enabled": true }
+}

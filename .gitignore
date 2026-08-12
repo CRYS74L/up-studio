@@ -1,0 +1,14 @@
+node_modules/
+dist/
+.wrangler/
+.dev.vars
+.env
+.env.*
+!.env.example
+coverage/
+playwright-report/
+test-results/
+*.tsbuildinfo
+*.log
+.DS_Store
+Thumbs.db
