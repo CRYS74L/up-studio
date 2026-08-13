@@ -53,4 +53,37 @@ final result: passed
 - 响应式：联合分析与详情在 `<600px` 改为单列，触控按钮维持至少 44px；图表可通过点击查看 tooltip。
 - 动效：主题切换继续使用 View Transition；数据点不因选择而放大位移；reduced motion 保留现有降级。
 
+
+## 2026-08-13 dev.9 回归验收
+
+- source visual truth: `C:/Users/25758/AppData/Local/Temp/codex-clipboard-2c111cc2-c08f-469e-a8f0-7dfa1d97ad45.png`
+- implementation screenshots: `implementation-theme-roundtrip-dev9.png`, `implementation-ctr-tooltip-dev9.png`, `implementation-home-dev9-light.png`, `implementation-map-dev9.png`, `implementation-mobile-dev9.png`
+- viewport: desktop 1548×974 and 1264×955; mobile 390×844. Source screenshot compared at its native 646×862 crop; layout judgment normalized by matching the CTR card region rather than browser chrome.
+- state: real 17-video dataset; light theme after a dark→light roundtrip; CTR hover tooltip visible; map selected state; mobile light overview.
+
+### Full-view and focused comparison evidence
+
+- CTR focused comparison: reference showed a dark grid after theme roundtrip and a tooltip extending past the card. Post-fix screenshot keeps 1px low-contrast grid lines; measured tooltip x-range 308.8–568.8 stays within chart x-range 308.8–648.4.
+- Watch chart: all 17 categories render together; measured `scrollWidth = clientWidth = 1201` and page horizontal overflow is 0. Bars use bright Bilibili pink and the line uses a darker berry pink, with no slider.
+- Map focused comparison: every bubble remains a fixed 22px radius with circular image clipping. Hover emphasis is disabled; normal items stay at `z2=1`, and only the selected item moves to `z2=20`.
+- Mobile: 390px view has 0px horizontal overflow and retains the dedicated card flow plus bottom navigation.
+
+### Required fidelity surfaces
+
+- Typography: product name stays on one line; compact chart labels use system/PingFang stack and readable truncation with full tooltip content.
+- Spacing/layout: homepage retains the dev.7 dense hierarchy; no new scrolling container was introduced for the watch chart.
+- Colors/tokens: charts remain in a coherent Bilibili pink family; selected map halo was corrected from blue to pink. Theme roundtrip does not change geometry.
+- Image quality: recent-card and map covers are real Bilibili images, 16:9/card or circular/map clipped without stretching.
+- Copy/content: “当前已接入指标完整” is paired with the visible “2 类计划指标尚未接入” disclosure on Data Source.
+
+### Comparison history
+
+1. P1: CTR grid persisted with dark styling after returning to light. Fixed by making the theme a React prop so ECharts is recreated with the correct option.
+2. P1: CTR tooltip overflowed the panel. Fixed with `confine`, local append target and bounded wrapping; post-fix measurement stays inside the chart.
+3. P1: AVD/AVP required horizontal scrolling. Removed `dataZoom`, tightened labels and bars, and verified all 17 categories at once.
+4. P1: Map hover changed overlap order. Disabled hover emphasis and assigned a constant normal z-order; selection alone raises z-order.
+5. P2: Selected map halo used an unrelated blue. Replaced with the Bilibili pink token family.
+
+No actionable P0/P1/P2 visual findings remain for this regression scope.
+
 final result: passed

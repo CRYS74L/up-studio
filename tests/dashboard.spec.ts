@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { readFile } from 'node:fs/promises';
 
 test('desktop renders real data and keeps the product name on one line', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'desktop');
@@ -35,6 +36,64 @@ test('desktop renders real data and keeps the product name on one line', async (
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
 });
 
+test('overview charts keep their light theme, tooltip bounds, and full-width data after theme roundtrip', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'desktop');
+  const source = await readFile(new URL('../src/main.tsx', import.meta.url), 'utf8');
+  expect(source).toContain('rgba(96,105,120,.12)');
+  expect(source).toContain('confine: true');
+  expect(source).not.toContain('dataZoom: videos.length > 10');
+  expect(source).toContain('barWidth: "62%"');
+  expect(source).toContain('color: PINK_BRIGHT');
+  expect(source).toContain('lineStyle: { color: PINK_DARK');
+
+  await page.goto('/');
+  if (await page.getByText('等待真实数据').isVisible()) test.skip(true, 'preview database has no connected data source');
+
+  const themeButton = page.getByRole('button', { name: '切换深浅色' });
+  if (await page.locator('html').getAttribute('data-theme') === 'dark') await themeButton.click();
+  await themeButton.click();
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+  await themeButton.click();
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
+
+  const ctrChart = page.locator('.homeCtrChart');
+  const ctrBox = await ctrChart.boundingBox();
+  expect(ctrBox).not.toBeNull();
+  await ctrChart.hover({ position: { x: Math.max(12, ctrBox!.width * 0.72), y: 44 } });
+  const tooltip = ctrChart.locator('div[style*="position: absolute"]').filter({ hasText: '封面点击率' }).first();
+  if (await tooltip.count()) {
+    await expect(tooltip).toBeVisible();
+    const tipBox = await tooltip.boundingBox();
+    expect(tipBox).not.toBeNull();
+    expect(tipBox!.x).toBeGreaterThanOrEqual(ctrBox!.x - 1);
+    expect(tipBox!.x + tipBox!.width).toBeLessThanOrEqual(ctrBox!.x + ctrBox!.width + 1);
+  }
+
+  const watchChart = page.locator('.homeWatchChart');
+  const watchSize = await watchChart.evaluate((node) => ({
+    clientWidth: node.clientWidth,
+    scrollWidth: node.scrollWidth,
+    pageOverflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+  }));
+  expect(watchSize.scrollWidth).toBe(watchSize.clientWidth);
+  expect(watchSize.pageOverflow).toBeLessThanOrEqual(1);
+
+});
+
+test('performance map hover cannot reorder bubbles while selection can', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'desktop');
+  const source = await readFile(new URL('../src/main.tsx', import.meta.url), 'utf8');
+  expect(source).toContain('emphasis: { disabled: true }');
+  expect(source).toContain('z2: selected ? 20 : 1');
+  expect(source).not.toContain('z2: selected ? 20 : params.dataIndex');
+  expect(source).toContain('rgba(251,114,153,.22)');
+
+  await page.goto('/');
+  if (await page.getByText('等待真实数据').isVisible()) test.skip(true, 'preview database has no connected data source');
+  await page.getByRole('button', { name: '表现地图' }).click();
+  await expect(page.locator('.mapChart canvas')).toBeVisible();
+});
+
 test('data source reports a successful self-run acquisition', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'desktop');
   await page.goto('/');
@@ -50,6 +109,7 @@ test('data source reports a successful self-run acquisition', async ({ page }, t
   await expect(page.getByText('当前已接入指标完整稿件')).toBeVisible();
   await expect(page.getByText(/2 类计划指标尚未接入/)).toBeVisible();
   await expect(page.getByText(/类源字段已保存/)).toBeVisible();
+  await expect(page.getByText('留存曲线').locator('..').getByText('17/17')).toBeVisible();
 });
 
 test('repeated collection keeps map coordinates stable inside one Bilibili window', async ({ page }, testInfo) => {

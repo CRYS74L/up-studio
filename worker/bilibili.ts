@@ -79,13 +79,13 @@ const retentionSchema = envelope(z.object({
   viewer_quit: z.array(z.object({
     duration_key: z.number(),
     num: z.number()
-  }).passthrough()).optional().default([]),
-  dm: z.array(z.record(z.string(), z.unknown())).optional().default([]),
+  }).passthrough()).nullish().transform((value) => value ?? []),
+  dm: z.unknown().nullish(),
   peer_viewer_quit: z.array(z.object({
     duration_key: z.number(),
     num: z.number()
-  }).passthrough()).optional().default([]),
-  peer_dm: z.array(z.record(z.string(), z.unknown())).optional().default([]),
+  }).passthrough()).nullish().transform((value) => value ?? []),
+  peer_dm: z.unknown().nullish(),
   quit_info: z.object({
     avg_play_progress: z.number().nullable().optional(),
     duration: z.number().nullable().optional(),
@@ -121,6 +121,18 @@ function findCid(value: unknown): number | null {
   }
   return null;
 }
+
+async function allSettledInBatches<T, R>(items: T[], batchSize: number, worker: (item: T, index: number) => Promise<R>) {
+  const results: PromiseSettledResult<R>[] = [];
+  for (let start = 0; start < items.length; start += batchSize) {
+    const batch = items.slice(start, start + batchSize);
+    results.push(...await Promise.allSettled(batch.map((item, offset) => worker(item, start + offset))));
+  }
+  return results;
+}
+const safeReason = (result: PromiseSettledResult<unknown>) => result.status === 'fulfilled'
+  ? null
+  : (result.reason instanceof Error ? result.reason.message : String(result.reason || 'unknown')).replace(/[^A-Z0-9_-]/gi, '_').slice(0, 80);
 
 function sessionFromLogin(urlValue: string | undefined, headers: Headers) {
   const cookieParts = new Map<string, string>();
@@ -228,12 +240,12 @@ export class BilibiliWebDataSource implements BilibiliDataSource {
         this.request(session, `/x/web/data/v3/archive/view?bvid=${encodeURIComponent(item.bvid)}`, archiveViewSchema)
       ))
     ]);
-    const retentionResults = await Promise.allSettled(archiveViewResults.map((viewResult) => {
+    const retentionResults = await allSettledInBatches(archiveViewResults, 4, async (viewResult) => {
       if (viewResult.status !== 'fulfilled') return Promise.reject(new Error('ARCHIVE_VIEW_UNAVAILABLE'));
       const cid = findCid(viewResult.value.data);
       if (cid == null) return Promise.reject(new Error('ARCHIVE_CID_NOT_RETURNED'));
-      return this.request(session, `/x/web/data/v2/archive/analyze/graph?cid=${encodeURIComponent(String(cid))}`, retentionSchema);
-    }));
+      return this.request(session, `/x/web/data/v2/archive/analyze/graph?cid=${encodeURIComponent(String(cid))}`, retentionSchema, 10_000);
+    });
     const enrichmentMs = Math.round(performance.now() - startedAt - indexMs);
     const rawOverview: Record<string, unknown> = {};
     const rawDiagnose: Record<string, unknown> = {};
@@ -325,6 +337,11 @@ export class BilibiliWebDataSource implements BilibiliDataSource {
     const successfulArchiveView = archiveViewResults.filter((item) => item.status === 'fulfilled').length;
     const successfulRetention = retentionResults.filter((item) => item.status === 'fulfilled').length;
     const successfulTerminalSources = overviewResults.filter((item) => item.status === 'fulfilled' && item.value.data.play_proportion && Object.keys(item.value.data.play_proportion).length > 0).length;
+    const retentionFailures = retentionResults.flatMap((result, index) => result.status === 'rejected' ? [{
+      bvid: archiveItems[index].bvid,
+      title: archiveItems[index].title,
+      reason: safeReason(result)
+    }] : []);
     const successfulCompare = archiveItems.filter((item) => compareByBvid.has(item.bvid)).length;
     const metricAccessors: Record<string, (snapshot: VideoSnapshot) => number | null | undefined> = {
       views: (snapshot) => snapshot.views,
@@ -363,7 +380,7 @@ export class BilibiliWebDataSource implements BilibiliDataSource {
       successfulFanTrend < archiveItems.length ? `${archiveItems.length - successfulFanTrend} 篇稿件的涨粉趋势接口失败` : '',
       successfulRealtime < archiveItems.length ? `${archiveItems.length - successfulRealtime} 篇稿件的实时播放接口失败` : '',
       successfulArchiveView < archiveItems.length ? `${archiveItems.length - successfulArchiveView} 篇稿件的 CID 元数据接口失败，留存曲线可能不完整` : '',
-      successfulRetention < archiveItems.length ? `${archiveItems.length - successfulRetention} 篇稿件的留存曲线暂不可用` : '',
+      successfulRetention < archiveItems.length ? `${archiveItems.length - successfulRetention} 篇稿件的留存曲线暂不可用：${retentionFailures.map((item) => `${item.title}（${item.reason}）`).join('；')}` : '',
       successfulTerminalSources < archiveItems.length ? `${archiveItems.length - successfulTerminalSources} 篇稿件没有返回播放终端来源` : '',
       missingByVideo.length ? `${missingByVideo.length} 篇稿件存在 B 站未返回的指标字段` : ''
     ].filter(Boolean);

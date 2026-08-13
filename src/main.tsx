@@ -137,8 +137,8 @@ const compact = (n: number | null | undefined) =>
 const percent = (n: number | null | undefined, d = 1) =>
   n == null ? "—" : `${n.toFixed(d)}%`;
 const PINK = "#FB7299";
-const PINK_BRIGHT = "#FF8FAF";
-const PINK_DARK = "#D94F7A";
+const PINK_BRIGHT = "#FF9FBA";
+const PINK_DARK = "#B43D70";
 const PINK_SOFT = "rgba(251,114,153,.16)";
 const seconds = (n: number | null | undefined) =>
   n == null
@@ -592,6 +592,9 @@ function performanceOption(
     grid: { left: 54, right: 24, top: 50, bottom: 48 },
     tooltip: {
       trigger: "item",
+      confine: true,
+      appendToBody: false,
+      extraCssText: "max-width:280px;white-space:normal;overflow-wrap:anywhere;line-height:1.55;",
       formatter: (p: any) =>
         `<b>${p.data.title}</b><br/>${metricLabels[x]} ${p.data.sourceValue?.[0]?.toFixed?.(1) ?? "—"} · ${metricLabels[y]} ${p.data.sourceValue?.[1]?.toFixed?.(1) ?? "—"}<br/>${metricLabels[size]} ${compact(p.value[2])}`,
     },
@@ -618,6 +621,8 @@ function performanceOption(
     series: [
       {
         type: "custom",
+        emphasis: { disabled: true },
+        blur: { itemStyle: { opacity: 1 } },
         data: separated.map(({ video: v, offsetX, offsetY }) => ({
           value: [
             Number(v[x]) + offsetX,
@@ -635,6 +640,7 @@ function performanceOption(
           const radius = 22;
           return {
             type: "group",
+            z2: selected ? 20 : 1,
             children: [
               {
                 type: "circle",
@@ -645,7 +651,7 @@ function performanceOption(
                 },
                 style: {
                   fill: selected
-                    ? "rgba(20,119,255,.18)"
+                    ? "rgba(251,114,153,.22)"
                     : "rgba(255,139,148,.30)",
                 },
               },
@@ -672,7 +678,7 @@ function performanceOption(
                   lineWidth: selected ? 3 : 1.5,
                   shadowBlur: selected ? 12 : 7,
                   shadowColor: selected
-                    ? "rgba(20,119,255,.32)"
+                    ? "rgba(251,114,153,.38)"
                     : "rgba(33,54,88,.18)",
                 },
               },
@@ -736,18 +742,28 @@ function TrendChart({ videos }: { videos: Video[] }) {
   return <Chart className="trendChart" option={option} />;
 }
 
-function OverviewPage({ setPage }: { setPage: (p: string) => void }) {
+function OverviewPage({ setPage, theme }: { setPage: (p: string) => void; theme: Theme }) {
   const { summary, videos, pending, error } = useData();
   if (pending) return <Loading />;
   if (error) return <ErrorState error={error} />;
   const ctrVideos = videos.filter((v) => v.cover_ctr != null).slice().sort((a, b) => (b.cover_ctr || 0) - (a.cover_ctr || 0));
   const recent = videos.slice(0, 6);
-  const dark = document.documentElement.dataset.theme === "dark";
+  const dark = theme === "dark";
   const ctrOption = {
     animationDuration: 360,
     grid: { left: 8, right: 44, top: 8, bottom: 8, containLabel: true },
-    tooltip: { trigger: "axis", axisPointer: { type: "shadow" } },
-    xAxis: { type: "value", axisLabel: { formatter: "{value}%" }, splitLine: { lineStyle: { color: dark ? "#2d3441" : "#e7ebf0" } } },
+    tooltip: {
+      trigger: "axis",
+      confine: true,
+      appendToBody: false,
+      axisPointer: { type: "shadow" },
+      extraCssText: "max-width:260px;white-space:normal;overflow-wrap:anywhere;line-height:1.55;",
+      formatter: (params: any[]) => {
+        const video = ctrVideos[params?.[0]?.dataIndex];
+        return video ? `<b>${video.title}</b><br/>封面点击率：${percent(video.cover_ctr, 2)}` : "";
+      },
+    },
+    xAxis: { type: "value", axisLabel: { formatter: "{value}%" }, splitLine: { show: true, lineStyle: { color: dark ? "rgba(255,255,255,.075)" : "rgba(96,105,120,.12)", width: 1 } } },
     yAxis: { type: "category", inverse: true, data: ctrVideos.map((v) => v.title), axisLabel: { width: 118, overflow: "truncate" } },
     color: [PINK],
     series: [{ type: "bar", data: ctrVideos.map((v) => v.cover_ctr), barWidth: 9, itemStyle: { color: PINK, borderRadius: 8 }, label: { show: true, position: "right", formatter: "{c}%" } }],
@@ -755,10 +771,13 @@ function OverviewPage({ setPage }: { setPage: (p: string) => void }) {
   const watchLabels = videos.map((video, index) => `${String(index + 1).padStart(2, "0")} · ${video.title}`);
   const watchOption = {
     animationDuration: 360,
-    color: [PINK, PINK_DARK],
-    grid: { left: 52, right: 52, top: 42, bottom: 92 },
+    color: [PINK_BRIGHT, PINK_DARK],
+    grid: { left: 48, right: 48, top: 40, bottom: 70 },
     tooltip: {
       trigger: "axis",
+      confine: true,
+      appendToBody: false,
+      extraCssText: "max-width:280px;white-space:normal;overflow-wrap:anywhere;line-height:1.55;",
       formatter: (params: any[]) => {
         const video = videos[params?.[0]?.dataIndex];
         if (!video) return "";
@@ -766,16 +785,17 @@ function OverviewPage({ setPage }: { setPage: (p: string) => void }) {
       },
     },
     legend: { data: ["平均播放时长", "平均播放百分比"], top: 0 },
-    dataZoom: videos.length > 10 ? [{ type: "slider", height: 18, bottom: 10, start: 0, end: Math.min(100, 10 / videos.length * 100), brushSelect: false }, { type: "inside" }] : [],
     xAxis: {
       type: "category",
       data: watchLabels,
+      boundaryGap: true,
       axisLabel: {
         interval: 0,
-        rotate: 28,
-        width: 150,
+        rotate: 36,
+        width: 92,
         overflow: "truncate",
-        formatter: (value: string) => value.length > 16 ? `${value.slice(0, 16)}…` : value,
+        fontSize: 9,
+        formatter: (value: string) => value.length > 11 ? `${value.slice(0, 11)}…` : value,
       },
     },
     yAxis: [
@@ -783,8 +803,8 @@ function OverviewPage({ setPage }: { setPage: (p: string) => void }) {
       { type: "value", name: "%", min: 0, max: 100, interval: 20, splitLine: { show: false } },
     ],
     series: [
-      { name: "平均播放时长", type: "bar", data: videos.map((v) => v.avg_watch_seconds), barMaxWidth: 22, itemStyle: { color: PINK, borderRadius: [6, 6, 0, 0] } },
-      { name: "平均播放百分比", type: "line", yAxisIndex: 1, smooth: 0.12, smoothMonotone: "x", symbolSize: 7, data: videos.map((v) => v.avg_watch_percent), lineStyle: { color: PINK_DARK, width: 2.5 }, itemStyle: { color: PINK_DARK }, areaStyle: { color: PINK_SOFT, opacity: .25 } },
+      { name: "平均播放时长", type: "bar", data: videos.map((v) => v.avg_watch_seconds), barWidth: "62%", barMaxWidth: 28, itemStyle: { color: PINK_BRIGHT, borderRadius: [5, 5, 0, 0] } },
+      { name: "平均播放百分比", type: "line", yAxisIndex: 1, smooth: 0.08, smoothMonotone: "x", symbolSize: 6, data: videos.map((v) => v.avg_watch_percent), lineStyle: { color: PINK_DARK, width: 2.5 }, itemStyle: { color: PINK_DARK } },
     ],
   };
   return (
@@ -1800,7 +1820,7 @@ function App() {
   };
   const content =
     page === "概览" ? (
-      <OverviewPage setPage={setPage} />
+      <OverviewPage setPage={setPage} theme={theme} />
     ) : page === "表现地图" ? (
       <PerformanceMapPage />
     ) : page === "稿件" ? (
