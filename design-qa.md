@@ -1,50 +1,46 @@
-# 首页参考图设计 QA
+# Design QA — 哔哩哔哩数据看板
 
-- source visual truth path: `D:\【主文件夹】\下载\d1b6030c-2851-4f5e-aab2-9e34de84bcb6.png`
-- implementation screenshot path: `D:\【主文件夹】\下载\【Codex 工作空间】\哔哩哔哩数据看板\implementation-overview-bubble-selected-2.png`
-- viewport: 1566 × 982 CSS px，device scale factor 1
-- source pixels: 1488 × 1056；implementation pixels: 1566 × 1098（完整页面）
-- state: 浅色模式、真实 B 站快照、第 8 篇稿件选中、17/17 篇地图指标完整
+- source visual truth: `C:/Users/25758/AppData/Local/Temp/codex-clipboard-f04d5655-43b2-41e1-9a5c-3a888014515a.png`
+- supporting source: `C:/Users/25758/AppData/Local/Temp/codex-clipboard-16f9b9f7-9332-44ed-aa96-a37c0e24fa1f.png`
+- implementation screenshot: `D:/【主文件夹】/下载/【Codex 工作空间】/哔哩哔哩数据看板/implementation-home-final.png`
+- additional states: `implementation-map-dev6.png`, `implementation-map-selected-dev6.png`, `implementation-videos-dev6.png`, `implementation-mobile-dev6.png`
+- viewport: desktop in-app browser 1264×955; mobile 390×844
+- density normalization: source and implementation compared as full-page 1× CSS captures; reference is a photographed screen, so browser chrome and camera perspective were excluded from fidelity judgments.
+- state: light theme, real 17-video dataset, latest successful acquisition.
 
 ## Full-view comparison evidence
 
-参考图和实现均采用窄侧栏、顶部数据新鲜度与筛选、六项 KPI、左侧表现地图、右侧选中稿件、下方播放趋势的同一信息架构。实现使用真实 17 篇稿件及真实封面，故内容与参考图示例不同。桌面主区域无水平溢出，右侧诊断和第六项 KPI 完整可见。
+The implementation preserves the reference hierarchy: one KPI strip, a narrow all-video CTR ranking, a wide recent-video-card region, and a full-width combined average-watch-duration / average-watch-percentage chart. It intentionally translates the reference's dense black operations-screen aesthetic into the selected Apple-style light/dark surface system.
 
-## Focused region comparison evidence
+## Focused region evidence
 
-- 地图：普通稿件与选中稿件均使用圆形真实封面气泡；选中项等比放大并使用蓝色圆形光环，图片由圆形 clipPath 裁切，不拉伸、不越界。相比参考图的矩形选中态，这是为解决真实封面比例和边界错位所做的 Apple 式一致性修正。
-- 右侧稿件：使用同源高质量封面、六项真实指标、三条关联诊断和两个操作按钮。
-- 趋势：只使用工具自身采集的真实快照，不复刻参考图中的虚构事件或曲线。
-- 字体与排版：系统字体、紧凑标题字距、固定单行产品名；长标题两行截断。
-- 颜色与令牌：保留参考图的冷白背景、蓝色主操作、粉色气泡光环；使用统一 20px 表面圆角和 12px 控件圆角。
-- 图片质量：大图通过同源 HTTPS 代理；地图使用 128px WebP 缩略图，无破图。
-- 文案：产品名称统一为“哔哩哔哩数据看板”；不使用参考图中的示例账号和示例指标。
+- Recent manuscripts use real 16:9 covers, title/date metadata and three compact metrics without stretched imagery.
+- CTR ranking preserves the reference's narrow horizontal ranking treatment.
+- Combined watch chart preserves bars plus line with separate seconds/% axes.
+- Map and manuscript screens were checked separately because they are not present in the visual source.
+
+## Required fidelity surfaces
+
+- Typography: system/PingFang stack, optical sizing, controlled heading tracking, no product-name wrapping.
+- Spacing/layout: 20px surfaces, 12–14px internal gaps, stable two-column reference composition, no mobile horizontal overflow.
+- Colors/tokens: restrained light surfaces and semantic blue/orange/pink; dark mode remains token-driven.
+- Image quality: all visible thumbnails are real Bilibili covers using 16:9 `object-fit: cover`; bubble images remain circular-clipped before and after selection.
+- Copy/content: section labels now describe the actual data shown; “组合看板” replaces the misleading “分析实验室”.
 
 ## Comparison history
 
-1. P1：首轮实现偏离参考图，首页改为排名加趋势。修复为参考图的三栏主构图。
-2. P1：原始 B 站 HTTP 封面在浏览器中不稳定。增加域名白名单同源封面代理、HTTPS 规范化和缓存。
-3. P1：首轮参考布局挤出右侧诊断。修复主内容宽度和 grid 的 min-width，1566px 下无水平溢出。
-4. P1：地图方形封面不符合参考。修复为圆形普通气泡。
-5. P1：自定义地图初版运行时异常导致空白。修复 ECharts custom series 数据索引，并在浏览器中确认无空白与无破图。
-6. P1：选中气泡使用 96×58 矩形导致封面横向拉伸并越出圆形边界。修复为等比 76×76 圆形放大、圆形裁切和同心蓝色描边；点选第 8 篇后截图确认边界完整。
-7. P1：批量诊断接口只返回 10 篇时，前端把其余空值当作 0，导致气泡堆叠。采集器现逐稿补取其余诊断数据，前端同时禁止把空值映射为 0；真实重采后 17/17 篇均有横纵轴数据，截图中全部 17 个点按真实位置分布。
-8. P1：采集结果曾只展示总覆盖率，未报告字段缺口。新增概览警示、地图可绘制数量和数据源逐指标覆盖报告；本轮已接入的 16 类指标均为 17/17，若未来出现缺失会列出稿件、字段与原因。
-9. P1：17/17 容易被误读为所有计划数据均已实现。覆盖卡现明确标注“当前已接入指标”，并单列曝光量、留存曲线、流量来源、观众地区/性别/年龄、实时播放等尚未接入项；不再将未实现能力包含在“完整”表述中。
-10. P1：重复采集时气泡位置大幅跳变。确认 B 站 `tm_rate` 在相同单稿、相同 `log_date/log_hour` 下重复请求仍会随机波动，而 3 秒跳出、互动率、播转粉率等字段稳定。采集器改用单稿 `play_analyze` 接口，并按 B 站统计窗口锁定点击率样本；相同窗口内三轮真实采集的 17 篇坐标最大变化为 0。横纵轴同时使用指标级固定分档，避免轻微真实变化触发整图缩放。
+1. P1: Homepage composition did not match the reference. Fixed by removing the map from Home and adding CTR ranking, recent cards, and combined watch chart. Post-fix evidence: `implementation-home-final.png`.
+2. P1: Bubble selection enlarged/cropped covers and neighboring points overlapped. Fixed with a constant 22px radius, outline-only selection and deterministic ID-sorted near-neighbor separation. Post-fix evidence: `implementation-map-selected-dev6.png`.
+3. P1: Manuscripts were row entries. Fixed as Bilibili-like 16:9 rectangular cards. Post-fix evidence: `implementation-videos-dev6.png`.
+4. P1: Audience counts were mislabeled as percentages. Fixed at ingestion by storing counts and normalizing to percentages. Post-fix visible values: 6.2% / 93.8%.
+5. P2: Mobile page flow risked horizontal overflow. Fixed responsive grids; measured document overflow is 0px at 390px.
 
-## Validation evidence
+## Findings
 
-- 真实采集：每轮 43 次实际请求、17 篇稿件；连续三轮分别耗时 679 ms、326 ms、382 ms，采集状态均为 `success`，远低于 15 分钟刷新间隔。
-- 地图稳定性：相同 `diagnose.log_date/log_hour` 统计窗口内连续三轮重采，17 篇稿件的 `cover_ctr` 与 `avg_watch_percent` 最大变化均为 0；横轴固定按 2% 分档、纵轴固定按 10% 分档，刻度与气泡坐标保持一致。
-- 字段覆盖：播放、封面点击率、平均播放时长、平均播放百分比、涨粉、点赞、评论、弹幕、收藏、投币、分享、3 秒跳出率、互动率、播转粉率、粉丝观众占比、游客观众占比均为 17/17；每篇另保存 67 个源数值字段与观众地区/性别/年龄、播放构成等结构化维度。
-- 主要交互：在浏览器中点选第 8 篇气泡，右侧标题、封面和指标同步变化；选中气泡保持圆形且封面未拉伸。
-- 控制台：0 条 error/warning。
-- 响应式：Playwright desktop、iPhone、iPad 核心回归 4 项通过；无横向溢出。
+No actionable P0/P1/P2 visual findings remain for the requested screens. The remaining unintegrated data capabilities are product/data work and are explicitly reported in the UI and `data-quality-audit.md`, not hidden as visual completion.
 
-## Remaining P3 polish
+## Follow-up polish
 
-- 参考图侧栏顶部使用不同的产品图标与“私有版”标签；当前保留项目既有播放图标与私人工作区文案。
-- 真实采集时间轴目前只有少量点，待运行更久后自然形成参考图中更丰富的趋势密度。
+- P3: On very tall displays, the recent-video grid can be made user-resizable in a later iteration.
 
 final result: passed

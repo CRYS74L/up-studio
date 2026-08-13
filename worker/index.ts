@@ -210,12 +210,13 @@ async function collect(env: Bindings, trigger: string) {
     const storageStarted = performance.now();
     if (env.BUCKET) await env.BUCKET.put(`raw/${started.slice(0, 10)}/${id}.json`, JSON.stringify(result.raw), { httpMetadata: { contentType: 'application/json' } });
     const storageMs = Math.round(performance.now() - storageStarted);
-    const status = result.coverage === 1 && result.coverageDetails.missingByVideo.length === 0 ? 'success' : 'partial';
+    const capabilitiesComplete = Object.values(result.coverageDetails.capabilityCounts).every((capability) => capability.available === capability.total);
+    const status = result.coverage === 1 && result.coverageDetails.missingByVideo.length === 0 && result.coverageDetails.warnings.length === 0 && capabilitiesComplete ? 'success' : 'partial';
     const timings = { ...result.timings, dbMs, storageMs, totalMs: Date.now() - Date.parse(started) };
     await env.DB.prepare('UPDATE acquisition_runs SET finished_at=?,status=?,coverage=?,coverage_json=?,timings_json=?,request_count=? WHERE id=?').bind(new Date().toISOString(), status, result.coverage, JSON.stringify(result.coverageDetails), JSON.stringify(timings), result.requestCount, id).run();
     return { id, status, coverage: result.coverage, details: result.coverageDetails, videos: result.videos.length, trigger, timings, requestCount: result.requestCount };
   } catch (error) {
-    const detail = error instanceof Error ? error.message : 'UNKNOWN';
+    const detail = error instanceof Error ? `${error.name}: ${error.message}${error.cause ? ` | cause: ${String(error.cause)}` : ''}` : String(error || 'UNKNOWN');
     const errorCode = /SESSION|API_-101|API_-111/.test(detail) ? 'session_expired' : error instanceof z.ZodError ? 'schema_changed' : 'network';
     await env.DB.prepare('UPDATE acquisition_runs SET finished_at=?,status=\'failed\',error_code=?,safe_error_detail=? WHERE id=?').bind(new Date().toISOString(), errorCode, detail.slice(0, 160), id).run();
     return { id, status: 'failed', errorCode };

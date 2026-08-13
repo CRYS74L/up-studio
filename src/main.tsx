@@ -62,6 +62,7 @@ type Video = {
   followers_gained: number | null;
   captured_at: string | null;
   metrics: Record<string, number | null>;
+  dimensions?: Record<string, any>;
 };
 type CoverageDetails = {
   totalVideos: number;
@@ -74,12 +75,16 @@ type CoverageDetails = {
     reasons: string[];
   }>;
   warnings: string[];
+  capabilityCounts?: Record<string, { available: number; total: number }>;
   sourceFields?: {
     archiveStat: string[];
     compareStat: string[];
     diagnose: string[];
     overviewStat: string[];
     overview: string[];
+    trend: string[];
+    realtime: string[];
+    retention: string[];
   };
   plannedNotIntegrated?: string[];
 };
@@ -171,7 +176,7 @@ const nav = [
   ["概览", Home],
   ["表现地图", Map],
   ["稿件", FileChartColumn],
-  ["分析实验室", FlaskConical],
+  ["组合看板", BarChart3],
   ["数据源", Database],
 ] as const;
 function Sidebar({
@@ -360,6 +365,16 @@ const plannedMetricLabels: Record<string, string> = {
   viewerAge: "观众年龄",
   realtimePlays: "实时播放",
 };
+const capabilityLabels: Record<string, string> = {
+  archive: "稿件列表",
+  compare: "稿件对比",
+  overview: "数据总览",
+  diagnose: "播放诊断",
+  playTrend: "播放趋势",
+  fanTrend: "涨粉趋势",
+  realtime: "实时播放",
+  retention: "留存曲线",
+};
 function SourceFieldSummary({ details }: { details: CoverageDetails }) {
   const sourceCount = details.sourceFields
     ? new Set([
@@ -368,6 +383,9 @@ function SourceFieldSummary({ details }: { details: CoverageDetails }) {
         ...details.sourceFields.diagnose,
         ...details.sourceFields.overviewStat,
         ...details.sourceFields.overview,
+        ...(details.sourceFields.trend || []),
+        ...(details.sourceFields.realtime || []),
+        ...(details.sourceFields.retention || []),
       ]).size
     : 0;
   if (!sourceCount) return null;
@@ -386,7 +404,7 @@ function CoverageNotice({
   acquisition?: Acquisition | null;
   compactView?: boolean;
 }) {
-  if (!acquisition || acquisition.status === "success") return null;
+  if (!acquisition || acquisition.status === "success" || (acquisition.status === "failed" && !acquisition.details?.totalVideos)) return null;
   const details = acquisition.details;
   const total = details?.totalVideos || 0;
   const incomplete = details?.missingByVideo?.length || 0;
@@ -407,8 +425,22 @@ function CoverageNotice({
       </div>
       {!compactView && details && (
         <>
+          {(details.warnings?.length || 0) > 0 && (
+            <ul className="coverageWarnings">
+              {details.warnings!.map((warning) => <li key={warning}>{warning}</li>)}
+            </ul>
+          )}
+          {details.capabilityCounts && (
+            <div className="capabilityCoverage">
+              {Object.entries(details.capabilityCounts).map(([key, value]) => (
+                <span className={value.available === value.total ? "complete" : "missing"} key={key}>
+                  {capabilityLabels[key] || key} {value.available}/{value.total}
+                </span>
+              ))}
+            </div>
+          )}
           <div className="coverageMetrics">
-            {Object.entries(details.metricCounts).map(([key, count]) => (
+            {Object.entries(details.metricCounts || {}).map(([key, count]) => (
               <span
                 className={count === total ? "complete" : "missing"}
                 key={key}
@@ -417,11 +449,11 @@ function CoverageNotice({
               </span>
             ))}
           </div>
-          {details.missingByVideo.length > 0 && (
+          {(details.missingByVideo?.length || 0) > 0 && (
             <details>
               <summary>查看缺失稿件与原因</summary>
               <ul>
-                {details.missingByVideo.map((video) => (
+                {details.missingByVideo!.map((video) => (
                   <li key={video.bvid}>
                     <b>{video.title}</b>
                     <span>
@@ -516,6 +548,36 @@ function performanceOption(
   };
   const xRange = stableAxis(x, xs);
   const yRange = stableAxis(y, ys);
+  const separated = (() => {
+    const placed: Array<{ x: number; y: number }> = [];
+    const spanX = Math.max(1, xRange.max - xRange.min);
+    const spanY = Math.max(1, yRange.max - yRange.min);
+    return plottable
+      .slice()
+      .sort((a, b) => a.id.localeCompare(b.id))
+      .map((video) => {
+        const rawX = Number(video[x]);
+        const rawY = Number(video[y]);
+        const baseX = ((rawX - xRange.min) / spanX) * 1000;
+        const baseY = ((rawY - yRange.min) / spanY) * 620;
+        let best = { x: baseX, y: baseY };
+        for (let step = 0; step < 40; step += 1) {
+          const angle = step * 2.399963229728653;
+          const distance = step === 0 ? 0 : 10 + 7 * Math.sqrt(step);
+          const candidate = { x: baseX + Math.cos(angle) * distance, y: baseY + Math.sin(angle) * distance };
+          if (placed.every((point) => Math.hypot(point.x - candidate.x, point.y - candidate.y) >= 48)) {
+            best = candidate;
+            break;
+          }
+        }
+        placed.push(best);
+        return {
+          video,
+          offsetX: (best.x - baseX) / 1000 * spanX,
+          offsetY: (best.y - baseY) / 620 * spanY,
+        };
+      });
+  })();
   const xMid = xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : 0;
   const yMid = ys.length ? ys.reduce((a, b) => a + b, 0) / ys.length : 0;
   return {
@@ -525,7 +587,7 @@ function performanceOption(
     tooltip: {
       trigger: "item",
       formatter: (p: any) =>
-        `<b>${p.data.title}</b><br/>${metricLabels[x]} ${p.value[0]?.toFixed?.(1) ?? "—"} · ${metricLabels[y]} ${p.value[1]?.toFixed?.(1) ?? "—"}<br/>${metricLabels[size]} ${compact(p.value[2])}`,
+        `<b>${p.data.title}</b><br/>${metricLabels[x]} ${p.data.sourceValue?.[0]?.toFixed?.(1) ?? "—"} · ${metricLabels[y]} ${p.data.sourceValue?.[1]?.toFixed?.(1) ?? "—"}<br/>${metricLabels[size]} ${compact(p.value[2])}`,
     },
     xAxis: {
       name: metricLabels[x],
@@ -550,23 +612,21 @@ function performanceOption(
     series: [
       {
         type: "custom",
-        data: plottable.map((v) => ({
+        data: separated.map(({ video: v, offsetX, offsetY }) => ({
           value: [
-            Number(v[x]),
-            Number(v[y]),
+            Number(v[x]) + offsetX,
+            Number(v[y]) + offsetY,
             v[size] == null ? 1 : Number(v[size]),
           ],
+          sourceValue: [Number(v[x]), Number(v[y])],
           title: v.title,
           videoId: v.id,
         })),
         renderItem: (params: any, api: any) => {
-          const data = plottable[params.dataIndex] || plottable[0];
+          const data = separated[params.dataIndex]?.video || plottable[0];
           const point = api.coord([api.value(0), api.value(1)]);
-          const volume = Math.max(1, Number(api.value(2)) || 1);
           const selected = data?.id === selectedId;
-          const radius = selected
-            ? 38
-            : Math.max(15, Math.min(29, Math.sqrt(volume) * 0.28));
+          const radius = 22;
           return {
             type: "group",
             children: [
@@ -575,7 +635,7 @@ function performanceOption(
                 shape: {
                   cx: point[0],
                   cy: point[1],
-                  r: radius + (selected ? 7 : 4),
+                  r: radius + 3,
                 },
                 style: {
                   fill: selected
@@ -603,7 +663,7 @@ function performanceOption(
                 style: {
                   fill: "transparent",
                   stroke: selected ? "#1477ff" : "#fff",
-                  lineWidth: selected ? 3 : 2,
+                  lineWidth: selected ? 3 : 1.5,
                   shadowBlur: selected ? 12 : 7,
                   shadowColor: selected
                     ? "rgba(20,119,255,.32)"
@@ -672,31 +732,31 @@ function TrendChart({ videos }: { videos: Video[] }) {
 
 function OverviewPage({ setPage }: { setPage: (p: string) => void }) {
   const { summary, videos, pending, error } = useData();
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const selected =
-    videos.find((v) => v.id === (selectedId || videos[0]?.id)) || videos[0];
-  const mapOption = useMemo(
-    () =>
-      performanceOption(
-        videos,
-        "cover_ctr",
-        "avg_watch_percent",
-        "views",
-        selected?.id,
-      ),
-    [videos, selected?.id],
-  );
-  const mapEvents = useMemo(
-    () => ({
-      click: (p: any) => p.data?.videoId && setSelectedId(p.data.videoId),
-    }),
-    [],
-  );
-  const plottable = videos.filter(
-    (video) => video.cover_ctr != null && video.avg_watch_percent != null,
-  ).length;
   if (pending) return <Loading />;
   if (error) return <ErrorState error={error} />;
+  const ctrVideos = videos.filter((v) => v.cover_ctr != null).slice().sort((a, b) => (b.cover_ctr || 0) - (a.cover_ctr || 0));
+  const recent = videos.slice(0, 6);
+  const dark = document.documentElement.dataset.theme === "dark";
+  const ctrOption = {
+    animationDuration: 360,
+    grid: { left: 8, right: 44, top: 8, bottom: 8, containLabel: true },
+    tooltip: { trigger: "axis", axisPointer: { type: "shadow" } },
+    xAxis: { type: "value", axisLabel: { formatter: "{value}%" }, splitLine: { lineStyle: { color: dark ? "#2d3441" : "#e7ebf0" } } },
+    yAxis: { type: "category", inverse: true, data: ctrVideos.map((v) => v.title), axisLabel: { width: 118, overflow: "truncate" } },
+    series: [{ type: "bar", data: ctrVideos.map((v) => v.cover_ctr), barWidth: 9, itemStyle: { color: "#ff9f43", borderRadius: 8 }, label: { show: true, position: "right", formatter: "{c}%" } }],
+  };
+  const watchOption = {
+    animationDuration: 360,
+    grid: { left: 46, right: 46, top: 35, bottom: 65 },
+    tooltip: { trigger: "axis" },
+    legend: { data: ["平均播放时长", "平均播放百分比"], top: 0 },
+    xAxis: { type: "category", data: videos.map((v) => v.title), axisLabel: { rotate: 34, width: 80, overflow: "truncate" } },
+    yAxis: [{ type: "value", name: "秒" }, { type: "value", name: "%", min: 0, max: 100 }],
+    series: [
+      { name: "平均播放时长", type: "bar", data: videos.map((v) => v.avg_watch_seconds), itemStyle: { color: dark ? "#d7dde8" : "#526174", borderRadius: [5, 5, 0, 0] } },
+      { name: "平均播放百分比", type: "line", yAxisIndex: 1, smooth: 0.25, data: videos.map((v) => v.avg_watch_percent), lineStyle: { color: "#ff647c", width: 2.5 }, itemStyle: { color: "#ff647c" } },
+    ],
+  };
   return (
     <>
       {!summary?.configured ? (
@@ -708,75 +768,31 @@ function OverviewPage({ setPage }: { setPage: (p: string) => void }) {
           <EmptyState />
         </>
       ) : (
-        <div className="referenceDashboard">
+        <div className="homeDashboard">
           <CoverageNotice acquisition={summary.acquisition} />
           <KpiStrip summary={summary} />
-          <div className="referenceGrid">
-            <section className="panel overviewMap">
-              <div className="panelHead">
-                <div>
-                  <h2>
-                    表现地图{" "}
-                    <small>气泡大小 = 播放量，粉色光环 = 涨粉效率</small>
-                  </h2>
-                  <p
-                    className={
-                      plottable === videos.length
-                        ? "mapCoverage complete"
-                        : "mapCoverage warning"
-                    }
-                  >
-                    {plottable === videos.length
-                      ? `${videos.length} / ${videos.length} 篇指标完整，全部已绘制`
-                      : `${plottable} / ${videos.length} 篇具备横纵轴真实值；缺失稿件未以 0 代替`}
-                  </p>
-                </div>
-                <button className="mapHelp">如何看图？</button>
-              </div>
-              <div className="quadrantCards" aria-hidden="true">
-                <span className="qa">
-                  低点击 高留存<small>内容强，标题需优化</small>
-                </span>
-                <span className="qb">
-                  高点击 高留存<small>优质爆款区</small>
-                </span>
-                <span className="qc">
-                  低点击 低留存<small>需全面优化</small>
-                </span>
-                <span className="qd">
-                  高点击 低留存<small>标题强，内容需优化</small>
-                </span>
-              </div>
-              <Chart
-                className="overviewMapChart"
-                option={mapOption}
-                events={mapEvents}
-              />
+          <div className="homePrimaryGrid">
+            <section className="panel homeCtrPanel">
+              <div className="panelHead"><div><h2>所有视频封面点击率</h2><p>按当前 B 站统计窗口排序</p></div></div>
+              <Chart className="homeCtrChart" option={ctrOption} />
             </section>
-            <OverviewInspector
-              video={selected}
-              index={
-                Math.max(
-                  0,
-                  videos.findIndex((v) => v.id === selected?.id),
-                ) + 1
-              }
-              total={videos.length}
-              previous={() => {
-                const i = videos.findIndex((v) => v.id === selected?.id);
-                setSelectedId(
-                  videos[(i - 1 + videos.length) % videos.length]?.id,
-                );
-              }}
-              next={() => {
-                const i = videos.findIndex((v) => v.id === selected?.id);
-                setSelectedId(videos[(i + 1) % videos.length]?.id);
-              }}
-              openDetails={() => setPage("稿件")}
-            />
-            <OverviewTrend video={selected} />
+            <section className="panel recentVideosPanel">
+              <div className="panelHead"><div><h2>最近更新的稿件</h2><p>封面与核心数据总览</p></div><button className="textButton" onClick={() => setPage("稿件")}>查看全部</button></div>
+              <div className="recentVideoGrid">
+                {recent.map((video) => <button className="recentVideoCard" key={video.id} onClick={() => setPage("稿件")}>
+                  <img src={coverSrc(video)} alt="" />
+                  <div><h3>{video.title}</h3><p>{date(video.published_at)} · {compact(video.views)} 播放</p>
+                    <dl><div><dt>封面点击率</dt><dd>{percent(video.cover_ctr)}</dd></div><div><dt>平均播放</dt><dd>{seconds(video.avg_watch_seconds)}</dd></div><div><dt>平均进度</dt><dd>{percent(video.avg_watch_percent)}</dd></div></dl>
+                  </div>
+                </button>)}
+              </div>
+            </section>
           </div>
-        </div>
+          <section className="panel homeWatchPanel">
+            <div className="panelHead"><div><h2>所有视频平均播放时长与平均播放百分比</h2><p>柱形为平均播放时长，折线为平均播放百分比</p></div></div>
+            <Chart className="homeWatchChart" option={watchOption} />
+          </section>
+          </div>
       )}
     </>
   );
@@ -988,7 +1004,8 @@ function PerformanceMapPage() {
               <div className="mapLegend">
                 <span>越靠右：{metricLabels[x]}越高</span>
                 <span>越靠上：{metricLabels[y]}越高</span>
-                <span>气泡：{metricLabels[size]}</span>
+                <span>封面圆点固定尺寸；{metricLabels[size]}仅在提示中展示</span>
+                <span>近邻稿件已做确定性轻微避让</span>
                 <span
                   className={
                     plottable === videos.length
@@ -1119,28 +1136,25 @@ function VideosPage() {
       {!summary?.configured ? (
         <EmptyState />
       ) : (
-        <div className="videosWorkspace">
-          <section className="panel videoTable">
-            {shown.map((v) => (
-              <button
-                key={v.id}
-                className={v.id === current?.id ? "selected" : ""}
-                onClick={() => setSelected(v.id)}
-              >
-                <img src={v.cover_url || ""} />
-                <span>
-                  <strong>{v.title}</strong>
-                  <small>
-                    {v.bvid} · {date(v.published_at)}
-                  </small>
-                </span>
-                <Metric label="播放" value={compact(v.views)} />
-                <Metric label="点击率" value={percent(v.cover_ctr)} />
-                <Metric label="进度" value={percent(v.avg_watch_percent)} />
-                <Metric label="涨粉" value={compact(v.followers_gained)} />
-              </button>
-            ))}
-          </section>
+          <div className="videosWorkspace">
+           <section className="videoCardGrid" aria-label="稿件卡片列表">
+             {shown.map((v) => (
+               <button
+                 key={v.id}
+                 className={`videoLibraryCard ${v.id === current?.id ? "selected" : ""}`}
+                 onClick={() => setSelected(v.id)}
+               >
+                 <div className="videoLibraryCover"><img src={coverSrc(v)} alt="" /><span>{seconds(v.duration_seconds)}</span></div>
+                 <div className="videoLibraryBody">
+                   <strong>{v.title}</strong>
+                   <small>
+                     {v.bvid} · {date(v.published_at)}
+                   </small>
+                   <dl className="videoLibraryMetrics"><div><dt>播放</dt><dd>{compact(v.views)}</dd></div><div><dt>点击率</dt><dd>{percent(v.cover_ctr)}</dd></div><div><dt>平均进度</dt><dd>{percent(v.avg_watch_percent)}</dd></div><div><dt>涨粉</dt><dd>{compact(v.followers_gained)}</dd></div></dl>
+                 </div>
+               </button>
+             ))}
+           </section>
           <VideoDetail video={current} />
         </div>
       )}
@@ -1206,126 +1220,40 @@ function VideoDetail({ video }: { video?: Video }) {
           value={percent(video.metrics.guestAudiencePercent)}
         />
       </div>
+      <p className="audienceEvidence">
+        B 站原始人数：粉丝 {compact(video.metrics.fanAudienceCount)} · 游客 {compact(video.metrics.guestAudienceCount)}；占比由两类人数归一化计算。
+      </p>
     </aside>
   );
 }
 function AnalysisLabPage() {
-  const { summary } = useData();
-  const [x, setX] = useState("cover_ctr");
-  const [y, setY] = useState("avg_watch_percent");
-  const [chart, setChart] = useState("scatter");
-  const [rows, setRows] = useState<any[]>([]);
-  const mutation = useMutation({
-    mutationFn: () =>
-      request<{ rows: any[] }>("/api/lab/query", {
-        method: "POST",
-        body: JSON.stringify({
-          metrics: [x, y],
-          xAxis: x,
-          yAxis: y,
-          from: "2000-01-01T00:00:00.000Z",
-          to: "2100-01-01T00:00:00.000Z",
-          chart,
-        }),
-      }),
-    onSuccess: (d) => setRows(d.rows),
-  });
-  const option = useMemo(
-    () =>
-      chart === "scatter"
-        ? {
-            grid: { left: 52, right: 20, top: 25, bottom: 45 },
-            tooltip: { trigger: "item" },
-            xAxis: { name: metricLabels[x] },
-            yAxis: { name: metricLabels[y] },
-            series: [
-              {
-                type: "scatter",
-                symbolSize: 18,
-                data: rows.map((r) => [r[x], r[y]]),
-                itemStyle: { color: "#247bff" },
-              },
-            ],
-          }
-        : {
-            grid: { left: 52, right: 20, top: 25, bottom: 60 },
-            tooltip: { trigger: "axis" },
-            xAxis: {
-              type: "category",
-              data: rows.map((r) => r.title),
-              axisLabel: { show: false },
-            },
-            yAxis: { type: "value" },
-            series: [
-              {
-                type: chart,
-                data: rows.map((r) => r[y]),
-                itemStyle: { color: "#247bff" },
-                lineStyle: { color: "#247bff" },
-              },
-            ],
-          },
-    [rows, x, y, chart],
-  );
+  const { summary, videos } = useData();
+  const availableBlocks = [
+    { id: "ctr", title: "封面点击率排行", description: "横向排名表", color: "#ff9f43" },
+    { id: "watch", title: "观看质量", description: "时长与进度组合图", color: "#ff647c" },
+    { id: "engagement", title: "互动表现", description: "点赞、投币、收藏、评论", color: "#247bff" },
+    { id: "audience", title: "观众构成", description: "粉丝与游客占比", color: "#8b5cf6" },
+    { id: "growth", title: "增长表现", description: "播放与涨粉同屏", color: "#18a672" },
+  ];
+  const [blocks, setBlocks] = useState(["ctr", "watch"]);
+  const toggleBlock = (id: string) => setBlocks((current) => current.includes(id) ? current.filter((x) => x !== id) : [...current, id]);
+  const makeOption = (id: string) => {
+    const labels = videos.map((v) => v.title);
+    const base = { animationDuration: 340, grid: { left: 48, right: 36, top: 32, bottom: 55 }, tooltip: { trigger: "axis" }, xAxis: { type: "category", data: labels, axisLabel: { show: false } } };
+    if (id === "ctr") return { ...base, xAxis: { type: "value", axisLabel: { formatter: "{value}%" } }, yAxis: { type: "category", inverse: true, data: labels, axisLabel: { width: 110, overflow: "truncate" } }, series: [{ type: "bar", data: videos.map((v) => v.cover_ctr), itemStyle: { color: "#ff9f43", borderRadius: 8 } }] };
+    if (id === "watch") return { ...base, yAxis: [{ type: "value" }, { type: "value", min: 0, max: 100 }], legend: { data: ["平均播放时长", "平均播放百分比"] }, series: [{ name: "平均播放时长", type: "bar", data: videos.map((v) => v.avg_watch_seconds), itemStyle: { color: "#66758a" } }, { name: "平均播放百分比", type: "line", yAxisIndex: 1, data: videos.map((v) => v.avg_watch_percent), itemStyle: { color: "#ff647c" } }] };
+    if (id === "engagement") return { ...base, yAxis: { type: "value" }, legend: { data: ["点赞", "投币", "收藏", "评论"] }, series: [["点赞", "likes"], ["投币", "coins"], ["收藏", "favorites"], ["评论", "comments"]].map(([name, key]) => ({ name, type: "bar", stack: "interaction", data: videos.map((v) => v.metrics[key]) })) };
+    if (id === "audience") return { ...base, yAxis: { type: "value", max: 100 }, legend: { data: ["粉丝观众", "游客观众"] }, series: [{ name: "粉丝观众", type: "bar", stack: "audience", data: videos.map((v) => v.metrics.fanAudiencePercent) }, { name: "游客观众", type: "bar", stack: "audience", data: videos.map((v) => v.metrics.guestAudiencePercent) }] };
+    return { ...base, yAxis: [{ type: "value" }, { type: "value" }], legend: { data: ["播放量", "涨粉量"] }, series: [{ name: "播放量", type: "bar", data: videos.map((v) => v.views), itemStyle: { color: "#18a672" } }, { name: "涨粉量", type: "line", yAxisIndex: 1, data: videos.map((v) => v.followers_gained), itemStyle: { color: "#247bff" } }] };
+  };
   return (
     <>
-      <PageIntro eyebrow="组合指标、轴和图表" title="分析实验室" />
-      <section className="labBuilder panel">
-        <div className="labControls">
-          <label>
-            <span>横轴</span>
-            <select value={x} onChange={(e) => setX(e.target.value)}>
-              {Object.entries(metricLabels)
-                .filter(([id]) => id !== "published_at")
-                .map(([id, l]) => (
-                  <option value={id} key={id}>
-                    {l}
-                  </option>
-                ))}
-            </select>
-          </label>
-          <label>
-            <span>纵轴</span>
-            <select value={y} onChange={(e) => setY(e.target.value)}>
-              {Object.entries(metricLabels)
-                .filter(([id]) => id !== "published_at")
-                .map(([id, l]) => (
-                  <option value={id} key={id}>
-                    {l}
-                  </option>
-                ))}
-            </select>
-          </label>
-          <label>
-            <span>图表</span>
-            <select value={chart} onChange={(e) => setChart(e.target.value)}>
-              <option value="scatter">散点图</option>
-              <option value="bar">柱状图</option>
-              <option value="line">折线图</option>
-            </select>
-          </label>
-          <button
-            className="primary small"
-            disabled={!summary?.configured || mutation.isPending}
-            onClick={() => mutation.mutate()}
-          >
-            <BarChart3 />
-            {mutation.isPending ? "查询中" : "运行查询"}
-          </button>
-        </div>
-        {mutation.error && <InlineError error={mutation.error} />}{" "}
-        {!summary?.configured ? (
-          <EmptyState />
-        ) : rows.length ? (
-          <Chart className="labChart" option={option} />
-        ) : (
-          <div className="labEmpty">
-            <FlaskConical />
-            <h2>构造一次真实查询</h2>
-            <p>选择轴和图表后运行；结果来自 D1 的最新真实快照。</p>
-          </div>
-        )}
+      <PageIntro eyebrow="把不同数据表放到同一个视图" title="组合看板" />
+      <section className="panel compositionPicker">
+        <div><h2>选择数据模块</h2><p>每个模块保留适合该数据的图表形式，可自由组合、移除和并排查看。</p></div>
+        <div className="compositionChoices">{availableBlocks.map((block) => <button key={block.id} className={blocks.includes(block.id) ? "selected" : ""} onClick={() => toggleBlock(block.id)}><span style={{ background: block.color }} /><b>{block.title}</b><small>{block.description}</small></button>)}</div>
       </section>
+      {!summary?.configured ? <EmptyState /> : <section className="compositionGrid">{blocks.map((id) => { const block = availableBlocks.find((item) => item.id === id)!; return <article className="panel compositionBlock" key={id}><div className="panelHead"><div><h2>{block.title}</h2><p>{block.description}</p></div><button className="iconButton" aria-label={`移除${block.title}`} onClick={() => toggleBlock(id)}><X /></button></div><Chart className="compositionChart" option={makeOption(id)} /></article>; })}{!blocks.length && <div className="labEmpty panel"><BarChart3 /><h2>选择至少一个数据模块</h2><p>上方模块可以任意组合，不再要求设置 X 轴和 Y 轴。</p></div>}</section>}
     </>
   );
 }
@@ -1703,7 +1631,7 @@ function RunCoverageReport({ run }: { run: any }) {
         <span>当前已接入指标完整稿件</span>
       </div>
       <div className="runMetricCoverage">
-        {Object.entries(details.metricCounts).map(([key, count]) => (
+        {Object.entries(details.metricCounts || {}).map(([key, count]) => (
           <span
             className={count === details.totalVideos ? "complete" : "missing"}
             key={key}
@@ -1716,13 +1644,28 @@ function RunCoverageReport({ run }: { run: any }) {
         ))}
       </div>
       <SourceFieldSummary details={details} />
-      {details.missingByVideo.length > 0 && (
+      {details.capabilityCounts && (
+        <div className="capabilityCoverage">
+          {Object.entries(details.capabilityCounts).map(([key, value]) => (
+            <span className={value.available === value.total ? "complete" : "missing"} key={key}>
+              {capabilityLabels[key] || key}<b>{value.available}/{value.total}</b>
+            </span>
+          ))}
+        </div>
+      )}
+      {(details.warnings?.length || 0) > 0 && (
+        <details className="runWarnings" open>
+          <summary>{details.warnings!.length} 项能力未完整获取</summary>
+          <ul>{details.warnings!.map((warning) => <li key={warning}>{warning}</li>)}</ul>
+        </details>
+      )}
+      {(details.missingByVideo?.length || 0) > 0 && (
         <details>
           <summary>
             {details.missingByVideo.length} 篇稿件存在未返回字段
           </summary>
           <ul>
-            {details.missingByVideo.map((video) => (
+            {details.missingByVideo!.map((video) => (
               <li key={video.bvid}>
                 <b>{video.title}</b>
                 <span>
@@ -1774,7 +1717,7 @@ function App() {
       <PerformanceMapPage />
     ) : page === "稿件" ? (
       <VideosPage />
-    ) : page === "分析实验室" ? (
+    ) : page === "组合看板" ? (
       <AnalysisLabPage />
     ) : page === "数据源" ? (
       <DataSourcePage />
@@ -1805,7 +1748,7 @@ function App() {
         {[
           ["概览", Home],
           ["稿件", FileChartColumn],
-          ["分析实验室", FlaskConical],
+          ["组合看板", BarChart3],
           ["设置", Settings],
         ].map(([p, I]: any) => (
           <button
@@ -1814,7 +1757,7 @@ function App() {
             onClick={() => setPage(p)}
           >
             <I />
-            <span>{p === "分析实验室" ? "实验室" : p}</span>
+            <span>{p === "组合看板" ? "组合" : p}</span>
           </button>
         ))}
       </nav>

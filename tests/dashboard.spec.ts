@@ -3,8 +3,12 @@ import { expect, test } from '@playwright/test';
 test('desktop renders real data and keeps the product name on one line', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'desktop');
   await page.goto('/');
-  await expect(page.getByText(/真实数据 · (完整|采集不完整)/)).toBeVisible();
-  await expect(page.getByRole('heading', { name: '表现地图' })).toBeVisible();
+  await expect(page.getByText(/真实数据 · (完整|采集不完整)|等待真实数据/)).toBeVisible();
+  if (await page.getByText('等待真实数据').isVisible()) test.skip(true, 'preview database has no connected data source');
+  await expect(page.getByRole('heading', { name: '所有视频封面点击率' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: '最近更新的稿件' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: '所有视频平均播放时长与平均播放百分比' })).toBeVisible();
+  await expect(page.locator('.homeDashboard .mapChart')).toHaveCount(0);
   const logo = page.locator('.sidebar .logo b');
   await expect(logo).toHaveText('哔哩哔哩数据看板');
   const oneLine = await logo.evaluate((node) => {
@@ -14,18 +18,18 @@ test('desktop renders real data and keeps the product name on one line', async (
   expect(oneLine).toBeTruthy();
   const targets = await page.locator('button:visible').evaluateAll((nodes) => nodes.map((node) => node.getBoundingClientRect().height));
   expect(Math.min(...targets)).toBeGreaterThanOrEqual(44);
-  await expect(page.locator('.overviewCover')).toHaveJSProperty('complete', true);
-  expect(await page.locator('.overviewCover').evaluate((image: HTMLImageElement) => image.naturalWidth)).toBeGreaterThan(0);
-  await expect(page.locator('.overviewMapChart canvas')).toBeVisible();
-  await expect(page.getByText(/篇指标完整，全部已绘制|具备横纵轴真实值/)).toBeVisible();
+  await expect(page.locator('.recentVideoCard img').first()).toHaveJSProperty('complete', true);
+  expect(await page.locator('.recentVideoCard img').first().evaluate((image: HTMLImageElement) => image.naturalWidth)).toBeGreaterThan(0);
   const zeroStackWarning = page.getByText('缺失稿件未以 0 代替');
   if (await zeroStackWarning.isVisible()) await expect(zeroStackWarning).toBeVisible();
   await page.getByRole('button', { name: '表现地图' }).click();
   await expect(page.getByRole('heading', { name: '表现地图' })).toBeVisible();
   await expect(page.locator('.mapChart canvas')).toBeVisible();
-  await page.getByRole('button', { name: '分析实验室' }).click();
-  await page.getByRole('button', { name: '运行查询' }).click();
-  await expect(page.locator('.labChart canvas')).toBeVisible();
+  await expect(page.getByText('近邻稿件已做确定性轻微避让')).toBeVisible();
+  await page.getByRole('button', { name: '组合看板' }).click();
+  await expect(page.getByRole('heading', { name: '组合看板' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: '选择数据模块' })).toBeVisible();
+  await expect(page.getByText('运行查询')).toHaveCount(0);
   await page.getByRole('button', { name: /切换深浅色/ }).click({ position: { x: 20, y: 20 } });
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
 });
@@ -33,14 +37,17 @@ test('desktop renders real data and keeps the product name on one line', async (
 test('data source reports a successful self-run acquisition', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'desktop');
   await page.goto('/');
+  await page.getByText(/真实数据|等待真实数据/).first().waitFor();
+  if (await page.getByText('等待真实数据').isVisible()) test.skip(true, 'preview database has no connected data source');
   await page.getByRole('button', { name: '数据源' }).click();
+  if (await page.getByText('尚未连接').isVisible()) test.skip(true, 'preview database has no connected data source');
   await expect(page.getByText('已连接真实账号')).toBeVisible();
   await expect(page.locator('.runHero b')).toHaveText(/success|partial/);
   const runStatus = await page.locator('.runHero b').textContent();
   if (runStatus === 'success') await expect(page.getByText('100.0%')).toBeVisible();
   else await expect(page.locator('.runCoverageReport')).toBeVisible();
   await expect(page.getByText('当前已接入指标完整稿件')).toBeVisible();
-  await expect(page.getByText('4 类计划指标尚未接入')).toBeVisible();
+  await expect(page.getByText('3 类计划指标尚未接入')).toBeVisible();
   await expect(page.getByText(/类源字段已保存/)).toBeVisible();
 });
 
@@ -64,17 +71,22 @@ test('phone keeps core pages within the viewport', async ({ page }, testInfo) =>
   test.skip(testInfo.project.name !== 'iphone');
   await page.goto('/');
   await expect(page.getByRole('main').getByText('哔哩哔哩数据看板', { exact: true })).toBeVisible();
+  if (await page.getByText('等待真实数据').isVisible()) test.skip(true, 'preview database has no connected data source');
   expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(1);
-  await page.getByRole('button', { name: '稿件' }).click();
+  await page.locator('.bottomNav').getByRole('button', { name: '稿件' }).click();
   await expect(page.getByRole('heading', { name: '稿件' })).toBeVisible();
+  await expect(page.locator('.videoLibraryCard').first()).toBeVisible();
+  const percentages = await page.locator('.audience b').allTextContents();
+  for (const value of percentages) expect(Number(value.replace('%', ''))).toBeGreaterThanOrEqual(0);
+  for (const value of percentages) expect(Number(value.replace('%', ''))).toBeLessThanOrEqual(100);
   expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(1);
-  await page.getByRole('button', { name: '实验室' }).click();
-  await expect(page.getByRole('heading', { name: '分析实验室' })).toBeVisible();
+  await page.locator('.bottomNav').getByRole('button', { name: '组合' }).click();
+  await expect(page.getByRole('heading', { name: '组合看板' })).toBeVisible();
 });
 
 test('tablet renders the real overview without overflow', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'ipad');
   await page.goto('/');
-  await expect(page.getByText(/真实数据 · (完整|采集不完整)/)).toBeVisible();
+  await expect(page.getByText(/真实数据 · (完整|采集不完整)|等待真实数据/)).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(1);
 });

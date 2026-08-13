@@ -128,6 +128,7 @@ svg {
 .logo b {
   font-size: 19px;
   letter-spacing: -0.03em;
+  white-space: nowrap;
 }
 .logo span {
   font-size: 11px;
@@ -2375,6 +2376,36 @@ select {
   background: var(--surface);
   color: var(--muted);
 }
+.coverageWarnings,
+.runWarnings ul {
+  margin: 8px 0 0;
+  padding-left: 18px;
+  color: var(--warning);
+  font-size: 10px;
+  line-height: 1.65;
+}
+.capabilityCoverage {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+.capabilityCoverage > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 28px;
+  padding: 5px 8px;
+  border-radius: var(--radius-tag);
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  color: var(--muted);
+  font-size: 9px;
+}
+.capabilityCoverage > span.complete { color: var(--positive); border-color: color-mix(in srgb, var(--positive) 25%, var(--line)); }
+.capabilityCoverage > span.missing { color: var(--warning); border-color: color-mix(in srgb, var(--warning) 32%, var(--line)); }
+.runWarnings { margin-top: 10px; padding: 10px 12px; border-radius: 12px; background: color-mix(in srgb, var(--warning) 8%, var(--surface)); }
+.runWarnings summary { color: var(--warning); font-size: 10px; font-weight: 700; cursor: pointer; }
 .runHero > b {
   display: inline-block;
   text-transform: uppercase;
@@ -2391,6 +2422,10 @@ select {
 .runHero > b.failed {
   color: var(--negative);
   background: color-mix(in srgb, var(--negative) 10%, transparent);
+}
+.runHero > b.partial {
+  color: var(--warning);
+  background: color-mix(in srgb, var(--warning) 10%, transparent);
 }
 .runHero strong,
 .runHero span {
@@ -2541,6 +2576,79 @@ dd {
     transform: translateY(8px);
     filter: blur(3px);
   }
+}
+
+/* Data-first home inspired by the supplied dashboard reference. */
+.homeDashboard .kpiStrip { margin-bottom: 14px; grid-template-columns: repeat(6, minmax(0, 1fr)); }
+.homeDashboard .kpiStrip article { min-width: 0; padding: 20px 18px; }
+.homePrimaryGrid { display: grid; grid-template-columns: minmax(290px, .72fr) minmax(0, 1.6fr); gap: 14px; }
+.homeCtrPanel, .recentVideosPanel, .homeWatchPanel { padding: 20px; min-width: 0; }
+.homeCtrChart { height: 520px; }
+.recentVideoGrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 14px; }
+.recentVideoCard { min-width: 0; text-align: left; display: block; overflow: hidden; border: 1px solid var(--line); border-radius: 16px; background: var(--surface-2); transition: transform .22s cubic-bezier(.2,.8,.2,1), border-color .22s, box-shadow .22s; }
+.recentVideoCard:hover { transform: translateY(-3px); border-color: color-mix(in srgb, var(--blue) 38%, var(--line)); box-shadow: 0 14px 32px rgba(20,40,74,.1); }
+.recentVideoCard:active { transform: scale(.985); }
+.recentVideoCard img { width: 100%; aspect-ratio: 16/9; object-fit: cover; display: block; background: var(--surface-2); }
+.recentVideoCard > div { padding: 12px; }
+.recentVideoCard h3 { font-size: 12px; line-height: 1.45; margin: 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.recentVideoCard p { color: var(--muted); font-size: 9px; margin: 7px 0 10px; }
+.recentVideoCard dl, .videoLibraryMetrics { margin: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; }
+.recentVideoCard dt, .videoLibraryMetrics dt { color: var(--muted); font-size: 8px; }
+.recentVideoCard dd, .videoLibraryMetrics dd { font-size: 11px; font-weight: 700; margin: 4px 0 0; }
+.homeWatchPanel { margin-top: 14px; }
+.homeWatchChart { height: 390px; }
+.textButton { color: var(--blue); font-size: 11px; padding: 0 10px; }
+
+/* Bilibili-style rectangular manuscript cards. */
+.videoCardGrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; align-content: start; }
+.videoLibraryCard { display: block; min-width: 0; overflow: hidden; padding: 0; text-align: left; border: 1px solid var(--line); border-radius: 18px; background: var(--surface); box-shadow: 0 4px 18px rgba(24,42,72,.045); transition: transform .22s cubic-bezier(.2,.8,.2,1), box-shadow .22s, border-color .22s; }
+.videoLibraryCard:hover { transform: translateY(-3px); box-shadow: 0 16px 34px rgba(24,42,72,.1); }
+.videoLibraryCard.selected { border-color: var(--blue); box-shadow: 0 0 0 3px color-mix(in srgb, var(--blue) 14%, transparent), 0 16px 34px rgba(24,42,72,.1); }
+.videoLibraryCard:active { transform: scale(.985); }
+.videoLibraryCover { position: relative; }
+.videoLibraryCover img { width: 100%; aspect-ratio: 16/9; object-fit: cover; display: block; background: var(--surface-2); }
+.videoLibraryCover span { position: absolute; right: 8px; bottom: 8px; padding: 3px 6px; border-radius: 7px; color: #fff; background: rgba(0,0,0,.68); font-size: 9px; backdrop-filter: blur(8px); }
+.videoLibraryBody { padding: 12px; }
+.videoLibraryBody > strong { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 35px; font-size: 12px; line-height: 1.45; }
+.videoLibraryBody > small { display: block; color: var(--muted); font-size: 9px; margin-top: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.videoLibraryMetrics { grid-template-columns: repeat(4, 1fr); padding-top: 11px; margin-top: 11px; border-top: 1px solid var(--line); }
+.audienceEvidence { font-size: 9px !important; line-height: 1.5; color: var(--muted); }
+
+/* Composable dashboard builder: modules instead of arbitrary axes. */
+.compositionPicker { padding: 20px; display: grid; grid-template-columns: 250px minmax(0, 1fr); gap: 20px; margin-bottom: 14px; }
+.compositionPicker h2 { margin: 0 0 6px; font-size: 16px; }
+.compositionPicker p { margin: 0; color: var(--muted); font-size: 11px; line-height: 1.6; }
+.compositionChoices { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 9px; }
+.compositionChoices button { min-width: 0; display: grid; grid-template-columns: 8px 1fr; column-gap: 8px; align-items: center; text-align: left; padding: 10px; border: 1px solid var(--line); border-radius: 13px; background: var(--surface-2); }
+.compositionChoices button.selected { border-color: var(--blue); background: var(--blue-soft); }
+.compositionChoices button > span { width: 8px; height: 28px; border-radius: 5px; grid-row: 1/3; }
+.compositionChoices b { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 10px; }
+.compositionChoices small { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--muted); font-size: 8px; }
+.compositionGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.compositionBlock { padding: 18px; min-width: 0; }
+.compositionChart { height: 360px; }
+.compositionGrid .labEmpty { grid-column: 1/-1; }
+
+@media (max-width: 1280px) {
+  .recentVideoGrid, .videoCardGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .compositionChoices { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 1023px) {
+  .homeDashboard .kpiStrip { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .homePrimaryGrid, .compositionGrid { grid-template-columns: minmax(0, 1fr); }
+  .homeCtrChart { height: 440px; }
+  .compositionPicker { grid-template-columns: minmax(0, 1fr); }
+  .videosWorkspace { grid-template-columns: minmax(0, 1fr); }
+  .videoDetail { position: static; }
+}
+@media (max-width: 599px) {
+  .homeDashboard .kpiStrip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .recentVideoGrid, .videoCardGrid { grid-template-columns: minmax(0, 1fr); }
+  .homeCtrPanel, .recentVideosPanel, .homeWatchPanel { padding: 15px; }
+  .homeCtrChart { height: 410px; }
+  .homeWatchChart { height: 330px; }
+  .compositionChoices { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .compositionChart { height: 320px; }
 }
 @media (max-width: 1190px) {
   .overviewGrid,
