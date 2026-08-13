@@ -130,9 +130,10 @@ export class BilibiliWebDataSource implements BilibiliDataSource {
       const result = overviewResults[index];
       const ov = result.status === 'fulfilled' ? result.value.data : null;
       rawOverview[item.bvid] = result.status === 'fulfilled' ? result.value.data : { error: 'unavailable' };
-      const totalDuration = ov?.stat.total_duration ?? item.duration ?? null;
-      const avgWatchSeconds = ov?.stat.play_avg_duration ?? null;
-      const avgWatchPercent = avgWatchSeconds != null && totalDuration ? avgWatchSeconds / totalDuration * 100 : percent10000(cmp?.full_play_ratio ?? item.stat.full_play_ratio);
+      const totalDuration = ov?.stat.total_duration || item.duration || null;
+      const reportedAverage = ov?.stat.play_avg_duration || null;
+      const avgWatchPercent = reportedAverage != null && totalDuration ? reportedAverage / totalDuration * 100 : percent10000(cmp?.full_play_ratio ?? item.stat.full_play_ratio);
+      const avgWatchSeconds = reportedAverage ?? (avgWatchPercent != null && totalDuration ? avgWatchPercent / 100 * totalDuration : null);
       videos.push({ id: String(item.aid), bvid: item.bvid, title: item.title, coverUrl: item.cover ?? null, durationSeconds: item.duration ?? null, publishedAt: new Date(item.pubtime * 1000).toISOString() });
       snapshots.push({
         videoId: String(item.aid), capturedAt, views: ov?.stat.play ?? cmp?.play ?? item.stat.play ?? null,
@@ -144,7 +145,8 @@ export class BilibiliWebDataSource implements BilibiliDataSource {
           shares: ov?.stat.share ?? cmp?.share ?? null, unfollows: ov?.stat.unfollow ?? cmp?.unfollow ?? null,
           threeSecondBounceRate: percent10000(cmp?.crash_rate), interactionRate: percent10000(cmp?.interact_rate),
           playToFollowRate: percent10000(cmp?.play_trans_fan_rate), fanAudiencePercent: ov?.audience_proportion?.fans ?? null,
-          guestAudiencePercent: ov?.audience_proportion?.guest ?? null
+          guestAudiencePercent: ov?.audience_proportion?.guest ?? null,
+          avgWatchSecondsDerived: reportedAverage == null && avgWatchSeconds != null ? 1 : 0
         }
       });
     });

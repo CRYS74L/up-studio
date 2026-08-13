@@ -3,15 +3,20 @@ import { expect, test } from '@playwright/test';
 test('desktop renders real data and keeps the product name on one line', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'desktop');
   await page.goto('/');
-  await expect(page.getByRole('heading', { name: '现在表现如何，哪些内容正在生长？' })).toBeVisible();
   await expect(page.getByText('真实数据', { exact: true })).toBeVisible();
-  await expect(page.locator('.ranking img')).toHaveCount(6);
+  await expect(page.getByRole('heading', { name: '表现地图' })).toBeVisible();
   const logo = page.locator('.sidebar .logo b');
   await expect(logo).toHaveText('哔哩哔哩数据看板');
-  const oneLine = await logo.evaluate((node) => node.scrollHeight <= node.clientHeight + 1 && getComputedStyle(node).whiteSpace === 'nowrap');
+  const oneLine = await logo.evaluate((node) => {
+    const range = document.createRange(); range.selectNodeContents(node);
+    return range.getClientRects().length === 1 && getComputedStyle(node).whiteSpace === 'nowrap';
+  });
   expect(oneLine).toBeTruthy();
   const targets = await page.locator('button:visible').evaluateAll((nodes) => nodes.map((node) => node.getBoundingClientRect().height));
   expect(Math.min(...targets)).toBeGreaterThanOrEqual(44);
+  await expect(page.locator('.overviewCover')).toHaveJSProperty('complete', true);
+  expect(await page.locator('.overviewCover').evaluate((image: HTMLImageElement) => image.naturalWidth)).toBeGreaterThan(0);
+  await expect(page.locator('.overviewMapChart canvas')).toBeVisible();
   await page.getByRole('button', { name: '表现地图' }).click();
   await expect(page.getByRole('heading', { name: '表现地图' })).toBeVisible();
   await expect(page.locator('.mapChart canvas')).toBeVisible();

@@ -62,12 +62,22 @@ app.get('/api/dashboard/summary', async (c) => {
 });
 app.get('/api/videos', async (c) => {
   const rows = (await c.env.DB.prepare('SELECT v.*,s.views,s.impressions,s.cover_ctr,s.avg_watch_seconds,s.avg_watch_percent,s.followers_gained,s.metrics_json,s.captured_at FROM videos v LEFT JOIN video_snapshots s ON s.id=(SELECT id FROM video_snapshots WHERE video_id=v.id ORDER BY captured_at DESC LIMIT 1) ORDER BY v.published_at DESC').all()).results;
-  return c.json({ ok: true, videos: rows.map((row: any) => ({ ...row, metrics: JSON.parse(row.metrics_json || '{}'), metrics_json: undefined })) });
+  return c.json({ ok: true, videos: rows.map((row: any) => ({ ...row, cover_url:`/api/covers/${encodeURIComponent(row.id)}`, metrics: JSON.parse(row.metrics_json || '{}'), metrics_json: undefined })) });
 });
 app.get('/api/videos/:id', async (c) => {
   const row: any = await c.env.DB.prepare('SELECT v.*,s.views,s.impressions,s.cover_ctr,s.avg_watch_seconds,s.avg_watch_percent,s.followers_gained,s.metrics_json,s.captured_at FROM videos v LEFT JOIN video_snapshots s ON s.id=(SELECT id FROM video_snapshots WHERE video_id=v.id ORDER BY captured_at DESC LIMIT 1) WHERE v.id=?').bind(c.req.param('id')).first();
   if (!row) return jsonError(c, 404, 'not_found', '没有找到这篇稿件');
-  return c.json({ ok: true, video: { ...row, metrics: JSON.parse(row.metrics_json || '{}'), metrics_json: undefined } });
+  return c.json({ ok: true, video: { ...row, cover_url:`/api/covers/${encodeURIComponent(row.id)}`, metrics: JSON.parse(row.metrics_json || '{}'), metrics_json: undefined } });
+});
+app.get('/api/covers/:id', async (c) => {
+  const row = await c.env.DB.prepare('SELECT cover_url FROM videos WHERE id=?').bind(c.req.param('id')).first<{ cover_url:string|null }>();
+  if (!row?.cover_url) return new Response(null, { status: 404 });
+  const url = new URL(row.cover_url.replace(/^http:/, 'https:'));
+  if (!/(^|\.)hdslb\.com$/.test(url.hostname)) return new Response(null, { status: 403 });
+  if (c.req.query('variant') === 'thumb') url.pathname += '@128w_128h_1c.webp';
+  const upstream = await fetch(url, { headers: { referer:'https://member.bilibili.com/', 'user-agent':'Mozilla/5.0' }, cf: { cacheTtl: 86400, cacheEverything: true } });
+  if (!upstream.ok) return new Response(null, { status: 502 });
+  return new Response(upstream.body, { headers: { 'content-type':upstream.headers.get('content-type')||'image/jpeg', 'cache-control':'public, max-age=86400, stale-while-revalidate=604800', 'cross-origin-resource-policy':'same-origin' } });
 });
 app.get('/api/videos/:id/timeseries', async (c) => {
   const rows = (await c.env.DB.prepare('SELECT captured_at,views,cover_ctr,avg_watch_seconds,avg_watch_percent,followers_gained,metrics_json FROM video_snapshots WHERE video_id=? ORDER BY captured_at').bind(c.req.param('id')).all()).results;
