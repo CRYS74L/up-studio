@@ -6,7 +6,7 @@ import { z } from 'zod';
 import { analysisQuerySchema } from '../shared/contracts';
 import { BilibiliWebDataSource } from './bilibili';
 import { buildManifest } from './backup';
-import { encryptJson, hmac, sha256 } from './crypto';
+import { decryptJson, encryptJson, hmac, sha256 } from './crypto';
 
 type Bindings = {
   DB: D1Database; BUCKET: R2Bucket; ASSETS: Fetcher; APP_ORIGIN: string;
@@ -53,13 +53,41 @@ app.get('/api/bilibili/qr/status/:key', async (c) => {
 });
 
 app.get('/api/dashboard/summary', async (c) => {
-  const rows = await c.env.DB.prepare('SELECT COUNT(DISTINCT video_id) videos, MAX(captured_at) fresh, SUM(views) views, SUM(followers_gained) followers FROM video_snapshots WHERE captured_at=(SELECT MAX(captured_at) FROM video_snapshots)').first();
-  return c.json({ ok: true, configured: Boolean(rows?.fresh), summary: rows ?? {}, freshnessMinutes: rows?.fresh ? Math.floor((Date.now() - Date.parse(String(rows.fresh))) / 60000) : null });
+  const rows = await c.env.DB.prepare('SELECT COUNT(DISTINCT video_id) videos, MAX(captured_at) fresh, SUM(views) views, SUM(followers_gained) followers, AVG(cover_ctr) cover_ctr, AVG(avg_watch_percent) avg_watch_percent, SUM(avg_watch_seconds*views)/NULLIF(SUM(views),0) avg_watch_seconds FROM video_snapshots WHERE captured_at=(SELECT MAX(captured_at) FROM video_snapshots)').first();
+  const latest = await c.env.DB.prepare('SELECT views,metrics_json FROM video_snapshots WHERE captured_at=(SELECT MAX(captured_at) FROM video_snapshots)').all<{ views: number; metrics_json: string }>();
+  let interactions = 0; let totalViews = 0;
+  for (const item of latest.results) { const metrics = JSON.parse(item.metrics_json || '{}'); interactions += ['likes','comments','danmaku','favorites','coins','shares'].reduce((sum,key)=>sum+(Number(metrics[key])||0),0); totalViews += Number(item.views)||0; }
+  const summary = { ...(rows ?? {}), interaction_rate: totalViews ? interactions / totalViews * 100 : null };
+  return c.json({ ok: true, configured: Boolean(rows?.fresh), summary, freshnessMinutes: rows?.fresh ? Math.floor((Date.now() - Date.parse(String(rows.fresh))) / 60000) : null });
 });
-app.get('/api/videos', async (c) => c.json({ ok: true, videos: (await c.env.DB.prepare('SELECT v.*,s.views,s.cover_ctr,s.avg_watch_percent,s.followers_gained,s.captured_at FROM videos v LEFT JOIN video_snapshots s ON s.id=(SELECT id FROM video_snapshots WHERE video_id=v.id ORDER BY captured_at DESC LIMIT 1) ORDER BY v.published_at DESC').all()).results }));
-app.get('/api/videos/:id/timeseries', async (c) => c.json({ ok: true, points: (await c.env.DB.prepare('SELECT captured_at,views,cover_ctr,avg_watch_percent,followers_gained,metrics_json FROM video_snapshots WHERE video_id=? ORDER BY captured_at').bind(c.req.param('id')).all()).results }));
-app.post('/api/lab/query', zValidator('json', analysisQuerySchema), async (c) => c.json({ ok: true, query: c.req.valid('json'), rows: [] }));
+app.get('/api/videos', async (c) => {
+  const rows = (await c.env.DB.prepare('SELECT v.*,s.views,s.impressions,s.cover_ctr,s.avg_watch_seconds,s.avg_watch_percent,s.followers_gained,s.metrics_json,s.captured_at FROM videos v LEFT JOIN video_snapshots s ON s.id=(SELECT id FROM video_snapshots WHERE video_id=v.id ORDER BY captured_at DESC LIMIT 1) ORDER BY v.published_at DESC').all()).results;
+  return c.json({ ok: true, videos: rows.map((row: any) => ({ ...row, metrics: JSON.parse(row.metrics_json || '{}'), metrics_json: undefined })) });
+});
+app.get('/api/videos/:id', async (c) => {
+  const row: any = await c.env.DB.prepare('SELECT v.*,s.views,s.impressions,s.cover_ctr,s.avg_watch_seconds,s.avg_watch_percent,s.followers_gained,s.metrics_json,s.captured_at FROM videos v LEFT JOIN video_snapshots s ON s.id=(SELECT id FROM video_snapshots WHERE video_id=v.id ORDER BY captured_at DESC LIMIT 1) WHERE v.id=?').bind(c.req.param('id')).first();
+  if (!row) return jsonError(c, 404, 'not_found', '没有找到这篇稿件');
+  return c.json({ ok: true, video: { ...row, metrics: JSON.parse(row.metrics_json || '{}'), metrics_json: undefined } });
+});
+app.get('/api/videos/:id/timeseries', async (c) => {
+  const rows = (await c.env.DB.prepare('SELECT captured_at,views,cover_ctr,avg_watch_seconds,avg_watch_percent,followers_gained,metrics_json FROM video_snapshots WHERE video_id=? ORDER BY captured_at').bind(c.req.param('id')).all()).results;
+  return c.json({ ok: true, points: rows.map((row: any) => ({ ...row, metrics: JSON.parse(row.metrics_json || '{}'), metrics_json: undefined })) });
+});
+const labMetricSql: Record<string, string> = { views:'s.views', cover_ctr:'s.cover_ctr', avg_watch_seconds:'s.avg_watch_seconds', avg_watch_percent:'s.avg_watch_percent', followers_gained:'s.followers_gained', published_at:'v.published_at', duration_seconds:'v.duration_seconds' };
+app.post('/api/lab/query', zValidator('json', analysisQuerySchema), async (c) => {
+  const query = c.req.valid('json');
+  const requested = [...new Set([query.xAxis, query.yAxis, ...query.metrics].filter(Boolean) as string[])];
+  if (requested.some((metric) => !labMetricSql[metric])) return jsonError(c, 400, 'unsupported_metric', '查询包含尚未开放的指标');
+  const columns = requested.map((metric) => `${labMetricSql[metric]} AS ${metric}`).join(',');
+  const rows = (await c.env.DB.prepare(`SELECT v.id video_id,v.bvid,v.title,${columns},s.captured_at FROM videos v JOIN video_snapshots s ON s.id=(SELECT id FROM video_snapshots WHERE video_id=v.id AND captured_at BETWEEN ? AND ? ORDER BY captured_at DESC LIMIT 1) ORDER BY v.published_at DESC`).bind(query.from, query.to).all()).results;
+  return c.json({ ok: true, query, rows, definitions: requested.map((id) => ({ id, nullable: true, source: id === 'duration_seconds' || id === 'published_at' ? '稿件元数据' : 'B站快照' })) });
+});
 app.post('/api/bilibili/qr/disconnect', async (c) => { await c.env.DB.prepare("DELETE FROM encrypted_secrets WHERE id='bilibili_session'").run(); return c.json({ ok: true }); });
+app.get('/api/bilibili/status', async (c) => {
+  const secret = await c.env.DB.prepare("SELECT updated_at FROM encrypted_secrets WHERE id='bilibili_session'").first<{ updated_at: string }>();
+  const lastRun = await c.env.DB.prepare('SELECT id,status,started_at,finished_at,coverage,error_code,safe_error_detail,timings_json,request_count FROM acquisition_runs ORDER BY started_at DESC LIMIT 1').first();
+  return c.json({ ok: true, connected: Boolean(secret), connectedAt: secret?.updated_at ?? null, lastRun: lastRun ?? null });
+});
 
 app.post('/api/imports/preview', async (c) => {
   const body = await c.req.arrayBuffer();
@@ -82,6 +110,40 @@ app.post('/api/ai/chat', async (c) => {
   return jsonError(c, 501, 'snapshot_required', '请先连接真实数据快照；聊天不会发送演示数据');
 });
 
+async function readDeepSeekKey(env: Bindings) {
+  if (env.MASTER_ENCRYPTION_KEY_BASE64) {
+    const stored = await env.DB.prepare("SELECT ciphertext,iv FROM encrypted_secrets WHERE id='deepseek_api_key'").first<{ ciphertext:string; iv:string }>();
+    if (stored) return (await decryptJson<{ key:string }>(stored.ciphertext, stored.iv, env.MASTER_ENCRYPTION_KEY_BASE64)).key;
+  }
+  return env.DEEPSEEK_API_KEY;
+}
+app.get('/api/settings/deepseek/status', async (c) => {
+  const setting = await c.env.DB.prepare("SELECT value_json,updated_at FROM settings WHERE key='deepseek_status'").first<{ value_json:string; updated_at:string }>();
+  const value = setting ? JSON.parse(setting.value_json) : {};
+  return c.json({ ok:true, configured:Boolean(await readDeepSeekKey(c.env)), last4:value.last4 ?? null, lastTestAt:value.lastTestAt ?? null, model:c.env.DEEPSEEK_MODEL });
+});
+app.put('/api/settings/deepseek', zValidator('json', z.object({ apiKey:z.string().min(8).max(256) })), async (c) => {
+  if (!c.env.MASTER_ENCRYPTION_KEY_BASE64) return jsonError(c,503,'encryption_not_configured','请先配置本地主加密密钥');
+  const key = c.req.valid('json').apiKey.trim(); const encrypted = await encryptJson({ key }, c.env.MASTER_ENCRYPTION_KEY_BASE64); const now=new Date().toISOString();
+  await c.env.DB.batch([
+    c.env.DB.prepare("INSERT INTO encrypted_secrets(id,ciphertext,iv,updated_at) VALUES('deepseek_api_key',?,?,?) ON CONFLICT(id) DO UPDATE SET ciphertext=excluded.ciphertext,iv=excluded.iv,updated_at=excluded.updated_at").bind(encrypted.ciphertext,encrypted.iv,now),
+    c.env.DB.prepare("INSERT INTO settings(key,value_json,updated_at) VALUES('deepseek_status',?,?) ON CONFLICT(key) DO UPDATE SET value_json=excluded.value_json,updated_at=excluded.updated_at").bind(JSON.stringify({last4:key.slice(-4),lastTestAt:null}),now)
+  ]);
+  return c.json({ ok:true, configured:true, last4:key.slice(-4) });
+});
+app.delete('/api/settings/deepseek', async (c) => { await c.env.DB.batch([c.env.DB.prepare("DELETE FROM encrypted_secrets WHERE id='deepseek_api_key'"),c.env.DB.prepare("DELETE FROM settings WHERE key='deepseek_status'")]); return c.json({ok:true}); });
+app.post('/api/settings/deepseek/test', async (c) => {
+  const key=await readDeepSeekKey(c.env); if(!key)return jsonError(c,503,'not_configured','尚未填写 DeepSeek API Key');
+  const started=Date.now();
+  try {
+    const response=await fetch('https://api.deepseek.com/chat/completions',{method:'POST',headers:{authorization:`Bearer ${key}`,'content-type':'application/json'},body:JSON.stringify({model:c.env.DEEPSEEK_MODEL,messages:[{role:'user',content:'只回复 OK'}],max_tokens:4,stream:false}),signal:AbortSignal.timeout(15000)});
+    if(!response.ok){ const safe=response.status===401?'API Key 无效':response.status===429?'请求过于频繁或额度不足':`DeepSeek 返回 HTTP ${response.status}`; return jsonError(c,502,'deepseek_rejected',safe); }
+    const now=new Date().toISOString(); const old=await c.env.DB.prepare("SELECT value_json FROM settings WHERE key='deepseek_status'").first<{value_json:string}>(); const value=old?JSON.parse(old.value_json):{};
+    await c.env.DB.prepare("INSERT INTO settings(key,value_json,updated_at) VALUES('deepseek_status',?,?) ON CONFLICT(key) DO UPDATE SET value_json=excluded.value_json,updated_at=excluded.updated_at").bind(JSON.stringify({...value,lastTestAt:now}),now).run();
+    return c.json({ok:true,model:c.env.DEEPSEEK_MODEL,latencyMs:Date.now()-started,testedAt:now});
+  } catch { return jsonError(c,502,'deepseek_unreachable','DeepSeek 连接超时或网络不可达'); }
+});
+
 app.get('/api/backups/status', async (c) => c.json({ ok: true, configured: Boolean(c.env.GOOGLE_CLIENT_ID && c.env.GOOGLE_CLIENT_SECRET), runs: (await c.env.DB.prepare('SELECT id,kind,status,started_at,finished_at,bytes,sha256,safe_error_detail FROM backup_runs ORDER BY started_at DESC LIMIT 20').all()).results }));
 app.get('/api/backups/oauth/start', async (c) => {
   if (!c.env.GOOGLE_CLIENT_ID) return jsonError(c, 503, 'not_configured', '尚未配置 Google OAuth 客户端');
@@ -102,11 +164,41 @@ app.post('/api/backups/verify', async (c) => c.json({ ok: true, status: 'preflig
 app.post('/api/backups/restore/preflight', async (c) => c.json({ ok: true, status: 'requires_manifest', destructive: false }));
 
 async function collect(env: Bindings, trigger: string) {
+  const active = await env.DB.prepare("SELECT id,started_at FROM acquisition_runs WHERE status='running' AND started_at>? ORDER BY started_at DESC LIMIT 1").bind(new Date(Date.now() - 10 * 60_000).toISOString()).first<{ id: string; started_at: string }>();
+  if (active) return { id: active.id, status: 'skipped', reason: 'already_running', startedAt: active.started_at };
   const id = crypto.randomUUID(); const started = new Date().toISOString();
-  await env.DB.prepare("INSERT INTO acquisition_runs(id,started_at,status,source_version,coverage,retries) VALUES(?,?,'running','web-data-v1',0,0)").bind(id, started).run();
-  await env.DB.prepare("UPDATE acquisition_runs SET finished_at=?,status='failed',error_code='session_expired',safe_error_detail=? WHERE id=?").bind(new Date().toISOString(), `No production session for ${trigger}`, id).run();
-  return { id, status: 'failed', errorCode: 'session_expired' };
+  const source = new BilibiliWebDataSource();
+  await env.DB.prepare("INSERT INTO acquisition_runs(id,started_at,status,source_version,coverage,retries) VALUES(?,?,'running',?,0,0)").bind(id, started, source.version).run();
+  try {
+    if (!env.MASTER_ENCRYPTION_KEY_BASE64) throw new Error('ENCRYPTION_KEY_MISSING');
+    const stored = await env.DB.prepare("SELECT ciphertext,iv FROM encrypted_secrets WHERE id='bilibili_session'").first<{ ciphertext: string; iv: string }>();
+    if (!stored) throw new Error('SESSION_MISSING');
+    const { session } = await decryptJson<{ session: string }>(stored.ciphertext, stored.iv, env.MASTER_ENCRYPTION_KEY_BASE64);
+    const result = await source.collect(session);
+    const dbStarted = performance.now();
+    const statements: D1PreparedStatement[] = [];
+    for (let index = 0; index < result.videos.length; index += 1) {
+      const video = result.videos[index]; const snapshot = result.snapshots[index];
+      statements.push(env.DB.prepare(`INSERT INTO videos(id,bvid,title,cover_url,duration_seconds,published_at) VALUES(?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET bvid=excluded.bvid,title=excluded.title,cover_url=excluded.cover_url,duration_seconds=excluded.duration_seconds,published_at=excluded.published_at`).bind(video.id, video.bvid, video.title, video.coverUrl, video.durationSeconds, video.publishedAt));
+      statements.push(env.DB.prepare(`INSERT OR IGNORE INTO video_snapshots(video_id,captured_at,source,views,impressions,cover_ctr,avg_watch_seconds,avg_watch_percent,followers_gained,metrics_json) VALUES(?,?,?,?,?,?,?,?,?,?)`).bind(snapshot.videoId, snapshot.capturedAt, source.version, snapshot.views, snapshot.impressions, snapshot.coverCtr, snapshot.avgWatchSeconds, snapshot.avgWatchPercent, snapshot.followersGained, JSON.stringify(snapshot.metrics)));
+    }
+    if (statements.length) await env.DB.batch(statements);
+    const dbMs = Math.round(performance.now() - dbStarted);
+    const storageStarted = performance.now();
+    if (env.BUCKET) await env.BUCKET.put(`raw/${started.slice(0, 10)}/${id}.json`, JSON.stringify(result.raw), { httpMetadata: { contentType: 'application/json' } });
+    const storageMs = Math.round(performance.now() - storageStarted);
+    const status = result.coverage === 1 ? 'success' : 'partial';
+    const timings = { ...result.timings, dbMs, storageMs, totalMs: Date.now() - Date.parse(started) };
+    await env.DB.prepare('UPDATE acquisition_runs SET finished_at=?,status=?,coverage=?,timings_json=?,request_count=? WHERE id=?').bind(new Date().toISOString(), status, result.coverage, JSON.stringify(timings), result.requestCount, id).run();
+    return { id, status, coverage: result.coverage, videos: result.videos.length, trigger, timings, requestCount: result.requestCount };
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : 'UNKNOWN';
+    const errorCode = /SESSION|API_-101|API_-111/.test(detail) ? 'session_expired' : error instanceof z.ZodError ? 'schema_changed' : 'network';
+    await env.DB.prepare('UPDATE acquisition_runs SET finished_at=?,status=\'failed\',error_code=?,safe_error_detail=? WHERE id=?').bind(new Date().toISOString(), errorCode, detail.slice(0, 160), id).run();
+    return { id, status: 'failed', errorCode };
+  }
 }
+app.post('/api/bilibili/collect-now', async (c) => c.json({ ok: true, run: await collect(c.env, 'manual') }));
 app.post('/internal/collect', async (c) => {
   if (!c.env.INTERNAL_COLLECT_SECRET) return jsonError(c, 503, 'not_configured', '采集签名密钥未配置');
   const timestamp = c.req.header('x-timestamp') ?? ''; const signature = c.req.header('x-signature') ?? '';

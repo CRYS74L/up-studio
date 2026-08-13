@@ -1,5 +1,5 @@
 {
-  "name": "bilibili-creator-insights",
+  "name": "bilibili-data-dashboard",
   "private": true,
   "version": "0.1.0",
   "type": "module",
@@ -19,6 +19,7 @@
     "echarts": "latest",
     "hono": "latest",
     "lucide-react": "latest",
+    "qrcode": "latest",
     "react": "latest",
     "react-dom": "latest",
     "zod": "latest"
@@ -31,6 +32,7 @@
     "@types/node": "latest",
     "@types/react": "latest",
     "@types/react-dom": "latest",
+    "@types/qrcode": "latest",
     "@vitejs/plugin-react": "latest",
     "jsdom": "latest",
     "typescript": "latest",

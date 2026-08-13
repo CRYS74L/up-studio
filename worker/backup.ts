@@ -9,7 +9,7 @@ export async function buildManifest(kind: 'incremental' | 'full', payloads: Arra
 
 export async function uploadDriveFile(accessToken: string, folderId: string, name: string, body: string, mimeType = 'application/json') {
   const boundary = `insights-${crypto.randomUUID()}`;
-  const metadata = JSON.stringify({ name, parents: [folderId], appProperties: { source: 'bilibili-creator-insights' } });
+  const metadata = JSON.stringify({ name, parents: [folderId], appProperties: { source: 'bilibili-data-dashboard' } });
   const multipart = `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${metadata}\r\n--${boundary}\r\nContent-Type: ${mimeType}\r\n\r\n${body}\r\n--${boundary}--`;
   const response = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name,size,md5Checksum', {
     method: 'POST', headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': `multipart/related; boundary=${boundary}` }, body: multipart
@@ -17,4 +17,3 @@ export async function uploadDriveFile(accessToken: string, folderId: string, nam
   if (!response.ok) throw new Error(`DRIVE_UPLOAD_${response.status}`);
   return response.json<{ id: string; name: string; size?: string; md5Checksum?: string }>();
 }
-
