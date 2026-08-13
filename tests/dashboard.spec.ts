@@ -3,7 +3,7 @@ import { expect, test } from '@playwright/test';
 test('desktop renders real data and keeps the product name on one line', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'desktop');
   await page.goto('/');
-  await expect(page.getByText(/真实数据 · (完整|采集不完整)|等待真实数据/)).toBeVisible();
+  await expect(page.getByText(/真实数据 · (已接入指标完整|采集不完整)|等待真实数据/)).toBeVisible();
   if (await page.getByText('等待真实数据').isVisible()) test.skip(true, 'preview database has no connected data source');
   await expect(page.getByRole('heading', { name: '所有视频封面点击率' })).toBeVisible();
   await expect(page.getByRole('heading', { name: '最近更新的稿件' })).toBeVisible();
@@ -87,6 +87,6 @@ test('phone keeps core pages within the viewport', async ({ page }, testInfo) =>
 test('tablet renders the real overview without overflow', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'ipad');
   await page.goto('/');
-  await expect(page.getByText(/真实数据 · (完整|采集不完整)|等待真实数据/)).toBeVisible();
+  await expect(page.getByText(/真实数据 · (已接入指标完整|采集不完整)|等待真实数据/)).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(1);
 });
