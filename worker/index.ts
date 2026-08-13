@@ -58,16 +58,17 @@ app.get('/api/dashboard/summary', async (c) => {
   let interactions = 0; let totalViews = 0;
   for (const item of latest.results) { const metrics = JSON.parse(item.metrics_json || '{}'); interactions += ['likes','comments','danmaku','favorites','coins','shares'].reduce((sum,key)=>sum+(Number(metrics[key])||0),0); totalViews += Number(item.views)||0; }
   const summary = { ...(rows ?? {}), interaction_rate: totalViews ? interactions / totalViews * 100 : null };
-  return c.json({ ok: true, configured: Boolean(rows?.fresh), summary, freshnessMinutes: rows?.fresh ? Math.floor((Date.now() - Date.parse(String(rows.fresh))) / 60000) : null });
+  const lastRun = await c.env.DB.prepare('SELECT status,coverage,coverage_json,started_at,finished_at,error_code,safe_error_detail FROM acquisition_runs ORDER BY started_at DESC LIMIT 1').first<any>();
+  return c.json({ ok: true, configured: Boolean(rows?.fresh), summary, freshnessMinutes: rows?.fresh ? Math.floor((Date.now() - Date.parse(String(rows.fresh))) / 60000) : null, acquisition: lastRun ? { ...lastRun, details: JSON.parse(lastRun.coverage_json || '{}'), coverage_json: undefined } : null });
 });
 app.get('/api/videos', async (c) => {
-  const rows = (await c.env.DB.prepare('SELECT v.*,s.views,s.impressions,s.cover_ctr,s.avg_watch_seconds,s.avg_watch_percent,s.followers_gained,s.metrics_json,s.captured_at FROM videos v LEFT JOIN video_snapshots s ON s.id=(SELECT id FROM video_snapshots WHERE video_id=v.id ORDER BY captured_at DESC LIMIT 1) ORDER BY v.published_at DESC').all()).results;
-  return c.json({ ok: true, videos: rows.map((row: any) => ({ ...row, cover_url:`/api/covers/${encodeURIComponent(row.id)}`, metrics: JSON.parse(row.metrics_json || '{}'), metrics_json: undefined })) });
+  const rows = (await c.env.DB.prepare('SELECT v.*,s.views,s.impressions,s.cover_ctr,s.avg_watch_seconds,s.avg_watch_percent,s.followers_gained,s.metrics_json,s.dimensions_json,s.captured_at FROM videos v LEFT JOIN video_snapshots s ON s.id=(SELECT id FROM video_snapshots WHERE video_id=v.id ORDER BY captured_at DESC LIMIT 1) ORDER BY v.published_at DESC').all()).results;
+  return c.json({ ok: true, videos: rows.map((row: any) => ({ ...row, cover_url:`/api/covers/${encodeURIComponent(row.id)}`, metrics: JSON.parse(row.metrics_json || '{}'), dimensions: JSON.parse(row.dimensions_json || '{}'), metrics_json: undefined, dimensions_json: undefined })) });
 });
 app.get('/api/videos/:id', async (c) => {
-  const row: any = await c.env.DB.prepare('SELECT v.*,s.views,s.impressions,s.cover_ctr,s.avg_watch_seconds,s.avg_watch_percent,s.followers_gained,s.metrics_json,s.captured_at FROM videos v LEFT JOIN video_snapshots s ON s.id=(SELECT id FROM video_snapshots WHERE video_id=v.id ORDER BY captured_at DESC LIMIT 1) WHERE v.id=?').bind(c.req.param('id')).first();
+  const row: any = await c.env.DB.prepare('SELECT v.*,s.views,s.impressions,s.cover_ctr,s.avg_watch_seconds,s.avg_watch_percent,s.followers_gained,s.metrics_json,s.dimensions_json,s.captured_at FROM videos v LEFT JOIN video_snapshots s ON s.id=(SELECT id FROM video_snapshots WHERE video_id=v.id ORDER BY captured_at DESC LIMIT 1) WHERE v.id=?').bind(c.req.param('id')).first();
   if (!row) return jsonError(c, 404, 'not_found', '没有找到这篇稿件');
-  return c.json({ ok: true, video: { ...row, cover_url:`/api/covers/${encodeURIComponent(row.id)}`, metrics: JSON.parse(row.metrics_json || '{}'), metrics_json: undefined } });
+  return c.json({ ok: true, video: { ...row, cover_url:`/api/covers/${encodeURIComponent(row.id)}`, metrics: JSON.parse(row.metrics_json || '{}'), dimensions: JSON.parse(row.dimensions_json || '{}'), metrics_json: undefined, dimensions_json: undefined } });
 });
 app.get('/api/covers/:id', async (c) => {
   const row = await c.env.DB.prepare('SELECT cover_url FROM videos WHERE id=?').bind(c.req.param('id')).first<{ cover_url:string|null }>();
@@ -95,8 +96,8 @@ app.post('/api/lab/query', zValidator('json', analysisQuerySchema), async (c) =>
 app.post('/api/bilibili/qr/disconnect', async (c) => { await c.env.DB.prepare("DELETE FROM encrypted_secrets WHERE id='bilibili_session'").run(); return c.json({ ok: true }); });
 app.get('/api/bilibili/status', async (c) => {
   const secret = await c.env.DB.prepare("SELECT updated_at FROM encrypted_secrets WHERE id='bilibili_session'").first<{ updated_at: string }>();
-  const lastRun = await c.env.DB.prepare('SELECT id,status,started_at,finished_at,coverage,error_code,safe_error_detail,timings_json,request_count FROM acquisition_runs ORDER BY started_at DESC LIMIT 1').first();
-  return c.json({ ok: true, connected: Boolean(secret), connectedAt: secret?.updated_at ?? null, lastRun: lastRun ?? null });
+  const lastRun = await c.env.DB.prepare('SELECT id,status,started_at,finished_at,coverage,coverage_json,error_code,safe_error_detail,timings_json,request_count FROM acquisition_runs ORDER BY started_at DESC LIMIT 1').first<any>();
+  return c.json({ ok: true, connected: Boolean(secret), connectedAt: secret?.updated_at ?? null, lastRun: lastRun ? { ...lastRun, details: JSON.parse(lastRun.coverage_json || '{}'), coverage_json: undefined } : null });
 });
 
 app.post('/api/imports/preview', async (c) => {
@@ -190,17 +191,17 @@ async function collect(env: Bindings, trigger: string) {
     for (let index = 0; index < result.videos.length; index += 1) {
       const video = result.videos[index]; const snapshot = result.snapshots[index];
       statements.push(env.DB.prepare(`INSERT INTO videos(id,bvid,title,cover_url,duration_seconds,published_at) VALUES(?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET bvid=excluded.bvid,title=excluded.title,cover_url=excluded.cover_url,duration_seconds=excluded.duration_seconds,published_at=excluded.published_at`).bind(video.id, video.bvid, video.title, video.coverUrl, video.durationSeconds, video.publishedAt));
-      statements.push(env.DB.prepare(`INSERT OR IGNORE INTO video_snapshots(video_id,captured_at,source,views,impressions,cover_ctr,avg_watch_seconds,avg_watch_percent,followers_gained,metrics_json) VALUES(?,?,?,?,?,?,?,?,?,?)`).bind(snapshot.videoId, snapshot.capturedAt, source.version, snapshot.views, snapshot.impressions, snapshot.coverCtr, snapshot.avgWatchSeconds, snapshot.avgWatchPercent, snapshot.followersGained, JSON.stringify(snapshot.metrics)));
+      statements.push(env.DB.prepare(`INSERT OR IGNORE INTO video_snapshots(video_id,captured_at,source,views,impressions,cover_ctr,avg_watch_seconds,avg_watch_percent,followers_gained,metrics_json,dimensions_json) VALUES(?,?,?,?,?,?,?,?,?,?,?)`).bind(snapshot.videoId, snapshot.capturedAt, source.version, snapshot.views, snapshot.impressions, snapshot.coverCtr, snapshot.avgWatchSeconds, snapshot.avgWatchPercent, snapshot.followersGained, JSON.stringify(snapshot.metrics), JSON.stringify(snapshot.dimensions)));
     }
     if (statements.length) await env.DB.batch(statements);
     const dbMs = Math.round(performance.now() - dbStarted);
     const storageStarted = performance.now();
     if (env.BUCKET) await env.BUCKET.put(`raw/${started.slice(0, 10)}/${id}.json`, JSON.stringify(result.raw), { httpMetadata: { contentType: 'application/json' } });
     const storageMs = Math.round(performance.now() - storageStarted);
-    const status = result.coverage === 1 ? 'success' : 'partial';
+    const status = result.coverage === 1 && result.coverageDetails.missingByVideo.length === 0 ? 'success' : 'partial';
     const timings = { ...result.timings, dbMs, storageMs, totalMs: Date.now() - Date.parse(started) };
-    await env.DB.prepare('UPDATE acquisition_runs SET finished_at=?,status=?,coverage=?,timings_json=?,request_count=? WHERE id=?').bind(new Date().toISOString(), status, result.coverage, JSON.stringify(timings), result.requestCount, id).run();
-    return { id, status, coverage: result.coverage, videos: result.videos.length, trigger, timings, requestCount: result.requestCount };
+    await env.DB.prepare('UPDATE acquisition_runs SET finished_at=?,status=?,coverage=?,coverage_json=?,timings_json=?,request_count=? WHERE id=?').bind(new Date().toISOString(), status, result.coverage, JSON.stringify(result.coverageDetails), JSON.stringify(timings), result.requestCount, id).run();
+    return { id, status, coverage: result.coverage, details: result.coverageDetails, videos: result.videos.length, trigger, timings, requestCount: result.requestCount };
   } catch (error) {
     const detail = error instanceof Error ? error.message : 'UNKNOWN';
     const errorCode = /SESSION|API_-101|API_-111/.test(detail) ? 'session_expired' : error instanceof z.ZodError ? 'schema_changed' : 'network';

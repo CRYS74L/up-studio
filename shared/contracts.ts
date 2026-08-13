@@ -21,7 +21,8 @@ export const videoSnapshotSchema = z.object({
   avgWatchSeconds: z.number().nonnegative().nullable(),
   avgWatchPercent: z.number().nullable(),
   followersGained: z.number().nullable(),
-  metrics: z.record(z.string(), z.number().nullable())
+  metrics: z.record(z.string(), z.number().nullable()),
+  dimensions: z.record(z.string(), z.unknown()).optional().default({})
 });
 export type VideoSnapshot = z.infer<typeof videoSnapshotSchema>;
 
@@ -47,4 +48,3 @@ export const backupManifestSchema = z.object({
   files: z.array(z.object({ path: z.string(), bytes: z.number().int(), sha256: z.string().length(64) }))
 });
 export type BackupManifest = z.infer<typeof backupManifestSchema>;
-

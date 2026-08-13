@@ -7,7 +7,17 @@ export type VideoRecord = {
 };
 export type CollectResult = {
   videos: VideoRecord[]; snapshots: VideoSnapshot[]; coverage: number;
+  coverageDetails: CoverageDetails;
   sourceVersion: string; raw: unknown; timings: Record<string, number>; requestCount: number;
+};
+export type CoverageDetails = {
+  totalVideos: number;
+  completeVideos: number;
+  metricCounts: Record<string, number>;
+  missingByVideo: Array<{ bvid: string; title: string; missing: string[]; reasons: string[] }>;
+  warnings: string[];
+  sourceFields: { archiveStat: string[]; compareStat: string[]; overviewStat: string[]; overview: string[] };
+  plannedNotIntegrated: string[];
 };
 export interface BilibiliDataSource {
   readonly version: string;
@@ -83,7 +93,8 @@ function sessionFromLogin(urlValue: string | undefined, headers: Headers) {
 }
 
 export class BilibiliWebDataSource implements BilibiliDataSource {
-  readonly version = 'web-data-v2';
+  readonly version = 'web-data-v3';
+  private requestCounter = 0;
 
   async startQrLogin() {
     const response = await fetch('https://passport.bilibili.com/x/passport-login/web/qrcode/generate', { headers: baseHeaders });
@@ -102,30 +113,57 @@ export class BilibiliWebDataSource implements BilibiliDataSource {
   }
 
   private async request<T>(session: string, path: string, schema: z.ZodType<T>, timeoutMs = 8_000): Promise<T> {
-    const response = await fetch(`https://member.bilibili.com${path}`, { headers: { ...baseHeaders, cookie: session }, signal: AbortSignal.timeout(timeoutMs) });
-    if (!response.ok) throw new Error(`BILIBILI_HTTP_${response.status}`);
-    const parsed = schema.parse(await response.json()) as T & { code?: number };
-    if (parsed.code !== 0) throw new Error(`BILIBILI_API_${parsed.code}`);
-    return parsed;
+    let lastError: unknown;
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      try {
+        this.requestCounter += 1;
+        const response = await fetch(`https://member.bilibili.com${path}`, { headers: { ...baseHeaders, cookie: session }, signal: AbortSignal.timeout(timeoutMs) });
+        if (!response.ok) throw new Error(`BILIBILI_HTTP_${response.status}`);
+        const parsed = schema.parse(await response.json()) as T & { code?: number };
+        if (parsed.code !== 0) throw new Error(`BILIBILI_API_${parsed.code}`);
+        return parsed;
+      } catch (error) {
+        lastError = error;
+        if (attempt === 0 && !/BILIBILI_API_(-101|-111|-352)/.test(error instanceof Error ? error.message : '')) continue;
+        throw error;
+      }
+    }
+    throw lastError;
   }
 
   async collect(session: string): Promise<CollectResult> {
+    this.requestCounter = 0;
     const startedAt = performance.now();
     const capturedAt = new Date().toISOString();
-    const [archive, compare] = await Promise.all([
+    const [firstArchive, compare] = await Promise.all([
       this.request(session, '/x/web/data/archive/index?pn=1&ps=20&scene=archive_compare&order=0', archiveSchema),
       this.request(session, '/x/web/data/archive_diagnose/compare?size=10', compareSchema)
     ]);
+    const totalPages = Math.max(1, Math.ceil(firstArchive.data.pager.total / 20));
+    const remainingArchivePages = await Promise.all(Array.from({ length: totalPages - 1 }, (_, index) =>
+      this.request(session, `/x/web/data/archive/index?pn=${index + 2}&ps=20&scene=archive_compare&order=0`, archiveSchema)
+    ));
+    const archiveItems = [firstArchive.data.list, ...remainingArchivePages.map((page) => page.data.list)].flat();
     const indexMs = Math.round(performance.now() - startedAt);
     const compareByBvid = new Map(compare.data.list.map((item) => [item.bvid, item.stat]));
-    const overviewResults = await Promise.allSettled(archive.data.list.map((item) =>
+    const missingCompareItems = archiveItems.filter((item) => !compareByBvid.has(item.bvid));
+    const supplementalCompareResults = await Promise.allSettled(missingCompareItems.map((item) =>
+      this.request(session, `/x/web/data/archive_diagnose/compare?bvid=${encodeURIComponent(item.bvid)}&size=10`, compareSchema)
+    ));
+    supplementalCompareResults.forEach((result, index) => {
+      if (result.status !== 'fulfilled') return;
+      const targetBvid = missingCompareItems[index].bvid;
+      const match = result.value.data.list.find((entry) => entry.bvid === targetBvid);
+      if (match) compareByBvid.set(match.bvid, match.stat);
+    });
+    const overviewResults = await Promise.allSettled(archiveItems.map((item) =>
       this.request(session, `/x/web/data/archive_diagnose/overview?bvid=${encodeURIComponent(item.bvid)}`, overviewSchema)
     ));
     const enrichmentMs = Math.round(performance.now() - startedAt - indexMs);
     const rawOverview: Record<string, unknown> = {};
     const videos: VideoRecord[] = [];
     const snapshots: VideoSnapshot[] = [];
-    archive.data.list.forEach((item, index) => {
+    archiveItems.forEach((item, index) => {
       const cmp = compareByBvid.get(item.bvid);
       const result = overviewResults[index];
       const ov = result.status === 'fulfilled' ? result.value.data : null;
@@ -134,12 +172,16 @@ export class BilibiliWebDataSource implements BilibiliDataSource {
       const reportedAverage = ov?.stat.play_avg_duration || null;
       const avgWatchPercent = reportedAverage != null && totalDuration ? reportedAverage / totalDuration * 100 : percent10000(cmp?.full_play_ratio ?? item.stat.full_play_ratio);
       const avgWatchSeconds = reportedAverage ?? (avgWatchPercent != null && totalDuration ? avgWatchPercent / 100 * totalDuration : null);
+      const sourceNumericMetrics: Record<string, number | null> = {};
+      for (const [key, value] of Object.entries(cmp ?? {})) if (typeof value === 'number') sourceNumericMetrics[`compare.${key}`] = value;
+      for (const [key, value] of Object.entries(ov?.stat ?? {})) if (typeof value === 'number') sourceNumericMetrics[`overviewStat.${key}`] = value;
       videos.push({ id: String(item.aid), bvid: item.bvid, title: item.title, coverUrl: item.cover ?? null, durationSeconds: item.duration ?? null, publishedAt: new Date(item.pubtime * 1000).toISOString() });
       snapshots.push({
         videoId: String(item.aid), capturedAt, views: ov?.stat.play ?? cmp?.play ?? item.stat.play ?? null,
         impressions: null, coverCtr: percent10000(cmp?.tm_rate), avgWatchSeconds, avgWatchPercent,
         followersGained: ov?.stat.fan ?? cmp?.total_new_attention_cnt ?? item.stat.fans ?? null,
         metrics: {
+          ...sourceNumericMetrics,
           likes: ov?.stat.like ?? cmp?.like ?? item.stat.likes ?? null, comments: ov?.stat.comment ?? cmp?.comment ?? item.stat.reply ?? null,
           danmaku: ov?.stat.dm ?? cmp?.dm ?? null, favorites: ov?.stat.fav ?? cmp?.fav ?? null, coins: ov?.stat.coin ?? cmp?.coin ?? null,
           shares: ov?.stat.share ?? cmp?.share ?? null, unfollows: ov?.stat.unfollow ?? cmp?.unfollow ?? null,
@@ -147,16 +189,67 @@ export class BilibiliWebDataSource implements BilibiliDataSource {
           playToFollowRate: percent10000(cmp?.play_trans_fan_rate), fanAudiencePercent: ov?.audience_proportion?.fans ?? null,
           guestAudiencePercent: ov?.audience_proportion?.guest ?? null,
           avgWatchSecondsDerived: reportedAverage == null && avgWatchSeconds != null ? 1 : 0
+        },
+        dimensions: {
+          audienceProportion: ov?.audience_proportion ?? null,
+          playProportion: ov?.play_proportion ?? null,
+          viewerArea: ov?.viewer_area ?? null,
+          viewerGender: ov?.gender ?? null,
+          viewerAge: ov?.viewer_age ?? null
         }
       });
     });
     const successfulOverview = overviewResults.filter((item) => item.status === 'fulfilled').length;
+    const successfulCompare = archiveItems.filter((item) => compareByBvid.has(item.bvid)).length;
+    const metricAccessors: Record<string, (snapshot: VideoSnapshot) => number | null | undefined> = {
+      views: (snapshot) => snapshot.views,
+      coverCtr: (snapshot) => snapshot.coverCtr,
+      avgWatchSeconds: (snapshot) => snapshot.avgWatchSeconds,
+      avgWatchPercent: (snapshot) => snapshot.avgWatchPercent,
+      followersGained: (snapshot) => snapshot.followersGained,
+      likes: (snapshot) => snapshot.metrics.likes,
+      comments: (snapshot) => snapshot.metrics.comments,
+      danmaku: (snapshot) => snapshot.metrics.danmaku,
+      favorites: (snapshot) => snapshot.metrics.favorites,
+      coins: (snapshot) => snapshot.metrics.coins,
+      shares: (snapshot) => snapshot.metrics.shares,
+      threeSecondBounceRate: (snapshot) => snapshot.metrics.threeSecondBounceRate,
+      interactionRate: (snapshot) => snapshot.metrics.interactionRate,
+      playToFollowRate: (snapshot) => snapshot.metrics.playToFollowRate,
+      fanAudiencePercent: (snapshot) => snapshot.metrics.fanAudiencePercent,
+      guestAudiencePercent: (snapshot) => snapshot.metrics.guestAudiencePercent
+    };
+    const metricCounts = Object.fromEntries(Object.entries(metricAccessors).map(([key, read]) => [key, snapshots.filter((snapshot) => read(snapshot) != null).length]));
+    const missingByVideo = archiveItems.map((item, index) => {
+      const snapshot = snapshots[index];
+      const missing = Object.entries(metricAccessors).filter(([, read]) => read(snapshot) == null).map(([key]) => key);
+      const reasons: string[] = [];
+      if (overviewResults[index].status === 'rejected') reasons.push('overview_request_failed');
+      if (!compareByBvid.has(item.bvid)) reasons.push('compare_request_failed_or_not_returned');
+      if (!reasons.length && missing.length) reasons.push('bilibili_field_not_returned');
+      return { bvid: item.bvid, title: item.title, missing, reasons };
+    }).filter((item) => item.missing.length > 0);
+    const completeVideos = archiveItems.length - missingByVideo.length;
+    const coverage = archiveItems.length ? Math.min(successfulOverview, successfulCompare) / archiveItems.length : 0;
+    const warnings = [
+      successfulOverview < archiveItems.length ? `${archiveItems.length - successfulOverview} 篇稿件的详情接口失败` : '',
+      successfulCompare < archiveItems.length ? `${archiveItems.length - successfulCompare} 篇稿件的诊断接口未返回` : '',
+      missingByVideo.length ? `${missingByVideo.length} 篇稿件存在 B 站未返回的指标字段` : ''
+    ].filter(Boolean);
+    const sourceFields = {
+      archiveStat: [...new Set(archiveItems.flatMap((item) => Object.keys(item.stat)))].sort(),
+      compareStat: [...new Set([...compareByBvid.values()].flatMap((stat) => Object.keys(stat)))].sort(),
+      overviewStat: [...new Set(overviewResults.flatMap((result) => result.status === 'fulfilled' ? Object.keys(result.value.data.stat) : []))].sort(),
+      overview: [...new Set(overviewResults.flatMap((result) => result.status === 'fulfilled' ? Object.keys(result.value.data) : []))].sort()
+    };
+    const plannedNotIntegrated = ['impressions', 'retentionCurve', 'trafficSources', 'realtimePlays'];
     return {
-      videos, snapshots, coverage: archive.data.list.length ? successfulOverview / archive.data.list.length : 0,
+      videos, snapshots, coverage,
+      coverageDetails: { totalVideos: archiveItems.length, completeVideos, metricCounts, missingByVideo, warnings, sourceFields, plannedNotIntegrated },
       sourceVersion: this.version,
-      raw: { archive: archive.data, compare: compare.data, overview: rawOverview },
+      raw: { archive: { total: firstArchive.data.pager.total, pages: [firstArchive.data, ...remainingArchivePages.map((page) => page.data)] }, compare: { batch: compare.data, supplemental: supplementalCompareResults.map((result, index) => result.status === 'fulfilled' ? result.value.data : { bvid: missingCompareItems[index].bvid, error: 'unavailable' }) }, overview: rawOverview },
       timings: { indexMs, enrichmentMs, totalNetworkMs: Math.round(performance.now() - startedAt) },
-      requestCount: 2 + archive.data.list.length
+      requestCount: this.requestCounter
     };
   }
 }
