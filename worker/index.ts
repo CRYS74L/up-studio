@@ -188,8 +188,20 @@ async function collect(env: Bindings, trigger: string) {
     const result = await source.collect(session);
     const dbStarted = performance.now();
     const statements: D1PreparedStatement[] = [];
+    const previousRows = (await env.DB.prepare(`SELECT s.video_id,s.cover_ctr,s.metrics_json FROM video_snapshots s JOIN (SELECT video_id,MAX(id) latest_id FROM video_snapshots GROUP BY video_id) latest ON latest.latest_id=s.id`).all<{ video_id:string; cover_ctr:number|null; metrics_json:string }>()).results;
+    const previousByVideo = new Map(previousRows.map((row) => [row.video_id, row]));
     for (let index = 0; index < result.videos.length; index += 1) {
       const video = result.videos[index]; const snapshot = result.snapshots[index];
+      const previous = previousByVideo.get(snapshot.videoId);
+      if (previous) {
+        const previousMetrics = JSON.parse(previous.metrics_json || '{}') as Record<string, number | null>;
+        const sameDiagnoseWindow = previousMetrics['diagnose.log_date'] === snapshot.metrics['diagnose.log_date'] && previousMetrics['diagnose.log_hour'] === snapshot.metrics['diagnose.log_hour'];
+        if (sameDiagnoseWindow && previous.cover_ctr != null) {
+          snapshot.metrics.coverCtrRawSample = snapshot.coverCtr;
+          snapshot.metrics.coverCtrWindowStabilized = 1;
+          snapshot.coverCtr = previous.cover_ctr;
+        } else snapshot.metrics.coverCtrWindowStabilized = 0;
+      }
       statements.push(env.DB.prepare(`INSERT INTO videos(id,bvid,title,cover_url,duration_seconds,published_at) VALUES(?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET bvid=excluded.bvid,title=excluded.title,cover_url=excluded.cover_url,duration_seconds=excluded.duration_seconds,published_at=excluded.published_at`).bind(video.id, video.bvid, video.title, video.coverUrl, video.durationSeconds, video.publishedAt));
       statements.push(env.DB.prepare(`INSERT OR IGNORE INTO video_snapshots(video_id,captured_at,source,views,impressions,cover_ctr,avg_watch_seconds,avg_watch_percent,followers_gained,metrics_json,dimensions_json) VALUES(?,?,?,?,?,?,?,?,?,?,?)`).bind(snapshot.videoId, snapshot.capturedAt, source.version, snapshot.views, snapshot.impressions, snapshot.coverCtr, snapshot.avgWatchSeconds, snapshot.avgWatchPercent, snapshot.followersGained, JSON.stringify(snapshot.metrics), JSON.stringify(snapshot.dimensions)));
     }

@@ -77,6 +77,7 @@ type CoverageDetails = {
   sourceFields?: {
     archiveStat: string[];
     compareStat: string[];
+    diagnose: string[];
     overviewStat: string[];
     overview: string[];
   };
@@ -364,6 +365,7 @@ function SourceFieldSummary({ details }: { details: CoverageDetails }) {
     ? new Set([
         ...details.sourceFields.archiveStat,
         ...details.sourceFields.compareStat,
+        ...details.sourceFields.diagnose,
         ...details.sourceFields.overviewStat,
         ...details.sourceFields.overview,
       ]).size
@@ -505,6 +507,15 @@ function performanceOption(
   );
   const xs = plottable.map((v) => Number(v[x]));
   const ys = plottable.map((v) => Number(v[y]));
+  const stableAxis = (metric: keyof Video, values: number[]) => {
+    const maxValue = Math.max(0, ...values);
+    if (metric === "cover_ctr") return { min: 0, max: Math.max(8, Math.ceil(maxValue / 2) * 2), interval: 2 };
+    if (metric === "avg_watch_percent") return { min: 0, max: Math.max(80, Math.ceil(maxValue / 10) * 10), interval: 10 };
+    if (metric === "avg_watch_seconds") return { min: 0, max: Math.max(120, Math.ceil(maxValue / 30) * 30) };
+    return { min: 0, max: Math.max(10, Math.ceil(maxValue * 1.1 / 10) * 10) };
+  };
+  const xRange = stableAxis(x, xs);
+  const yRange = stableAxis(y, ys);
   const xMid = xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : 0;
   const yMid = ys.length ? ys.reduce((a, b) => a + b, 0) / ys.length : 0;
   return {
@@ -518,7 +529,7 @@ function performanceOption(
     },
     xAxis: {
       name: metricLabels[x],
-      min: 0,
+      ...xRange,
       axisLabel: {
         formatter: (v: number) => (x === "cover_ctr" ? `${v}%` : v),
       },
@@ -528,7 +539,7 @@ function performanceOption(
     },
     yAxis: {
       name: metricLabels[y],
-      min: 0,
+      ...yRange,
       axisLabel: {
         formatter: (v: number) => (y === "avg_watch_percent" ? `${v}%` : v),
       },
@@ -770,6 +781,19 @@ function OverviewPage({ setPage }: { setPage: (p: string) => void }) {
     </>
   );
 }
+function metricWindow(video: Video) {
+  const dateValue = video.metrics["diagnose.log_date"];
+  const hourValue = video.metrics["diagnose.log_hour"];
+  if (dateValue == null || hourValue == null) return "B 站当前统计窗口";
+  const raw = String(dateValue);
+  return `${raw.slice(4, 6)}/${raw.slice(6, 8)} ${String(hourValue).padStart(2, "0")}:00 统计窗口`;
+}
+function coverCtrConfidence(video: Video) {
+  const passRate = video.metrics["diagnose.tm_pass_rate"];
+  if (passRate == null) return "B 站未提供可信度标记";
+  return passRate >= 5000 ? "样本达到 B 站展示阈值" : "低样本，B 站可能仅显示高/低等级";
+}
+
 function OverviewInspector({
   video,
   index,
@@ -807,7 +831,7 @@ function OverviewInspector({
       <p>发布于 {date(video.published_at)}</p>
       <div className="overviewMetrics">
         <Metric label="播放量" value={compact(video.views)} />
-        <Metric label="封标点击率" value={percent(video.cover_ctr)} />
+        <Metric label="封面点击率" value={percent(video.cover_ctr)} />
         <Metric
           label="3秒跳出率"
           value={percent(video.metrics.threeSecondBounceRate)}
@@ -816,9 +840,12 @@ function OverviewInspector({
         <Metric label="互动率" value={percent(video.metrics.interactionRate)} />
         <Metric label="涨粉量" value={compact(video.followers_gained)} />
       </div>
+      <p className="metricWindow">
+        封面点击率 · {metricWindow(video)} · {coverCtrConfidence(video)}
+      </p>
       <div className="diagnosticSignals">
         <div className="signalGood">
-          <b>封标点击率表现</b>
+          <b>封面点击率表现</b>
           <span>
             {video.cover_ctr == null
               ? "暂无数据"

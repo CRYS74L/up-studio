@@ -44,6 +44,22 @@ test('data source reports a successful self-run acquisition', async ({ page }, t
   await expect(page.getByText(/类源字段已保存/)).toBeVisible();
 });
 
+test('repeated collection keeps map coordinates stable inside one Bilibili window', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'desktop');
+  const before = await page.request.get('/api/videos').then(response => response.json());
+  await page.request.post('/api/bilibili/collect-now');
+  await page.request.post('/api/bilibili/collect-now');
+  const after = await page.request.get('/api/videos').then(response => response.json());
+  const beforeById = new Map(before.videos.map((video: any) => [video.id, video]));
+  for (const video of after.videos) {
+    const previous: any = beforeById.get(video.id);
+    expect(video.cover_ctr).toBe(previous.cover_ctr);
+    expect(video.avg_watch_percent).toBe(previous.avg_watch_percent);
+  }
+  await page.goto('/');
+  await expect(page.getByText(/统计窗口/).first()).toBeVisible();
+});
+
 test('phone keeps core pages within the viewport', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'iphone');
   await page.goto('/');

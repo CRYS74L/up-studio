@@ -1508,6 +1508,12 @@ main {
   border-top: 1px solid var(--line);
   border-bottom: 1px solid var(--line);
 }
+.metricWindow {
+  margin: 8px 0 0 !important;
+  color: var(--muted) !important;
+  font-size: 9px !important;
+  text-align: right;
+}
 .overviewMetrics > div {
   padding: 13px 8px;
 }

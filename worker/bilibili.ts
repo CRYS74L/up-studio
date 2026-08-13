@@ -16,7 +16,7 @@ export type CoverageDetails = {
   metricCounts: Record<string, number>;
   missingByVideo: Array<{ bvid: string; title: string; missing: string[]; reasons: string[] }>;
   warnings: string[];
-  sourceFields: { archiveStat: string[]; compareStat: string[]; overviewStat: string[]; overview: string[] };
+  sourceFields: { archiveStat: string[]; compareStat: string[]; diagnose: string[]; overviewStat: string[]; overview: string[] };
   plannedNotIntegrated: string[];
 };
 export interface BilibiliDataSource {
@@ -58,6 +58,15 @@ const overviewSchema = envelope(z.object({
   gender: z.record(z.string(), z.number()).nullable().optional(),
   viewer_age: z.record(z.string(), z.number()).nullable().optional()
 }).passthrough());
+const playAnalyzeSchema = envelope(z.object({
+  guest_interact: z.object({
+    tm_rate: z.number().nullable().optional(), crash_rate: z.number().nullable().optional(),
+    interact_rate: z.number().nullable().optional(), play_trans_fan_rate: z.number().nullable().optional()
+  }).passthrough(),
+  arc_audience: z.record(z.string(), z.unknown()).nullable().optional(),
+  viewer_assistant: z.record(z.string(), z.unknown()).nullable().optional(),
+  improve_idea: z.record(z.string(), z.unknown()).nullable().optional()
+}).passthrough());
 const trendSchema = envelope(z.object({
   tendency: z.array(z.object({ date_key: z.number(), total_inc: z.number(), sub_total_inc: z.number() })).optional().default([]),
   hour_realtime_tendency: z.array(z.object({ date_key: z.number(), total_inc: z.number(), sub_total_inc: z.number() })).nullable().optional()
@@ -93,7 +102,7 @@ function sessionFromLogin(urlValue: string | undefined, headers: Headers) {
 }
 
 export class BilibiliWebDataSource implements BilibiliDataSource {
-  readonly version = 'web-data-v3';
+  readonly version = 'web-data-v5';
   private requestCounter = 0;
 
   async startQrLogin() {
@@ -156,37 +165,47 @@ export class BilibiliWebDataSource implements BilibiliDataSource {
       const match = result.value.data.list.find((entry) => entry.bvid === targetBvid);
       if (match) compareByBvid.set(match.bvid, match.stat);
     });
-    const overviewResults = await Promise.allSettled(archiveItems.map((item) =>
-      this.request(session, `/x/web/data/archive_diagnose/overview?bvid=${encodeURIComponent(item.bvid)}`, overviewSchema)
-    ));
+    const [overviewResults, diagnoseResults] = await Promise.all([
+      Promise.allSettled(archiveItems.map((item) =>
+        this.request(session, `/x/web/data/archive_diagnose/overview?bvid=${encodeURIComponent(item.bvid)}`, overviewSchema)
+      )),
+      Promise.allSettled(archiveItems.map((item) =>
+        this.request(session, `/x/web/data/archive_diagnose/play_analyze?bvid=${encodeURIComponent(item.bvid)}`, playAnalyzeSchema)
+      ))
+    ]);
     const enrichmentMs = Math.round(performance.now() - startedAt - indexMs);
     const rawOverview: Record<string, unknown> = {};
+    const rawDiagnose: Record<string, unknown> = {};
     const videos: VideoRecord[] = [];
     const snapshots: VideoSnapshot[] = [];
     archiveItems.forEach((item, index) => {
       const cmp = compareByBvid.get(item.bvid);
       const result = overviewResults[index];
       const ov = result.status === 'fulfilled' ? result.value.data : null;
+      const diagnoseResult = diagnoseResults[index];
+      const diagnose = diagnoseResult.status === 'fulfilled' ? diagnoseResult.value.data : null;
       rawOverview[item.bvid] = result.status === 'fulfilled' ? result.value.data : { error: 'unavailable' };
+      rawDiagnose[item.bvid] = diagnoseResult.status === 'fulfilled' ? diagnoseResult.value.data : { error: 'unavailable' };
       const totalDuration = ov?.stat.total_duration || item.duration || null;
       const reportedAverage = ov?.stat.play_avg_duration || null;
       const avgWatchPercent = reportedAverage != null && totalDuration ? reportedAverage / totalDuration * 100 : percent10000(cmp?.full_play_ratio ?? item.stat.full_play_ratio);
       const avgWatchSeconds = reportedAverage ?? (avgWatchPercent != null && totalDuration ? avgWatchPercent / 100 * totalDuration : null);
       const sourceNumericMetrics: Record<string, number | null> = {};
       for (const [key, value] of Object.entries(cmp ?? {})) if (typeof value === 'number') sourceNumericMetrics[`compare.${key}`] = value;
+      for (const [key, value] of Object.entries(diagnose?.guest_interact ?? {})) if (typeof value === 'number') sourceNumericMetrics[`diagnose.${key}`] = value;
       for (const [key, value] of Object.entries(ov?.stat ?? {})) if (typeof value === 'number') sourceNumericMetrics[`overviewStat.${key}`] = value;
       videos.push({ id: String(item.aid), bvid: item.bvid, title: item.title, coverUrl: item.cover ?? null, durationSeconds: item.duration ?? null, publishedAt: new Date(item.pubtime * 1000).toISOString() });
       snapshots.push({
         videoId: String(item.aid), capturedAt, views: ov?.stat.play ?? cmp?.play ?? item.stat.play ?? null,
-        impressions: null, coverCtr: percent10000(cmp?.tm_rate), avgWatchSeconds, avgWatchPercent,
+        impressions: null, coverCtr: percent10000(diagnose?.guest_interact.tm_rate), avgWatchSeconds, avgWatchPercent,
         followersGained: ov?.stat.fan ?? cmp?.total_new_attention_cnt ?? item.stat.fans ?? null,
         metrics: {
           ...sourceNumericMetrics,
           likes: ov?.stat.like ?? cmp?.like ?? item.stat.likes ?? null, comments: ov?.stat.comment ?? cmp?.comment ?? item.stat.reply ?? null,
           danmaku: ov?.stat.dm ?? cmp?.dm ?? null, favorites: ov?.stat.fav ?? cmp?.fav ?? null, coins: ov?.stat.coin ?? cmp?.coin ?? null,
           shares: ov?.stat.share ?? cmp?.share ?? null, unfollows: ov?.stat.unfollow ?? cmp?.unfollow ?? null,
-          threeSecondBounceRate: percent10000(cmp?.crash_rate), interactionRate: percent10000(cmp?.interact_rate),
-          playToFollowRate: percent10000(cmp?.play_trans_fan_rate), fanAudiencePercent: ov?.audience_proportion?.fans ?? null,
+          threeSecondBounceRate: percent10000(diagnose?.guest_interact.crash_rate), interactionRate: percent10000(diagnose?.guest_interact.interact_rate),
+          playToFollowRate: percent10000(diagnose?.guest_interact.play_trans_fan_rate), fanAudiencePercent: ov?.audience_proportion?.fans ?? null,
           guestAudiencePercent: ov?.audience_proportion?.guest ?? null,
           avgWatchSecondsDerived: reportedAverage == null && avgWatchSeconds != null ? 1 : 0
         },
@@ -200,6 +219,7 @@ export class BilibiliWebDataSource implements BilibiliDataSource {
       });
     });
     const successfulOverview = overviewResults.filter((item) => item.status === 'fulfilled').length;
+    const successfulDiagnose = diagnoseResults.filter((item) => item.status === 'fulfilled').length;
     const successfulCompare = archiveItems.filter((item) => compareByBvid.has(item.bvid)).length;
     const metricAccessors: Record<string, (snapshot: VideoSnapshot) => number | null | undefined> = {
       views: (snapshot) => snapshot.views,
@@ -225,20 +245,21 @@ export class BilibiliWebDataSource implements BilibiliDataSource {
       const missing = Object.entries(metricAccessors).filter(([, read]) => read(snapshot) == null).map(([key]) => key);
       const reasons: string[] = [];
       if (overviewResults[index].status === 'rejected') reasons.push('overview_request_failed');
-      if (!compareByBvid.has(item.bvid)) reasons.push('compare_request_failed_or_not_returned');
+      if (diagnoseResults[index].status === 'rejected') reasons.push('diagnose_request_failed');
       if (!reasons.length && missing.length) reasons.push('bilibili_field_not_returned');
       return { bvid: item.bvid, title: item.title, missing, reasons };
     }).filter((item) => item.missing.length > 0);
     const completeVideos = archiveItems.length - missingByVideo.length;
-    const coverage = archiveItems.length ? Math.min(successfulOverview, successfulCompare) / archiveItems.length : 0;
+    const coverage = archiveItems.length ? Math.min(successfulOverview, successfulDiagnose) / archiveItems.length : 0;
     const warnings = [
       successfulOverview < archiveItems.length ? `${archiveItems.length - successfulOverview} 篇稿件的详情接口失败` : '',
-      successfulCompare < archiveItems.length ? `${archiveItems.length - successfulCompare} 篇稿件的诊断接口未返回` : '',
+      successfulDiagnose < archiveItems.length ? `${archiveItems.length - successfulDiagnose} 篇稿件的单稿诊断接口失败` : '',
       missingByVideo.length ? `${missingByVideo.length} 篇稿件存在 B 站未返回的指标字段` : ''
     ].filter(Boolean);
     const sourceFields = {
       archiveStat: [...new Set(archiveItems.flatMap((item) => Object.keys(item.stat)))].sort(),
       compareStat: [...new Set([...compareByBvid.values()].flatMap((stat) => Object.keys(stat)))].sort(),
+      diagnose: [...new Set(diagnoseResults.flatMap((result) => result.status === 'fulfilled' ? Object.keys(result.value.data.guest_interact) : []))].sort(),
       overviewStat: [...new Set(overviewResults.flatMap((result) => result.status === 'fulfilled' ? Object.keys(result.value.data.stat) : []))].sort(),
       overview: [...new Set(overviewResults.flatMap((result) => result.status === 'fulfilled' ? Object.keys(result.value.data) : []))].sort()
     };
@@ -247,7 +268,7 @@ export class BilibiliWebDataSource implements BilibiliDataSource {
       videos, snapshots, coverage,
       coverageDetails: { totalVideos: archiveItems.length, completeVideos, metricCounts, missingByVideo, warnings, sourceFields, plannedNotIntegrated },
       sourceVersion: this.version,
-      raw: { archive: { total: firstArchive.data.pager.total, pages: [firstArchive.data, ...remainingArchivePages.map((page) => page.data)] }, compare: { batch: compare.data, supplemental: supplementalCompareResults.map((result, index) => result.status === 'fulfilled' ? result.value.data : { bvid: missingCompareItems[index].bvid, error: 'unavailable' }) }, overview: rawOverview },
+      raw: { archive: { total: firstArchive.data.pager.total, pages: [firstArchive.data, ...remainingArchivePages.map((page) => page.data)] }, compare: { batch: compare.data, supplemental: supplementalCompareResults.map((result, index) => result.status === 'fulfilled' ? result.value.data : { bvid: missingCompareItems[index].bvid, error: 'unavailable' }) }, overview: rawOverview, diagnose: rawDiagnose },
       timings: { indexMs, enrichmentMs, totalNetworkMs: Math.round(performance.now() - startedAt) },
       requestCount: this.requestCounter
     };
