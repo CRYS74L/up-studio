@@ -44,3 +44,13 @@ No actionable P0/P1/P2 visual findings remain for the requested screens. The rem
 - P3: On very tall displays, the recent-video grid can be made user-resizable in a later iteration.
 
 final result: passed
+## 2026-08-13 dev.8 验收范围
+
+- 全站主数据系列统一为哔哩哔哩粉 `#FB7299`，用同色系明度、透明度、面积与线型区分角色；状态色只保留给成功、警告和错误。
+- 首页 AVD/AVP 图：可滚动长标题轴、轻微单调平滑、仅左轴绘制 5 段参考线、右轴固定 0–100/20 间隔。
+- 联合分析：把 CTR、观看深度、播放量和诊断指标编码进同一张图，支持四类分析问题模板。
+- 稿件详情：补齐播放、实时、涨粉/取关、六类互动、质量、观众、终端来源、留存和历史趋势。
+- 响应式：联合分析与详情在 `<600px` 改为单列，触控按钮维持至少 44px；图表可通过点击查看 tooltip。
+- 动效：主题切换继续使用 View Transition；数据点不因选择而放大位移；reduced motion 保留现有降级。
+
+final result: passed

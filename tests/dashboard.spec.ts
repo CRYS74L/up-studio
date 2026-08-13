@@ -26,9 +26,10 @@ test('desktop renders real data and keeps the product name on one line', async (
   await expect(page.getByRole('heading', { name: '表现地图' })).toBeVisible();
   await expect(page.locator('.mapChart canvas')).toBeVisible();
   await expect(page.getByText('近邻稿件已做确定性轻微避让')).toBeVisible();
-  await page.getByRole('button', { name: '组合看板' }).click();
-  await expect(page.getByRole('heading', { name: '组合看板' })).toBeVisible();
-  await expect(page.getByRole('heading', { name: '选择数据模块' })).toBeVisible();
+  await page.getByRole('button', { name: '联合分析' }).click();
+  await expect(page.getByRole('heading', { name: '联合分析' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: '包装与承接' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: '选择分析问题' })).toBeVisible();
   await expect(page.getByText('运行查询')).toHaveCount(0);
   await page.getByRole('button', { name: /切换深浅色/ }).click({ position: { x: 20, y: 20 } });
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
@@ -47,7 +48,7 @@ test('data source reports a successful self-run acquisition', async ({ page }, t
   if (runStatus === 'success') await expect(page.getByText('100.0%')).toBeVisible();
   else await expect(page.locator('.runCoverageReport')).toBeVisible();
   await expect(page.getByText('当前已接入指标完整稿件')).toBeVisible();
-  await expect(page.getByText('3 类计划指标尚未接入')).toBeVisible();
+  await expect(page.getByText(/2 类计划指标尚未接入/)).toBeVisible();
   await expect(page.getByText(/类源字段已保存/)).toBeVisible();
 });
 
@@ -73,15 +74,15 @@ test('phone keeps core pages within the viewport', async ({ page }, testInfo) =>
   await expect(page.getByRole('main').getByText('哔哩哔哩数据看板', { exact: true })).toBeVisible();
   if (await page.getByText('等待真实数据').isVisible()) test.skip(true, 'preview database has no connected data source');
   expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(1);
-  await page.locator('.bottomNav').getByRole('button', { name: '稿件' }).click();
+  await page.locator('.mobileNav').getByRole('button', { name: '稿件' }).click();
   await expect(page.getByRole('heading', { name: '稿件' })).toBeVisible();
   await expect(page.locator('.videoLibraryCard').first()).toBeVisible();
   const percentages = await page.locator('.audience b').allTextContents();
   for (const value of percentages) expect(Number(value.replace('%', ''))).toBeGreaterThanOrEqual(0);
   for (const value of percentages) expect(Number(value.replace('%', ''))).toBeLessThanOrEqual(100);
   expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(1);
-  await page.locator('.bottomNav').getByRole('button', { name: '组合' }).click();
-  await expect(page.getByRole('heading', { name: '组合看板' })).toBeVisible();
+  await page.locator('.mobileNav').getByRole('button', { name: '分析' }).click();
+  await expect(page.getByRole('heading', { name: '联合分析' })).toBeVisible();
 });
 
 test('tablet renders the real overview without overflow', async ({ page }, testInfo) => {

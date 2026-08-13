@@ -74,6 +74,29 @@ const trendSchema = envelope(z.object({
   hour_realtime_tendency: z.array(z.object({ date_key: z.number(), total_inc: z.number(), sub_total_inc: z.number() })).nullable().optional()
 }).passthrough());
 const realtimeSchema = envelope(z.record(z.string(), z.unknown()));
+const archiveViewSchema = envelope(z.record(z.string(), z.unknown()));
+const retentionSchema = envelope(z.object({
+  viewer_quit: z.array(z.object({
+    duration_key: z.number(),
+    num: z.number()
+  }).passthrough()).optional().default([]),
+  dm: z.array(z.record(z.string(), z.unknown())).optional().default([]),
+  peer_viewer_quit: z.array(z.object({
+    duration_key: z.number(),
+    num: z.number()
+  }).passthrough()).optional().default([]),
+  peer_dm: z.array(z.record(z.string(), z.unknown())).optional().default([]),
+  quit_info: z.object({
+    avg_play_progress: z.number().nullable().optional(),
+    duration: z.number().nullable().optional(),
+    full_play_ratio: z.number().nullable().optional()
+  }).passthrough().nullable().optional(),
+  danmu_info: z.record(z.string(), z.unknown()).nullable().optional(),
+  duration_info: z.object({
+    avg_play_time: z.string().nullable().optional(),
+    avg_play_time_int: z.number().nullable().optional()
+  }).passthrough().nullable().optional()
+}).passthrough());
 
 const baseHeaders = {
   accept: 'application/json, text/plain, */*',
@@ -81,6 +104,23 @@ const baseHeaders = {
   'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/131 Safari/537.36'
 };
 const percent10000 = (value: number | null | undefined) => value == null ? null : value / 100;
+
+function findCid(value: unknown): number | null {
+  if (!value || typeof value !== 'object') return null;
+  if (!Array.isArray(value)) {
+    const record = value as Record<string, unknown>;
+    if (typeof record.cid === 'number' && Number.isFinite(record.cid) && record.cid > 0) return record.cid;
+    for (const key of ['archive', 'arc', 'page', 'pages', 'videos', 'data']) {
+      const found = findCid(record[key]);
+      if (found != null) return found;
+    }
+  }
+  for (const child of Array.isArray(value) ? value : Object.values(value as Record<string, unknown>)) {
+    const found = findCid(child);
+    if (found != null) return found;
+  }
+  return null;
+}
 
 function sessionFromLogin(urlValue: string | undefined, headers: Headers) {
   const cookieParts = new Map<string, string>();
@@ -105,7 +145,7 @@ function sessionFromLogin(urlValue: string | undefined, headers: Headers) {
 }
 
 export class BilibiliWebDataSource implements BilibiliDataSource {
-  readonly version = 'web-data-v7';
+  readonly version = 'web-data-v8';
   private requestCounter = 0;
 
   async startQrLogin() {
@@ -168,7 +208,7 @@ export class BilibiliWebDataSource implements BilibiliDataSource {
       const match = result.value.data.list.find((entry) => entry.bvid === targetBvid);
       if (match) compareByBvid.set(match.bvid, match.stat);
     });
-    const [overviewResults, diagnoseResults, playTrendResults, fanTrendResults, realtimeResults] = await Promise.all([
+    const [overviewResults, diagnoseResults, playTrendResults, fanTrendResults, realtimeResults, archiveViewResults] = await Promise.all([
       Promise.allSettled(archiveItems.map((item) =>
         this.request(session, `/x/web/data/archive_diagnose/overview?bvid=${encodeURIComponent(item.bvid)}`, overviewSchema)
       )),
@@ -183,13 +223,24 @@ export class BilibiliWebDataSource implements BilibiliDataSource {
       )),
       Promise.allSettled(archiveItems.map((item) =>
         this.request(session, `/x/web/data/real_time_play_num?bvid=${encodeURIComponent(item.bvid)}`, realtimeSchema)
+      )),
+      Promise.allSettled(archiveItems.map((item) =>
+        this.request(session, `/x/web/data/v3/archive/view?bvid=${encodeURIComponent(item.bvid)}`, archiveViewSchema)
       ))
     ]);
+    const retentionResults = await Promise.allSettled(archiveViewResults.map((viewResult) => {
+      if (viewResult.status !== 'fulfilled') return Promise.reject(new Error('ARCHIVE_VIEW_UNAVAILABLE'));
+      const cid = findCid(viewResult.value.data);
+      if (cid == null) return Promise.reject(new Error('ARCHIVE_CID_NOT_RETURNED'));
+      return this.request(session, `/x/web/data/v2/archive/analyze/graph?cid=${encodeURIComponent(String(cid))}`, retentionSchema);
+    }));
     const enrichmentMs = Math.round(performance.now() - startedAt - indexMs);
     const rawOverview: Record<string, unknown> = {};
     const rawDiagnose: Record<string, unknown> = {};
     const rawTrend: Record<string, unknown> = {};
     const rawRealtime: Record<string, unknown> = {};
+    const rawArchiveView: Record<string, unknown> = {};
+    const rawRetention: Record<string, unknown> = {};
     const videos: VideoRecord[] = [];
     const snapshots: VideoSnapshot[] = [];
     archiveItems.forEach((item, index) => {
@@ -206,6 +257,9 @@ export class BilibiliWebDataSource implements BilibiliDataSource {
       };
       const realtimeResult = realtimeResults[index];
       const realtime = realtimeResult.status === 'fulfilled' ? realtimeResult.value.data : null;
+      const archiveViewResult = archiveViewResults[index];
+      const retentionResult = retentionResults[index];
+      const retention = retentionResult.status === 'fulfilled' ? retentionResult.value.data : null;
       rawOverview[item.bvid] = result.status === 'fulfilled' ? result.value.data : { error: 'unavailable' };
       rawDiagnose[item.bvid] = diagnoseResult.status === 'fulfilled' ? diagnoseResult.value.data : { error: 'unavailable' };
       rawTrend[item.bvid] = {
@@ -213,6 +267,8 @@ export class BilibiliWebDataSource implements BilibiliDataSource {
         fan: fanTrendResult.status === 'fulfilled' ? fanTrendResult.value.data : { error: 'unavailable' }
       };
       rawRealtime[item.bvid] = realtimeResult.status === 'fulfilled' ? realtimeResult.value.data : { error: 'unavailable' };
+      rawArchiveView[item.bvid] = archiveViewResult.status === 'fulfilled' ? archiveViewResult.value.data : { error: 'unavailable' };
+      rawRetention[item.bvid] = retentionResult.status === 'fulfilled' ? retentionResult.value.data : { error: 'unavailable' };
       const totalDuration = ov?.stat.total_duration || item.duration || null;
       const reportedAverage = ov?.stat.play_avg_duration || null;
       const avgWatchPercent = reportedAverage != null && totalDuration ? reportedAverage / totalDuration * 100 : percent10000(cmp?.full_play_ratio ?? item.stat.full_play_ratio);
@@ -250,7 +306,14 @@ export class BilibiliWebDataSource implements BilibiliDataSource {
           viewerGender: ov?.gender ?? null,
           viewerAge: ov?.viewer_age ?? null,
           trend: playTrendResult.status === 'fulfilled' || fanTrendResult.status === 'fulfilled' ? trend : null,
-          realtime: realtime ?? null
+          realtime: realtime ?? null,
+          playbackTerminalSources: ov?.play_proportion ?? null,
+          retention: retention ? {
+            viewerQuit: retention.viewer_quit,
+            peerViewerQuit: retention.peer_viewer_quit,
+            quitInfo: retention.quit_info ?? null,
+            durationInfo: retention.duration_info ?? null
+          } : null
         }
       });
     });
@@ -259,6 +322,9 @@ export class BilibiliWebDataSource implements BilibiliDataSource {
     const successfulPlayTrend = playTrendResults.filter((item) => item.status === 'fulfilled').length;
     const successfulFanTrend = fanTrendResults.filter((item) => item.status === 'fulfilled').length;
     const successfulRealtime = realtimeResults.filter((item) => item.status === 'fulfilled').length;
+    const successfulArchiveView = archiveViewResults.filter((item) => item.status === 'fulfilled').length;
+    const successfulRetention = retentionResults.filter((item) => item.status === 'fulfilled').length;
+    const successfulTerminalSources = overviewResults.filter((item) => item.status === 'fulfilled' && item.value.data.play_proportion && Object.keys(item.value.data.play_proportion).length > 0).length;
     const successfulCompare = archiveItems.filter((item) => compareByBvid.has(item.bvid)).length;
     const metricAccessors: Record<string, (snapshot: VideoSnapshot) => number | null | undefined> = {
       views: (snapshot) => snapshot.views,
@@ -296,6 +362,9 @@ export class BilibiliWebDataSource implements BilibiliDataSource {
       successfulPlayTrend < archiveItems.length ? `${archiveItems.length - successfulPlayTrend} 篇稿件的播放趋势接口失败` : '',
       successfulFanTrend < archiveItems.length ? `${archiveItems.length - successfulFanTrend} 篇稿件的涨粉趋势接口失败` : '',
       successfulRealtime < archiveItems.length ? `${archiveItems.length - successfulRealtime} 篇稿件的实时播放接口失败` : '',
+      successfulArchiveView < archiveItems.length ? `${archiveItems.length - successfulArchiveView} 篇稿件的 CID 元数据接口失败，留存曲线可能不完整` : '',
+      successfulRetention < archiveItems.length ? `${archiveItems.length - successfulRetention} 篇稿件的留存曲线暂不可用` : '',
+      successfulTerminalSources < archiveItems.length ? `${archiveItems.length - successfulTerminalSources} 篇稿件没有返回播放终端来源` : '',
       missingByVideo.length ? `${missingByVideo.length} 篇稿件存在 B 站未返回的指标字段` : ''
     ].filter(Boolean);
     const sourceFields = {
@@ -309,9 +378,9 @@ export class BilibiliWebDataSource implements BilibiliDataSource {
         ...fanTrendResults.flatMap((result) => result.status === 'fulfilled' ? Object.keys(result.value.data).map((key) => `fan.${key}`) : [])
       ])].sort(),
       realtime: [...new Set(realtimeResults.flatMap((result) => result.status === 'fulfilled' ? Object.keys(result.value.data) : []))].sort()
-      ,retention: []
+      ,retention: [...new Set(retentionResults.flatMap((result) => result.status === 'fulfilled' ? Object.keys(result.value.data) : []))].sort()
     };
-    const plannedNotIntegrated = ['impressions', 'retentionCurve', 'trafficSources'];
+    const plannedNotIntegrated = ['impressions', 'recommendationTrafficSources'];
     const capabilityCounts = {
       archive: { available: archiveItems.length, total: archiveItems.length },
       compare: { available: successfulCompare, total: archiveItems.length },
@@ -319,13 +388,16 @@ export class BilibiliWebDataSource implements BilibiliDataSource {
       diagnose: { available: successfulDiagnose, total: archiveItems.length },
       playTrend: { available: successfulPlayTrend, total: archiveItems.length },
       fanTrend: { available: successfulFanTrend, total: archiveItems.length },
-      realtime: { available: successfulRealtime, total: archiveItems.length }
+      realtime: { available: successfulRealtime, total: archiveItems.length },
+      archiveView: { available: successfulArchiveView, total: archiveItems.length },
+      retention: { available: successfulRetention, total: archiveItems.length },
+      terminalSources: { available: successfulTerminalSources, total: archiveItems.length }
     };
     return {
       videos, snapshots, coverage,
       coverageDetails: { totalVideos: archiveItems.length, completeVideos, metricCounts, missingByVideo, warnings, sourceFields, capabilityCounts, plannedNotIntegrated },
       sourceVersion: this.version,
-      raw: { archive: { total: firstArchive.data.pager.total, pages: [firstArchive.data, ...remainingArchivePages.map((page) => page.data)] }, compare: { batch: compare.data, supplemental: supplementalCompareResults.map((result, index) => result.status === 'fulfilled' ? result.value.data : { bvid: missingCompareItems[index].bvid, error: 'unavailable' }) }, overview: rawOverview, diagnose: rawDiagnose, trend: rawTrend, realtime: rawRealtime },
+      raw: { archive: { total: firstArchive.data.pager.total, pages: [firstArchive.data, ...remainingArchivePages.map((page) => page.data)] }, compare: { batch: compare.data, supplemental: supplementalCompareResults.map((result, index) => result.status === 'fulfilled' ? result.value.data : { bvid: missingCompareItems[index].bvid, error: 'unavailable' }) }, overview: rawOverview, diagnose: rawDiagnose, trend: rawTrend, realtime: rawRealtime, archiveView: rawArchiveView, retention: rawRetention },
       timings: { indexMs, enrichmentMs, totalNetworkMs: Math.round(performance.now() - startedAt) },
       requestCount: this.requestCounter
     };
