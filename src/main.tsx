@@ -10,6 +10,8 @@ import {
 import QRCode from "qrcode";
 import {
   Activity,
+  ArrowDownRight,
+  ArrowUpRight,
   BarChart3,
   Bell,
   Bot,
@@ -23,9 +25,11 @@ import {
   FlaskConical,
   Home,
   KeyRound,
+  Layers3,
   ListFilter,
   Map,
   Menu,
+  Minus,
   Moon,
   Play,
   RefreshCw,
@@ -38,6 +42,13 @@ import {
   X,
 } from "lucide-react";
 import { echarts } from "./charts";
+import {
+  analysisMetricGroups,
+  median,
+  normalizeMetricValues,
+  quadrantLabels,
+  type AnalysisVisual,
+} from "./dashboard-model";
 import {
   applyTheme,
   getInitialTheme,
@@ -110,6 +121,15 @@ type Summary = {
     avg_watch_seconds?: number;
     interaction_rate?: number;
   };
+  comparison?: Record<string, {
+    current: number;
+    previous: number;
+    delta: number;
+    changePercent: number | null;
+    direction: "up" | "down" | "flat";
+    deltaKind: "percent" | "pp";
+  } | null>;
+  comparisonCapturedAt?: string | null;
   acquisition?: Acquisition | null;
 };
 const queryClient = new QueryClient({
@@ -136,10 +156,12 @@ const compact = (n: number | null | undefined) =>
       : n.toLocaleString("zh-CN");
 const percent = (n: number | null | undefined, d = 1) =>
   n == null ? "—" : `${n.toFixed(d)}%`;
-const PINK = "#FB7299";
-const PINK_BRIGHT = "#FF9FBA";
-const PINK_DARK = "#B43D70";
-const PINK_SOFT = "rgba(251,114,153,.16)";
+const PINK = "#FF6699";
+const PINK_BRIGHT = "#FF9AB8";
+const PINK_DARK = "#D64778";
+const PINK_SOFT = "rgba(255,102,153,.16)";
+const BILI_CYAN = "#00A1D6";
+const BILI_CYAN_SOFT = "rgba(0,161,214,.14)";
 const seconds = (n: number | null | undefined) =>
   n == null
     ? "—"
@@ -178,7 +200,7 @@ function Logo() {
 }
 const nav = [
   ["概览", Home],
-  ["表现地图", Map],
+  ["内容吸引力矩阵", Map],
   ["稿件", FileChartColumn],
   ["联合分析", BarChart3],
   ["数据源", Database],
@@ -323,22 +345,35 @@ function EmptyState({
 function KpiStrip({ summary }: { summary: Summary }) {
   const s = summary.summary;
   const items = [
-    ["播放总量", compact(s.views)],
-    ["涨粉总量", compact(s.followers)],
-    ["封面点击率", percent(s.cover_ctr)],
-    ["平均播放百分比", percent(s.avg_watch_percent)],
-    ["平均播放时长", seconds(s.avg_watch_seconds)],
-    ["综合互动率", percent(s.interaction_rate)],
+    ["播放总量", "views", compact(s.views)],
+    ["涨粉总量", "followers", compact(s.followers)],
+    ["封面点击率", "cover_ctr", percent(s.cover_ctr)],
+    ["平均播放百分比", "avg_watch_percent", percent(s.avg_watch_percent)],
+    ["平均播放时长", "avg_watch_seconds", seconds(s.avg_watch_seconds)],
+    ["综合互动率", "interaction_rate", percent(s.interaction_rate)],
   ];
   return (
     <section className="kpiStrip">
-      {items.map(([label, value]) => (
+      {items.map(([label, key, value]) => {
+        const delta = summary.comparison?.[key];
+        const DeltaIcon = delta?.direction === "up" ? ArrowUpRight : delta?.direction === "down" ? ArrowDownRight : Minus;
+        const change = delta
+          ? delta.deltaKind === "pp"
+            ? `${Math.abs(delta.delta).toFixed(2)}pp`
+            : delta.changePercent == null
+              ? "持平"
+              : `${Math.abs(delta.changePercent).toFixed(1)}%`
+          : null;
+        return (
         <article key={label}>
           <span>{label}</span>
           <strong>{value}</strong>
-          <small>最新真实快照</small>
+          <small className={`kpiDelta ${delta?.direction || "unavailable"}`}>
+            {delta ? <><DeltaIcon />{change}<em>较上个可比快照</em></> : <em>暂无可比快照</em>}
+          </small>
         </article>
-      ))}
+        );
+      })}
     </section>
   );
 }
@@ -584,8 +619,8 @@ function performanceOption(
         };
       });
   })();
-  const xMid = xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : 0;
-  const yMid = ys.length ? ys.reduce((a, b) => a + b, 0) / ys.length : 0;
+  const xMid = median(xs) ?? 0;
+  const yMid = median(ys) ?? 0;
   return {
     animationDuration: 420,
     animationEasing: "cubicOut",
@@ -602,6 +637,7 @@ function performanceOption(
       name: metricLabels[x],
       ...xRange,
       axisLabel: {
+        color: dark ? "#C9CCD0" : "#61666D",
         formatter: (v: number) => (x === "cover_ctr" ? `${v}%` : v),
       },
       splitLine: {
@@ -612,6 +648,7 @@ function performanceOption(
       name: metricLabels[y],
       ...yRange,
       axisLabel: {
+        color: dark ? "#C9CCD0" : "#61666D",
         formatter: (v: number) => (y === "avg_watch_percent" ? `${v}%` : v),
       },
       splitLine: {
@@ -619,6 +656,19 @@ function performanceOption(
       },
     },
     series: [
+      {
+        type: "scatter",
+        silent: true,
+        symbolSize: 0,
+        data: [],
+        markLine: {
+          silent: true,
+          symbol: "none",
+          label: { show: false },
+          lineStyle: { color: dark ? "rgba(255,255,255,.28)" : "rgba(97,102,109,.25)", type: "dashed", width: 1 },
+          data: [{ xAxis: xMid }, { yAxis: yMid }],
+        },
+      },
       {
         type: "custom",
         emphasis: { disabled: true },
@@ -749,30 +799,43 @@ function OverviewPage({ setPage, theme }: { setPage: (p: string) => void; theme:
   const ctrVideos = videos.filter((v) => v.cover_ctr != null).slice().sort((a, b) => (b.cover_ctr || 0) - (a.cover_ctr || 0));
   const recent = videos.slice(0, 6);
   const dark = theme === "dark";
+  const ctrMedian = median(ctrVideos.map((video) => video.cover_ctr).filter((value): value is number => value != null));
+  const chartGrid = dark ? "rgba(255,255,255,.075)" : "rgba(148,153,160,.16)";
+  const chartText = dark ? "#C9CCD0" : "#61666D";
   const ctrOption = {
-    animationDuration: 360,
-    grid: { left: 8, right: 44, top: 8, bottom: 8, containLabel: true },
+    animationDuration: 520,
+    animationEasing: "cubicOut",
+    grid: { left: 8, right: 52, top: 18, bottom: 8, containLabel: true },
     tooltip: {
       trigger: "axis",
       confine: true,
       appendToBody: false,
-      axisPointer: { type: "shadow" },
+      axisPointer: { type: "shadow", shadowStyle: { color: dark ? "rgba(255,255,255,.04)" : "rgba(255,102,153,.055)" } },
       extraCssText: "max-width:260px;white-space:normal;overflow-wrap:anywhere;line-height:1.55;",
       formatter: (params: any[]) => {
         const video = ctrVideos[params?.[0]?.dataIndex];
         return video ? `<b>${video.title}</b><br/>封面点击率：${percent(video.cover_ctr, 2)}` : "";
       },
     },
-    xAxis: { type: "value", axisLabel: { formatter: "{value}%" }, splitLine: { show: true, lineStyle: { color: dark ? "rgba(255,255,255,.075)" : "rgba(96,105,120,.12)", width: 1 } } },
-    yAxis: { type: "category", inverse: true, data: ctrVideos.map((v) => v.title), axisLabel: { width: 118, overflow: "truncate" } },
-    color: [PINK],
-    series: [{ type: "bar", data: ctrVideos.map((v) => v.cover_ctr), barWidth: 9, itemStyle: { color: PINK, borderRadius: 8 }, label: { show: true, position: "right", formatter: "{c}%" } }],
+    xAxis: { type: "value", axisLabel: { show: false }, axisLine: { show: false }, axisTick: { show: false }, splitLine: { show: true, lineStyle: { color: chartGrid, width: 1 } } },
+    yAxis: { type: "category", inverse: true, data: ctrVideos.map((v) => v.title), axisTick: { show: false }, axisLine: { show: false }, axisLabel: { width: 132, overflow: "truncate", color: chartText, margin: 12 } },
+    series: [{
+      type: "bar",
+      data: ctrVideos.map((v) => v.cover_ctr),
+      barWidth: 10,
+      showBackground: true,
+      backgroundStyle: { color: dark ? "rgba(255,255,255,.055)" : "#F1F2F3", borderRadius: 8 },
+      itemStyle: { color: PINK, borderRadius: 8 },
+      label: { show: true, position: "right", color: dark ? "#F2F3F5" : "#61666D", formatter: ({ value }: any) => `${Number(value).toFixed(1)}%` },
+      markLine: ctrMedian ? { silent: true, symbol: "none", label: { formatter: "中位数 {c}%", color: PINK_DARK, fontSize: 10 }, lineStyle: { color: PINK, type: "dashed", opacity: .55 }, data: [{ xAxis: Number(ctrMedian.toFixed(2)) }] } : undefined,
+    }],
   };
   const watchLabels = videos.map((video, index) => `${String(index + 1).padStart(2, "0")} · ${video.title}`);
   const watchOption = {
-    animationDuration: 360,
-    color: [PINK_BRIGHT, PINK_DARK],
-    grid: { left: 48, right: 48, top: 40, bottom: 70 },
+    animationDuration: 560,
+    animationEasing: "cubicOut",
+    color: [BILI_CYAN, PINK],
+    grid: { left: 48, right: 48, top: 44, bottom: 72 },
     tooltip: {
       trigger: "axis",
       confine: true,
@@ -784,7 +847,7 @@ function OverviewPage({ setPage, theme }: { setPage: (p: string) => void; theme:
         return `<b>${video.title}</b><br/>平均播放时长：${seconds(video.avg_watch_seconds)}<br/>平均播放百分比：${percent(video.avg_watch_percent)}`;
       },
     },
-    legend: { data: ["平均播放时长", "平均播放百分比"], top: 0 },
+    legend: { data: ["平均播放时长", "平均播放百分比"], top: 0, itemWidth: 18, itemHeight: 8, textStyle: { color: dark ? "#D5D8DE" : "#61666D" } },
     xAxis: {
       type: "category",
       data: watchLabels,
@@ -799,12 +862,12 @@ function OverviewPage({ setPage, theme }: { setPage: (p: string) => void; theme:
       },
     },
     yAxis: [
-      { type: "value", name: "秒", splitNumber: 5, min: 0, splitLine: { show: true, lineStyle: { color: dark ? "rgba(255,255,255,.08)" : "rgba(68,48,58,.09)" } } },
-      { type: "value", name: "%", min: 0, max: 100, interval: 20, splitLine: { show: false } },
+      { type: "value", name: "秒", splitNumber: 5, min: 0, nameTextStyle: { color: chartText }, axisLabel: { color: chartText }, axisLine: { show: false }, axisTick: { show: false }, splitLine: { show: true, lineStyle: { color: chartGrid } } },
+      { type: "value", name: "%", min: 0, max: 100, interval: 20, nameTextStyle: { color: chartText }, axisLabel: { color: chartText }, splitLine: { show: false } },
     ],
     series: [
-      { name: "平均播放时长", type: "bar", data: videos.map((v) => v.avg_watch_seconds), barWidth: "62%", barMaxWidth: 28, itemStyle: { color: PINK_BRIGHT, borderRadius: [5, 5, 0, 0] } },
-      { name: "平均播放百分比", type: "line", yAxisIndex: 1, smooth: 0.08, smoothMonotone: "x", symbolSize: 6, data: videos.map((v) => v.avg_watch_percent), lineStyle: { color: PINK_DARK, width: 2.5 }, itemStyle: { color: PINK_DARK } },
+      { name: "平均播放时长", type: "bar", data: videos.map((v) => v.avg_watch_seconds), barWidth: "58%", barMaxWidth: 24, itemStyle: { color: BILI_CYAN, borderRadius: [7, 7, 2, 2], opacity: .78 }, emphasis: { itemStyle: { opacity: 1 } } },
+      { name: "平均播放百分比", type: "line", yAxisIndex: 1, smooth: .38, smoothMonotone: "x", showSymbol: false, symbolSize: 7, data: videos.map((v) => v.avg_watch_percent), lineStyle: { color: PINK, width: 3, cap: "round", join: "round" }, itemStyle: { color: PINK, borderColor: dark ? "#24262D" : "#fff", borderWidth: 2 }, emphasis: { focus: "series", scale: 1.12 }, areaStyle: { color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{ offset: 0, color: dark ? "rgba(255,102,153,.34)" : "rgba(255,102,153,.28)" }, { offset: 1, color: "rgba(255,102,153,0)" }]) } },
     ],
   };
   return (
@@ -823,7 +886,7 @@ function OverviewPage({ setPage, theme }: { setPage: (p: string) => void; theme:
           <KpiStrip summary={summary} />
           <div className="homePrimaryGrid">
             <section className="panel homeCtrPanel">
-              <div className="panelHead"><div><h2>所有视频封面点击率</h2><p>按当前 B 站统计窗口排序</p></div></div>
+              <div className="panelHead"><div><h2>所有视频封面点击率</h2><p>按当前 B 站统计窗口排序 · 虚线为个人中位数</p></div></div>
               <Chart className="homeCtrChart" option={ctrOption} />
             </section>
             <section className="panel recentVideosPanel">
@@ -839,7 +902,7 @@ function OverviewPage({ setPage, theme }: { setPage: (p: string) => void; theme:
             </section>
           </div>
           <section className="panel homeWatchPanel">
-            <div className="panelHead"><div><h2>所有视频平均播放时长与平均播放百分比</h2><p>柱形为平均播放时长，折线为平均播放百分比</p></div></div>
+            <div className="panelHead"><div><h2>观看深度总览</h2><p>青色柱形为平均播放时长，粉色渐变曲线为平均播放百分比</p></div></div>
             <Chart className="homeWatchChart" option={watchOption} />
           </section>
           </div>
@@ -1034,8 +1097,8 @@ function PerformanceMapPage() {
   return (
     <>
       <PageIntro
-        eyebrow="自由组合三个维度"
-        title="表现地图"
+        eyebrow="用封面吸引力与观看承接定位内容"
+        title="封面吸引力 × 观看深度矩阵"
         actions={
           <div className="mapControls">
             <Select value={x} setValue={(v) => setX(v as keyof Video)} />
@@ -1066,7 +1129,14 @@ function PerformanceMapPage() {
                   {plottable}/{videos.length} 篇可绘制
                 </span>
               </div>
-              <Chart className="mapChart" option={option} events={events} />
+              <div className="matrixChartFrame">
+                {x === "cover_ctr" && y === "avg_watch_percent" && (
+                  <div className="matrixQuadrants" aria-label="矩阵象限说明">
+                    {quadrantLabels.map((label, index) => <span className={`quadrant q${index + 1}`} key={label}>{label}</span>)}
+                  </div>
+                )}
+                <Chart className="mapChart" option={option} events={events} />
+              </div>
             </section>
             <VideoInspector
               video={
@@ -1095,7 +1165,7 @@ function Select({
           ? "横轴"
           : value === "avg_watch_percent"
             ? "纵轴"
-            : "气泡"}
+            : "参考"}
       </span>
       <select value={value} onChange={(e) => setValue(e.target.value)}>
         {Object.entries(metricLabels)
@@ -1187,6 +1257,7 @@ function VideosPage() {
         <EmptyState />
       ) : (
           <div className="videosWorkspace">
+          <VideoDetail video={current} />
            <section className="videoCardGrid" aria-label="稿件卡片列表">
              {shown.map((v) => (
                <button
@@ -1205,7 +1276,6 @@ function VideosPage() {
                </button>
              ))}
            </section>
-          <VideoDetail video={current} />
         </div>
       )}
     </>
@@ -1229,25 +1299,18 @@ function VideoDetail({ video }: { video?: Video }) {
     enabled: Boolean(video),
   });
   if (!video) return null;
-  const option = {
-    grid: { left: 42, right: 14, top: 18, bottom: 30 },
-    tooltip: { trigger: "axis" },
-    xAxis: {
-      type: "category",
-      data: (q.data?.points || []).map((p) => date(p.captured_at)),
-    },
-    yAxis: { type: "value" },
-    series: [
-      {
-        type: "line",
-        smooth: 0.12,
-        smoothMonotone: "x",
-        data: (q.data?.points || []).map((p) => p.views),
-        lineStyle: { color: PINK, width: 3 },
-        itemStyle: { color: PINK },
-        areaStyle: { color: PINK_SOFT },
-      },
-    ],
+  const points = q.data?.points || [];
+  const detailDark = document.documentElement.dataset.theme === "dark";
+  const gridLine = detailDark ? "rgba(255,255,255,.08)" : "rgba(148,153,160,.16)";
+  const chartText = detailDark ? "#C9CCD0" : "#61666D";
+  const areaGradient = new echarts.graphic.LinearGradient(0, 0, 0, 1, [{ offset: 0, color: "rgba(255,102,153,.30)" }, { offset: 1, color: "rgba(255,102,153,0)" }]);
+  const trendOption = {
+    animationDuration: 520,
+    grid: { left: 46, right: 16, top: 24, bottom: 34 },
+    tooltip: { trigger: "axis", confine: true },
+    xAxis: { type: "category", boundaryGap: false, data: points.map((p) => date(p.captured_at)), axisLabel: { fontSize: 9, color: chartText } },
+    yAxis: { type: "value", axisLabel: { color: chartText }, splitLine: { lineStyle: { color: gridLine } } },
+    series: [{ type: "line", smooth: .38, smoothMonotone: "x", showSymbol: points.length < 10, symbolSize: 6, data: points.map((p) => p.views), lineStyle: { color: PINK, width: 3 }, itemStyle: { color: PINK }, areaStyle: { color: areaGradient } }],
   };
   const dimensions = video.dimensions || {};
   const terminalSources = dimensions.playbackTerminalSources || dimensions.playProportion || {};
@@ -1260,25 +1323,50 @@ function VideoDetail({ video }: { video?: Video }) {
   const retention = dimensions.retention;
   const retentionPoints = Array.isArray(retention?.viewerQuit) ? retention.viewerQuit : [];
   const retentionOption = {
-    animationDuration: 320,
+    animationDuration: 520,
     grid: { left: 42, right: 16, top: 20, bottom: 34 },
     tooltip: { trigger: "axis", valueFormatter: (value: number) => `${value.toLocaleString("zh-CN")} 人` },
-    xAxis: { type: "category", name: "秒", data: retentionPoints.map((point: any) => point.duration_key) },
-    yAxis: { type: "value", splitLine: { lineStyle: { color: "rgba(125,139,158,.14)" } } },
-    series: [{ type: "line", smooth: 0.08, smoothMonotone: "x", symbol: "none", data: retentionPoints.map((point: any) => point.num), lineStyle: { color: PINK, width: 3 }, areaStyle: { color: PINK_SOFT } }],
+    xAxis: { type: "category", name: "秒", nameTextStyle: { color: chartText }, axisLabel: { color: chartText }, data: retentionPoints.map((point: any) => point.duration_key) },
+    yAxis: { type: "value", axisLabel: { color: chartText }, splitLine: { lineStyle: { color: gridLine } } },
+    series: [{ type: "line", smooth: .36, smoothMonotone: "x", symbol: "none", data: retentionPoints.map((point: any) => point.num), lineStyle: { color: PINK, width: 3 }, areaStyle: { color: areaGradient } }],
   };
+  const diagnosis = [
+    ["封面点击", video.cover_ctr],
+    ["3秒留存", video.metrics.threeSecondBounceRate == null ? null : 100 - Number(video.metrics.threeSecondBounceRate)],
+    ["平均观看", video.avg_watch_percent],
+    ["互动", video.metrics.interactionRate],
+    ["转粉", video.metrics.playToFollowRate],
+  ];
+  const diagnosisOption = {
+    animationDuration: 480,
+    grid: { left: 72, right: 42, top: 16, bottom: 28 },
+    tooltip: { trigger: "axis", confine: true, valueFormatter: (value: number) => percent(value, 2) },
+    xAxis: { type: "value", axisLabel: { formatter: "{value}%", color: chartText }, splitLine: { lineStyle: { color: gridLine } } },
+    yAxis: { type: "category", inverse: true, data: diagnosis.map(([label]) => label), axisLabel: { color: chartText }, axisLine: { show: false }, axisTick: { show: false } },
+    series: [{ type: "bar", data: diagnosis.map(([, value]) => value), barWidth: 12, showBackground: true, backgroundStyle: { color: "rgba(148,153,160,.12)", borderRadius: 8 }, itemStyle: { color: PINK, borderRadius: 8 }, label: { show: true, position: "right", formatter: ({ value }: any) => percent(Number(value), 1) } }],
+  };
+  const interactionEntries = [["点赞", video.metrics.likes], ["投币", video.metrics.coins], ["收藏", video.metrics.favorites], ["评论", video.metrics.comments], ["弹幕", video.metrics.danmaku], ["分享", video.metrics.shares]].filter(([, value]) => value != null && Number(value) >= 0);
+  const interactionOption = {
+    animationDuration: 520,
+    tooltip: { trigger: "item", confine: true, formatter: ({ name, value, percent: ratio }: any) => `${name}<br/><b>${compact(Number(value))}</b> · ${ratio}%` },
+    legend: { type: "scroll", bottom: 0, icon: "circle", itemWidth: 8, itemHeight: 8, textStyle: { color: chartText } },
+    series: [{ type: "pie", radius: ["48%", "72%"], center: ["50%", "44%"], avoidLabelOverlap: true, itemStyle: { borderColor: detailDark ? "#1F2127" : "#FFFFFF", borderWidth: 3, borderRadius: 5 }, label: { formatter: "{b}\n{d}%", fontSize: 10, color: chartText }, data: interactionEntries.map(([name, value], index) => ({ name, value, itemStyle: { color: [PINK, BILI_CYAN, "#FF9AB8", "#36B8D8", "#D64778", "#77C8E2"][index] } })) }],
+  };
+  const fanCount = Number(video.metrics.fanAudienceCount);
+  const guestCount = Number(video.metrics.guestAudienceCount);
+  const audienceTotal = (Number.isFinite(fanCount) ? fanCount : 0) + (Number.isFinite(guestCount) ? guestCount : 0);
+  const fanPercent = audienceTotal > 0 ? fanCount / audienceTotal * 100 : Number(video.metrics.fanAudiencePercent) <= 100 ? Number(video.metrics.fanAudiencePercent) : null;
+  const guestPercent = audienceTotal > 0 ? guestCount / audienceTotal * 100 : Number(video.metrics.guestAudiencePercent) <= 100 ? Number(video.metrics.guestAudiencePercent) : null;
   return (
-    <aside className="panel videoDetail">
-      <img className="detailCover" src={coverSrc(video)} alt="" />
-      <h2>{video.title}</h2>
-      <p>
-        {video.bvid} · {seconds(video.duration_seconds)} · {date(video.published_at)}
-      </p>
-      <DetailSection title="数据总览">
+    <article className="panel videoDetail videoDetailWorkbench">
+      <header className="videoDetailHero">
+        <img className="detailCover" src={coverSrc(video)} alt="" />
+        <div><span className="detailEyebrow">当前选中稿件 · {metricWindow(video)}</span><h2>{video.title}</h2><p>{video.bvid} · {seconds(video.duration_seconds)} · 发布于 {date(video.published_at)}</p><div className="heroMetrics"><Metric label="累计播放" value={compact(video.views)} /><Metric label="封面点击率" value={percent(video.cover_ctr)} /><Metric label="平均播放" value={seconds(video.avg_watch_seconds)} /><Metric label="平均进度" value={percent(video.avg_watch_percent)} /><Metric label="涨粉" value={compact(video.followers_gained)} /></div></div>
+      </header>
+      <div className="detailMetricBand">
+      <DetailSection title="完整数据总览">
         <div className="metricGrid detailMetricGrid">
-          <Metric label="累计播放" value={compact(video.views)} />
           <Metric label="实时播放" value={compact(video.metrics.realtimePlay)} />
-          <Metric label="涨粉" value={compact(video.followers_gained)} />
           <Metric label="取关" value={compact(video.metrics.unfollows)} />
           <Metric label="点赞" value={compact(video.metrics.likes)} />
           <Metric label="投币" value={compact(video.metrics.coins)} />
@@ -1286,82 +1374,111 @@ function VideoDetail({ video }: { video?: Video }) {
           <Metric label="评论" value={compact(video.metrics.comments)} />
           <Metric label="弹幕" value={compact(video.metrics.danmaku)} />
           <Metric label="分享" value={compact(video.metrics.shares)} />
-        </div>
-      </DetailSection>
-      <DetailSection title="播放质量与转化">
-        <div className="metricGrid detailMetricGrid">
-          <Metric label="封面点击率" value={percent(video.cover_ctr)} />
           <Metric label="3 秒跳出率" value={percent(video.metrics.threeSecondBounceRate)} />
-          <Metric label="平均播放时长" value={seconds(video.avg_watch_seconds)} />
-          <Metric label="平均播放百分比" value={percent(video.avg_watch_percent)} />
           <Metric label="互动率" value={percent(video.metrics.interactionRate)} />
           <Metric label="播转粉率" value={percent(video.metrics.playToFollowRate)} />
         </div>
       </DetailSection>
-      <DetailSection title="观众构成">
-        <div className="audience">
-          <Metric label="粉丝观众" value={percent(video.metrics.fanAudiencePercent)} />
-          <Metric label="游客观众" value={percent(video.metrics.guestAudiencePercent)} />
-        </div>
-        <p className="audienceEvidence">B 站原始人数：粉丝 {compact(video.metrics.fanAudienceCount)} · 游客 {compact(video.metrics.guestAudienceCount)}；占比由两类人数归一化计算。</p>
-      </DetailSection>
-      <DetailSection title="播放终端来源">
-        {terminalEntries.length ? <div className="terminalSources">{terminalEntries.map(([key, value]) => <div key={key}><span>{terminalLabels[key] || key}</span><div><i style={{ width: `${Math.min(100, value)}%` }} /></div><b>{percent(value)}</b></div>)}</div> : <p className="muted">该稿件尚未返回终端来源；这不等同于推荐、搜索等渠道来源。</p>}
-        <p className="sourceNote">口径为移动端、PC、TV、H5 等播放终端，不冒充推荐/搜索渠道。</p>
-      </DetailSection>
-      <DetailSection title="留存与采集趋势">
-        {retentionPoints.length ? <><div className="retentionSummary"><Metric label="留存接口平均播放" value={seconds(retention?.durationInfo?.avg_play_time_int)} /><Metric label="留存接口平均进度" value={percent(retention?.quitInfo?.avg_play_progress)} /></div><Chart className="detailTrend" option={retentionOption} /></> : <p className="muted">本轮采集未取得该稿件留存曲线，能力状态中会明确显示缺失。</p>}
-        <h4>快照采集历史</h4>
-        {(q.data?.points?.length || 0) > 1 ? <Chart className="detailTrend" option={option} /> : <p className="muted">完成至少两次采集后显示真实变化趋势。</p>}
-      </DetailSection>
-    </aside>
+      </div>
+      <div className="diagnosticChartGrid">
+        <DetailSection title="诊断漏斗"><p className="detailHint">封面点击 → 开头留存 → 观看深度 → 互动 → 转粉；均保留原始百分比口径。</p><Chart className="diagnosticChart" option={diagnosisOption} /></DetailSection>
+        <DetailSection title="互动构成"><p className="detailHint">六类互动的数量构成，不用单个总数掩盖互动偏好。</p><Chart className="diagnosticChart" option={interactionOption} /></DetailSection>
+        <DetailSection title="观众构成">
+          <div className="audienceVisual"><div className="audienceDonut" style={{ "--fan": `${Math.max(0, Math.min(100, fanPercent ?? 0))}%` } as React.CSSProperties}><span><b>{percent(fanPercent)}</b><small>粉丝观众</small></span></div><div className="audienceLegend"><Metric label="粉丝观众" value={percent(fanPercent)} /><Metric label="游客观众" value={percent(guestPercent)} /><p>B 站原始人数：粉丝 {compact(video.metrics.fanAudienceCount)} · 游客 {compact(video.metrics.guestAudienceCount)}</p></div></div>
+        </DetailSection>
+        <DetailSection title="播放终端来源">
+          {terminalEntries.length ? <div className="terminalSources">{terminalEntries.map(([key, value]) => <div key={key}><span>{terminalLabels[key] || key}</span><div><i style={{ width: `${Math.min(100, value)}%` }} /></div><b>{percent(value)}</b></div>)}</div> : <p className="muted">该稿件尚未返回终端来源；这不等同于推荐、搜索等渠道来源。</p>}
+          <p className="sourceNote">口径为移动端、PC、TV、H5 等播放终端，不冒充推荐/搜索渠道。</p>
+        </DetailSection>
+      </div>
+      <div className="detailTrendGrid">
+        <DetailSection title="观众留存曲线"><div className="retentionSummary"><Metric label="留存接口平均播放" value={seconds(retention?.durationInfo?.avg_play_time_int)} /><Metric label="留存接口平均进度" value={percent(retention?.quitInfo?.avg_play_progress)} /></div><Chart className="detailTrendLarge" option={retentionOption} /><p className="detailHint">{retentionPoints.length ? "曲线来自 B 站留存接口。" : "B 站本轮返回空曲线；界面不补造数据。"}</p></DetailSection>
+        <DetailSection title="真实快照趋势"><Chart className="detailTrendLarge" option={trendOption} /><p className="detailHint">{points.length > 1 ? "展示工具每 15 分钟采集形成的真实序列。" : "至少两次采集后才形成变化曲线。"}</p></DetailSection>
+      </div>
+    </article>
   );
 }
 function AnalysisLabPage() {
   const { summary, videos } = useData();
-  const templates = [
-    { id: "package", title: "包装与承接", description: "CTR × 平均观看深度；气泡大小为播放量，标签补充 3 秒跳出" },
-    { id: "quality", title: "流量质量", description: "游客占比 × 播转粉率；气泡大小为播放量，识别高播放低转粉" },
-    { id: "depth", title: "内容深度", description: "视频时长 × 平均播放时长；气泡大小为平均播放百分比" },
-    { id: "spread", title: "传播与转粉", description: "综合互动率 × 播转粉率；气泡大小为涨粉量" },
-  ];
-  const [template, setTemplate] = useState("package");
-  const templateInfo = templates.find((item) => item.id === template)!;
-  const config = template === "quality"
-    ? { x: (v: Video) => v.metrics.guestAudiencePercent, y: (v: Video) => v.metrics.playToFollowRate, size: (v: Video) => v.views, xName: "游客占比", yName: "播转粉率", extra: (v: Video) => `涨粉 ${compact(v.followers_gained)}` }
-    : template === "depth"
-      ? { x: (v: Video) => v.duration_seconds, y: (v: Video) => v.avg_watch_seconds, size: (v: Video) => v.avg_watch_percent, xName: "视频时长（秒）", yName: "平均播放时长（秒）", extra: (v: Video) => `平均播放 ${percent(v.avg_watch_percent)}` }
-      : template === "spread"
-        ? { x: (v: Video) => v.metrics.interactionRate, y: (v: Video) => v.metrics.playToFollowRate, size: (v: Video) => v.followers_gained, xName: "综合互动率", yName: "播转粉率", extra: (v: Video) => `分享 ${compact(v.metrics.shares)}` }
-        : { x: (v: Video) => v.cover_ctr, y: (v: Video) => v.avg_watch_percent, size: (v: Video) => v.views, xName: "封面点击率", yName: "平均播放百分比", extra: (v: Video) => `3 秒跳出 ${percent(v.metrics.threeSecondBounceRate)}` };
-  const points = videos.map((video) => ({ video, x: config.x(video), y: config.y(video), size: config.size(video) })).filter((point) => point.x != null && point.y != null);
-  const sizes = points.map((point) => Number(point.size || 0));
-  const minSize = Math.min(...sizes, 0);
-  const maxSize = Math.max(...sizes, 1);
+  const analysisDark = document.documentElement.dataset.theme === "dark";
+  const analysisText = analysisDark ? "#C9CCD0" : "#61666D";
+  const presets: Record<string, string[]> = {
+    "包装与承接": ["views", "cover_ctr", "avg_watch_percent", "threeSecondBounceRate"],
+    "观看与互动": ["avg_watch_seconds", "avg_watch_percent", "interactionRate"],
+    "互动与转粉": ["interactionRate", "followers_gained", "playToFollowRate"],
+  };
+  const [preset, setPreset] = useState("包装与承接");
+  const [layers, setLayers] = useState<Array<{ id: string; visual: AnalysisVisual }>>([
+    { id: "views", visual: "bar" },
+    { id: "cover_ctr", visual: "area" },
+    { id: "avg_watch_percent", visual: "line" },
+    { id: "threeSecondBounceRate", visual: "dot" },
+  ]);
+  const definitions = analysisMetricGroups.flatMap((group) => group.metrics);
+  const definitionMap = Object.fromEntries(definitions.map((definition) => [definition.id, definition]));
+  const metricValue = (video: Video, id: string) => {
+    const direct = (video as any)[id];
+    const value = direct ?? video.metrics[id];
+    return value == null || !Number.isFinite(Number(value)) ? null : Number(value);
+  };
+  const applyPreset = (name: string) => {
+    setPreset(name);
+    const visuals: AnalysisVisual[] = ["bar", "area", "line", "dot"];
+    setLayers((presets[name] || []).map((id, index) => ({ id, visual: visuals[index] || "line" })));
+  };
+  const toggleMetric = (id: string) => {
+    setPreset("自定义");
+    setLayers((current) => current.some((layer) => layer.id === id)
+      ? current.filter((layer) => layer.id !== id)
+      : [...current, { id, visual: current.length ? "line" : "bar" }]);
+  };
+  const palette = [BILI_CYAN, PINK, PINK_DARK, "#1FABDA", PINK_BRIGHT, "#77C8E2"];
+  const rawByMetric = Object.fromEntries(layers.map((layer) => [layer.id, videos.map((video) => metricValue(video, layer.id))]));
+  const normalizedByMetric = Object.fromEntries(layers.map((layer) => [layer.id, normalizeMetricValues(rawByMetric[layer.id])]));
+  const formatRaw = (id: string, value: number | null) => {
+    if (value == null) return "—";
+    const definition = definitionMap[id];
+    if (definition?.unit === "percent") return percent(value, 2);
+    if (definition?.unit === "seconds") return seconds(value);
+    return compact(value);
+  };
   const option = {
-    animationDuration: 360,
-    color: [PINK],
-    grid: { left: 58, right: 30, top: 26, bottom: 54 },
-    tooltip: { formatter: (params: any) => { const video = points[params.dataIndex]?.video; return video ? `<b>${video.title}</b><br/>${config.xName}：${params.value[0]}<br/>${config.yName}：${params.value[1]}<br/>播放：${compact(video.views)}<br/>${config.extra(video)}` : ""; } },
-    xAxis: { type: "value", name: config.xName, nameLocation: "middle", nameGap: 34, splitLine: { lineStyle: { color: "rgba(125,139,158,.14)" } } },
-    yAxis: { type: "value", name: config.yName, nameLocation: "middle", nameGap: 42, splitLine: { lineStyle: { color: "rgba(125,139,158,.14)" } } },
-    series: [{
-      type: "scatter",
-      data: points.map((point) => [point.x, point.y, point.size]),
-      symbolSize: (value: number[]) => 18 + Math.sqrt((Number(value[2] || 0) - minSize) / Math.max(1, maxSize - minSize)) * 38,
-      itemStyle: { color: PINK, opacity: .72, borderColor: PINK_DARK, borderWidth: 2 },
-      emphasis: { scale: false, itemStyle: { opacity: .92, shadowBlur: 16, shadowColor: PINK_SOFT } },
-      label: { show: true, position: "top", formatter: (params: any) => points[params.dataIndex]?.video.title.slice(0, 10) || "", color: "inherit", fontSize: 10 },
-    }],
+    animationDuration: 560,
+    animationEasing: "cubicOut",
+    grid: { left: 48, right: 26, top: 56, bottom: 94 },
+    legend: { type: "scroll", top: 4, data: layers.map((layer) => definitionMap[layer.id]?.label || layer.id), icon: "roundRect", itemWidth: 18, itemHeight: 8, textStyle: { color: analysisText } },
+    tooltip: {
+      trigger: "axis",
+      confine: true,
+      extraCssText: "max-width:320px;white-space:normal;overflow-wrap:anywhere;line-height:1.65;",
+      formatter: (params: any[]) => {
+        const index = params?.[0]?.dataIndex;
+        const video = videos[index];
+        if (!video) return "";
+        return `<b>${video.title}</b><br/>${layers.map((layer) => `${definitionMap[layer.id]?.label || layer.id}：${formatRaw(layer.id, rawByMetric[layer.id][index])}`).join("<br/>")}`;
+      },
+    },
+    xAxis: { type: "category", data: videos.map((video, index) => `${String(index + 1).padStart(2, "0")} · ${video.title}`), axisLabel: { interval: 0, rotate: 34, width: 94, overflow: "truncate", fontSize: 9, color: analysisText, formatter: (value: string) => value.length > 12 ? `${value.slice(0, 12)}…` : value }, axisTick: { show: false } },
+    yAxis: { type: "value", name: "统一尺度", nameTextStyle: { color: analysisText }, min: 0, max: 100, interval: 20, axisLabel: { formatter: "{value}", color: analysisText }, splitLine: { lineStyle: { color: analysisDark ? "rgba(255,255,255,.08)" : "rgba(148,153,160,.16)" } } },
+    series: layers.map((layer, index) => {
+      const color = palette[index % palette.length];
+      const label = definitionMap[layer.id]?.label || layer.id;
+      const base = { name: label, data: normalizedByMetric[layer.id], emphasis: { focus: "series" } };
+      if (layer.visual === "bar") return { ...base, type: "bar", barMaxWidth: 22, itemStyle: { color, opacity: .72, borderRadius: [6, 6, 2, 2] } };
+      if (layer.visual === "dot") return { ...base, type: "scatter", symbolSize: 9, itemStyle: { color, borderColor: "#fff", borderWidth: 2 } };
+      return { ...base, type: "line", smooth: .38, smoothMonotone: "x", showSymbol: false, lineStyle: { color, width: layer.visual === "area" ? 3 : 2.5 }, itemStyle: { color }, areaStyle: layer.visual === "area" ? { color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{ offset: 0, color: index % 2 ? "rgba(255,102,153,.30)" : "rgba(0,161,214,.28)" }, { offset: 1, color: "rgba(255,255,255,0)" }]) } : undefined };
+    }),
   };
   return (
     <>
-      <PageIntro eyebrow="把有关联的数据编码进同一张图" title="联合分析" />
-      <section className="panel compositionPicker jointAnalysisPicker">
-        <div><h2>选择分析问题</h2><p>默认组合依据 CTR → 观看深度 → 互动 → 转粉的创作链路设计，不再把指标拆成互不相关的小图。</p></div>
-        <div className="compositionChoices">{templates.map((item) => <button key={item.id} className={template === item.id ? "selected" : ""} onClick={() => setTemplate(item.id)}><span /><b>{item.title}</b><small>{item.description}</small></button>)}</div>
+      <PageIntro eyebrow="把不同指标图层叠加到同一张图表" title="联合分析" />
+      <section className="panel analysisLayerBuilder">
+        <div className="layerBuilderIntro"><Layers3 /><div><h2>指标图层</h2><p>把不同指标叠加到同一张图表；每层可独立选择柱形、渐变面积、折线或数据点。</p></div></div>
+        <div className="analysisPresets">{Object.keys(presets).map((name) => <button className={preset === name ? "selected" : ""} onClick={() => applyPreset(name)} key={name}>{name}</button>)}</div>
+        <div className="metricPickerGroups">{analysisMetricGroups.map((group) => <fieldset key={group.name}><legend>{group.name}</legend>{group.metrics.map((metric) => <label key={metric.id}><input type="checkbox" checked={layers.some((layer) => layer.id === metric.id)} onChange={() => toggleMetric(metric.id)} /><span>{metric.label}</span></label>)}</fieldset>)}</div>
+        <div className="selectedLayers"><span>当前图层</span><div>{layers.map((layer, index) => <div className="analysisLayerChip" key={layer.id}><i style={{ background: palette[index % palette.length] }} /><b>{definitionMap[layer.id]?.label || layer.id}</b><select aria-label={`${definitionMap[layer.id]?.label || layer.id}图形`} value={layer.visual} onChange={(event) => { const visual = event.target.value as AnalysisVisual; setPreset("自定义"); setLayers((current) => current.map((item) => item.id === layer.id ? { ...item, visual } : item)); }}><option value="bar">柱形</option><option value="area">渐变面积</option><option value="line">折线</option><option value="dot">数据点</option></select><button aria-label={`移除${definitionMap[layer.id]?.label || layer.id}`} onClick={() => toggleMetric(layer.id)}><X /></button></div>)}</div></div>
       </section>
-      {!summary?.configured ? <EmptyState /> : <section className="panel jointAnalysisPanel"><div className="panelHead"><div><h2>{templateInfo.title}</h2><p>{templateInfo.description}</p></div><span className="dataEncodingLegend"><i /> 同一粉色系通过位置、面积和透明度区分数据角色</span></div><Chart className="jointAnalysisChart" option={option} /><p className="sourceNote">这是数据关联视图，不代表因果关系；完整标题与指标值可通过点击或悬停查看。</p></section>}
+      {!summary?.configured ? <EmptyState /> : <section className="panel jointAnalysisPanel"><div className="panelHead"><div><h2>多指标统一视图</h2><p>为避免单位差异挤压图形，各指标按自身范围映射至 0–100；悬停显示真实原始值。</p></div><span className="dataEncodingLegend"><i /> B 站粉色与创作中心青色共同编码</span></div>{layers.length ? <Chart className="jointAnalysisChart" option={option} /> : <div className="labEmpty"><Layers3 /><b>至少选择一个指标</b><p>从上方指标组中勾选后，图层会立即加入同一张图表。</p></div>}<p className="sourceNote">统一尺度只改变视觉比较方式，不改变 tooltip 中的原始数据，也不代表因果关系。</p></section>}
     </>
   );
 }
@@ -1821,7 +1938,7 @@ function App() {
   const content =
     page === "概览" ? (
       <OverviewPage setPage={setPage} theme={theme} />
-    ) : page === "表现地图" ? (
+    ) : page === "内容吸引力矩阵" ? (
       <PerformanceMapPage />
     ) : page === "稿件" ? (
       <VideosPage />

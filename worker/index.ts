@@ -7,6 +7,7 @@ import { analysisQuerySchema } from '../shared/contracts';
 import { BilibiliWebDataSource } from './bilibili';
 import { buildManifest } from './backup';
 import { decryptJson, encryptJson, hmac, sha256 } from './crypto';
+import { buildSummaryComparison } from './summary';
 
 type Bindings = {
   DB: D1Database; BUCKET: R2Bucket; ASSETS: Fetcher; APP_ORIGIN: string;
@@ -52,14 +53,23 @@ app.get('/api/bilibili/qr/status/:key', async (c) => {
   } catch { return jsonError(c, 502, 'bilibili_unavailable', '二维码状态查询失败'); }
 });
 
-app.get('/api/dashboard/summary', async (c) => {
-  const rows = await c.env.DB.prepare('SELECT COUNT(DISTINCT video_id) videos, MAX(captured_at) fresh, SUM(views) views, SUM(followers_gained) followers, AVG(cover_ctr) cover_ctr, AVG(avg_watch_percent) avg_watch_percent, SUM(avg_watch_seconds*views)/NULLIF(SUM(views),0) avg_watch_seconds FROM video_snapshots WHERE captured_at=(SELECT MAX(captured_at) FROM video_snapshots)').first();
-  const latest = await c.env.DB.prepare('SELECT views,metrics_json FROM video_snapshots WHERE captured_at=(SELECT MAX(captured_at) FROM video_snapshots)').all<{ views: number; metrics_json: string }>();
+async function loadSummaryAt(db: D1Database, capturedAt: string) {
+  const rows = await db.prepare('SELECT COUNT(DISTINCT video_id) videos, MAX(captured_at) fresh, SUM(views) views, SUM(followers_gained) followers, AVG(cover_ctr) cover_ctr, AVG(avg_watch_percent) avg_watch_percent, SUM(avg_watch_seconds*views)/NULLIF(SUM(views),0) avg_watch_seconds FROM video_snapshots WHERE captured_at=?').bind(capturedAt).first<any>();
+  const latest = await db.prepare('SELECT views,metrics_json FROM video_snapshots WHERE captured_at=?').bind(capturedAt).all<{ views: number; metrics_json: string }>();
   let interactions = 0; let totalViews = 0;
   for (const item of latest.results) { const metrics = JSON.parse(item.metrics_json || '{}'); interactions += ['likes','comments','danmaku','favorites','coins','shares'].reduce((sum,key)=>sum+(Number(metrics[key])||0),0); totalViews += Number(item.views)||0; }
-  const summary = { ...(rows ?? {}), interaction_rate: totalViews ? interactions / totalViews * 100 : null };
+  return { ...(rows ?? {}), interaction_rate: totalViews ? interactions / totalViews * 100 : null };
+}
+
+app.get('/api/dashboard/summary', async (c) => {
+  const timestamps = await c.env.DB.prepare('SELECT captured_at FROM video_snapshots GROUP BY captured_at ORDER BY captured_at DESC LIMIT 2').all<{ captured_at: string }>();
+  const currentAt = timestamps.results[0]?.captured_at;
+  const previousAt = timestamps.results[1]?.captured_at;
+  const summary = currentAt ? await loadSummaryAt(c.env.DB, currentAt) : {};
+  const previousSummary = previousAt ? await loadSummaryAt(c.env.DB, previousAt) : {};
+  const comparison = previousAt ? buildSummaryComparison(summary, previousSummary) : buildSummaryComparison(summary, {});
   const lastRun = await c.env.DB.prepare('SELECT status,coverage,coverage_json,started_at,finished_at,error_code,safe_error_detail FROM acquisition_runs ORDER BY started_at DESC LIMIT 1').first<any>();
-  return c.json({ ok: true, configured: Boolean(rows?.fresh), summary, freshnessMinutes: rows?.fresh ? Math.floor((Date.now() - Date.parse(String(rows.fresh))) / 60000) : null, acquisition: lastRun ? { ...lastRun, details: JSON.parse(lastRun.coverage_json || '{}'), coverage_json: undefined } : null });
+  return c.json({ ok: true, configured: Boolean(currentAt), summary, comparison, comparisonCapturedAt: previousAt ?? null, freshnessMinutes: currentAt ? Math.floor((Date.now() - Date.parse(currentAt)) / 60000) : null, acquisition: lastRun ? { ...lastRun, details: JSON.parse(lastRun.coverage_json || '{}'), coverage_json: undefined } : null });
 });
 app.get('/api/videos', async (c) => {
   const rows = (await c.env.DB.prepare('SELECT v.*,s.views,s.impressions,s.cover_ctr,s.avg_watch_seconds,s.avg_watch_percent,s.followers_gained,s.metrics_json,s.dimensions_json,s.captured_at FROM videos v LEFT JOIN video_snapshots s ON s.id=(SELECT id FROM video_snapshots WHERE video_id=v.id ORDER BY captured_at DESC LIMIT 1) ORDER BY v.published_at DESC').all()).results;

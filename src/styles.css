@@ -10,19 +10,23 @@
     sans-serif;
   font-optical-sizing: auto;
   color-scheme: light;
-  --bg: #f1f4f8;
-  --surface: rgba(255, 255, 255, 0.78);
+  --bg: #f6f7f8;
+  --surface: rgba(255, 255, 255, 0.86);
   --solid: #fff;
-  --surface-2: #f7f9fb;
-  --text: #161a22;
-  --muted: #747c89;
-  --line: #e3e7ed;
-  --blue: #fb7299;
+  --surface-2: #fafafa;
+  --text: #18191c;
+  --muted: #61666d;
+  --subtle: #9499a0;
+  --line: #f1f2f3;
+  --line-strong: #c9ccd0;
+  --blue: #ff6699;
   --blue-soft: #fff0f5;
-  --positive: #16a36a;
-  --negative: #ef5361;
+  --cyan: #00a1d6;
+  --cyan-soft: #edfaff;
+  --positive: #2ac864;
+  --negative: #f85a54;
   --warning: #e58b13;
-  --shadow: 0 12px 38px rgba(38, 48, 68, 0.07);
+  --shadow: 0 12px 40px rgba(24, 25, 28, 0.055), 0 1px 2px rgba(24, 25, 28, 0.035);
   --radius-surface: 20px;
   --radius-sheet: 28px;
   --radius-control: 12px;
@@ -30,21 +34,426 @@
   --radius-tag: 10px;
   background: var(--bg);
 }
+
+/* v0.1.0-dev.10 — official Creator Center palette and spatial polish. */
+.panel,
+.kpiStrip,
+.mobileVideos {
+  border-color: color-mix(in srgb, var(--line-strong) 34%, transparent);
+  background: color-mix(in srgb, var(--surface) 94%, transparent);
+  box-shadow: var(--shadow);
+}
+.topbar {
+  background: color-mix(in srgb, var(--bg) 78%, transparent);
+  border-color: color-mix(in srgb, var(--line-strong) 36%, transparent);
+}
+.logoMark {
+  background: linear-gradient(145deg, #ff6699, #ff8fb2);
+  box-shadow: 0 9px 22px rgba(255, 102, 153, .24);
+}
+.aiButton {
+  background: var(--blue) !important;
+  color: #fff !important;
+  box-shadow: 0 8px 20px rgba(255, 102, 153, .2);
+}
+.date:hover,
+.iconButton:hover,
+.themeSwitch:hover {
+  border-color: color-mix(in srgb, var(--blue) 28%, var(--line)) !important;
+  background: color-mix(in srgb, var(--solid) 92%, var(--blue-soft)) !important;
+}
+.kpiStrip article {
+  transition: background .24s ease;
+}
+.kpiStrip article:hover {
+  background: color-mix(in srgb, var(--blue-soft) 54%, transparent);
+}
+.kpiDelta {
+  min-height: 18px;
+  display: flex !important;
+  align-items: center;
+  gap: 3px;
+  color: var(--subtle);
+  font-variant-numeric: tabular-nums;
+}
+.kpiDelta svg {
+  width: 15px;
+  height: 15px;
+  stroke-width: 2.2;
+}
+.kpiDelta.up { color: var(--positive); }
+.kpiDelta.down { color: var(--negative); }
+.kpiDelta.flat { color: var(--subtle); }
+.kpiDelta em { margin-left: 3px; }
+.homeCtrPanel,
+.recentVideosPanel,
+.homeWatchPanel {
+  overflow: hidden;
+}
+.homeWatchPanel .panelHead::after {
+  content: "";
+  width: 42px;
+  height: 5px;
+  margin-top: 6px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--cyan) 0 48%, transparent 48% 54%, var(--blue) 54%);
+}
+.recentVideoCard,
+.videoLibraryCard,
+.analysisLayerChip,
+.analysisPresets button {
+  transition: transform .24s cubic-bezier(.22, 1, .36, 1), border-color .24s, box-shadow .24s, background .24s;
+}
+.recentVideoCard:hover,
+.videoLibraryCard:hover {
+  box-shadow: 0 16px 38px rgba(24, 25, 28, .09);
+}
+
+/* Content attraction matrix. */
+.matrixChartFrame {
+  position: relative;
+  min-height: 570px;
+}
+.matrixChartFrame .mapChart {
+  position: relative;
+  z-index: 1;
+  margin-top: 0;
+}
+.matrixQuadrants {
+  position: absolute;
+  inset: 60px 32px 54px 64px;
+  z-index: 2;
+  pointer-events: none;
+}
+.matrixQuadrants .quadrant {
+  position: absolute;
+  max-width: 152px;
+  padding: 8px 11px;
+  color: var(--text);
+  font-size: 10px;
+  line-height: 1.35;
+  font-weight: 650;
+  border: 1px solid color-mix(in srgb, var(--blue) 18%, var(--line));
+  background: color-mix(in srgb, var(--solid) 88%, transparent);
+  box-shadow: 0 6px 18px rgba(24,25,28,.055);
+  backdrop-filter: blur(14px);
+}
+.matrixQuadrants .q1 { left: 8px; top: 8px; }
+.matrixQuadrants .q2 { right: 8px; top: 8px; border-color: color-mix(in srgb, var(--cyan) 24%, var(--line)); }
+.matrixQuadrants .q3 { left: 8px; bottom: 8px; }
+.matrixQuadrants .q4 { right: 8px; bottom: 8px; }
+.mapStandalone {
+  overflow: hidden;
+}
+
+/* Manuscript diagnosis workbench. */
+.videosWorkspace {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.videoDetailWorkbench {
+  width: 100%;
+  position: static;
+  padding: 22px;
+  overflow: hidden;
+}
+.videoDetailHero {
+  display: grid;
+  grid-template-columns: minmax(260px, 390px) minmax(0, 1fr);
+  gap: 24px;
+  align-items: center;
+}
+.videoDetailHero .detailCover {
+  height: 100%;
+  min-height: 220px;
+  border-radius: 18px;
+  box-shadow: 0 12px 30px rgba(24,25,28,.12);
+}
+.videoDetailHero h2 {
+  max-width: 920px;
+  margin: 8px 0 7px;
+  font-size: clamp(20px, 2vw, 30px);
+  line-height: 1.28;
+  letter-spacing: -.035em;
+}
+.videoDetailHero p,
+.detailEyebrow {
+  color: var(--muted);
+  font-size: 11px;
+}
+.detailEyebrow {
+  display: inline-flex;
+  padding: 6px 9px;
+  border-radius: 9px;
+  color: var(--blue);
+  background: var(--blue-soft);
+}
+.heroMetrics {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 18px;
+}
+.heroMetrics > div,
+.detailMetricGrid > div,
+.audienceLegend > div,
+.retentionSummary > div {
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid color-mix(in srgb, var(--line-strong) 28%, transparent);
+  border-radius: 13px;
+  background: var(--surface-2);
+}
+.heroMetrics span,
+.heroMetrics b,
+.detailMetricGrid span,
+.detailMetricGrid b,
+.audienceLegend span,
+.audienceLegend b {
+  display: block;
+}
+.heroMetrics span,
+.detailMetricGrid span,
+.audienceLegend span {
+  color: var(--subtle);
+  font-size: 9px;
+}
+.heroMetrics b,
+.detailMetricGrid b,
+.audienceLegend b {
+  margin-top: 5px;
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+}
+.detailMetricBand .detailSection {
+  margin-top: 20px;
+}
+.detailMetricGrid {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+}
+.diagnosticChartGrid,
+.detailTrendGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+.diagnosticChartGrid .detailSection,
+.detailTrendGrid .detailSection {
+  min-width: 0;
+  padding: 18px;
+  border: 1px solid color-mix(in srgb, var(--line-strong) 30%, transparent);
+  border-radius: 17px;
+  background: color-mix(in srgb, var(--surface-2) 84%, transparent);
+}
+.diagnosticChart,
+.detailTrendLarge {
+  width: 100%;
+  height: 270px;
+}
+.detailTrendGrid .detailSection {
+  margin-top: 14px;
+}
+.detailHint {
+  margin: -4px 0 8px;
+  color: var(--subtle);
+  font-size: 9px;
+  line-height: 1.55;
+}
+.audienceVisual {
+  min-height: 250px;
+  display: grid;
+  grid-template-columns: 180px minmax(0, 1fr);
+  gap: 20px;
+  align-items: center;
+}
+.audienceDonut {
+  width: 160px;
+  aspect-ratio: 1;
+  margin: auto;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: conic-gradient(var(--blue) 0 var(--fan), var(--cyan) var(--fan) 100%);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.16), 0 14px 32px rgba(24,25,28,.08);
+}
+.audienceDonut::before {
+  content: "";
+  grid-area: 1/1;
+  width: 110px;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: var(--solid);
+}
+.audienceDonut span {
+  position: relative;
+  grid-area: 1/1;
+  text-align: center;
+}
+.audienceDonut b,
+.audienceDonut small { display: block; }
+.audienceDonut b { font-size: 22px; }
+.audienceDonut small { margin-top: 3px; color: var(--muted); font-size: 9px; }
+.audienceLegend { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.audienceLegend p { grid-column: 1/-1; color: var(--subtle); font-size: 9px; line-height: 1.55; }
+.videoCardGrid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+/* Unified multi-metric analysis layers. */
+.analysisLayerBuilder {
+  padding: 20px;
+  margin-bottom: 14px;
+}
+.layerBuilderIntro {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.layerBuilderIntro > svg {
+  width: 38px;
+  height: 38px;
+  padding: 9px;
+  color: var(--blue);
+  border-radius: 12px;
+  background: var(--blue-soft);
+}
+.layerBuilderIntro h2 { margin: 0 0 4px; font-size: 17px; }
+.layerBuilderIntro p { margin: 0; color: var(--muted); font-size: 11px; }
+.analysisPresets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 18px 0;
+}
+.analysisPresets button {
+  padding: 0 14px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface-2);
+  font-size: 11px;
+}
+.analysisPresets button.selected {
+  color: var(--blue);
+  border-color: color-mix(in srgb, var(--blue) 44%, var(--line));
+  background: var(--blue-soft);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--blue) 12%, transparent);
+}
+.metricPickerGroups {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+.metricPickerGroups fieldset {
+  min-width: 0;
+  margin: 0;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--surface-2);
+}
+.metricPickerGroups legend {
+  padding: 0 5px;
+  color: var(--subtle);
+  font-size: 9px;
+  font-weight: 650;
+}
+.metricPickerGroups label {
+  min-height: 36px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-right: 10px;
+  font-size: 10px;
+  cursor: pointer;
+}
+.metricPickerGroups input { accent-color: var(--blue); }
+.selectedLayers {
+  display: grid;
+  grid-template-columns: 74px minmax(0, 1fr);
+  align-items: start;
+  gap: 10px;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+.selectedLayers > span { padding-top: 11px; color: var(--subtle); font-size: 10px; }
+.selectedLayers > div { display: flex; flex-wrap: wrap; gap: 8px; }
+.analysisLayerChip {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 4px 5px 4px 10px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--solid);
+}
+.analysisLayerChip > i { width: 7px; height: 22px; border-radius: 999px; }
+.analysisLayerChip b { font-size: 10px; }
+.analysisLayerChip select { height: 34px; padding: 0 5px; color: var(--muted); font-size: 9px; }
+.analysisLayerChip button { width: 34px; min-height: 34px; display: grid; place-items: center; border-radius: 9px; }
+.analysisLayerChip button:hover { background: var(--blue-soft); color: var(--blue); }
+.analysisLayerChip button svg { width: 15px; height: 15px; }
+.jointAnalysisPanel { overflow: hidden; }
+.dataEncodingLegend i { background: linear-gradient(90deg, var(--cyan) 0 48%, var(--blue) 52%); }
+
+@media (max-width: 1360px) {
+  .videoCardGrid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .detailMetricGrid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .heroMetrics { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 1023px) {
+  .videoDetailHero { grid-template-columns: 300px minmax(0, 1fr); gap: 18px; }
+  .videoDetailHero .detailCover { min-height: 170px; }
+  .diagnosticChartGrid,
+  .detailTrendGrid { grid-template-columns: minmax(0, 1fr); }
+  .metricPickerGroups { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .videoCardGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 720px) {
+  .videoDetailHero { grid-template-columns: minmax(0, 1fr); }
+  .videoDetailHero .detailCover { min-height: 0; }
+  .heroMetrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .detailMetricGrid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .audienceVisual { grid-template-columns: minmax(0, 1fr); }
+  .metricPickerGroups { grid-template-columns: minmax(0, 1fr); }
+  .selectedLayers { grid-template-columns: minmax(0, 1fr); }
+  .selectedLayers > span { padding-top: 0; }
+}
+@media (max-width: 599px) {
+  .videoDetailWorkbench { padding: 14px; }
+  .videoCardGrid { grid-template-columns: minmax(0, 1fr); }
+  .detailMetricGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .diagnosticChartGrid .detailSection,
+  .detailTrendGrid .detailSection { padding: 14px; }
+  .diagnosticChart,
+  .detailTrendLarge { height: 240px; }
+  .matrixQuadrants { inset: 54px 12px 48px 48px; }
+  .matrixQuadrants .quadrant { max-width: 112px; padding: 6px 8px; font-size: 8px; }
+  .analysisLayerBuilder { padding: 15px; }
+  .analysisLayerChip { width: 100%; }
+  .analysisLayerChip b { flex: 1; }
+}
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --bg: #101216;
-  --surface: rgba(28, 31, 38, 0.78);
-  --solid: #1c1f26;
-  --surface-2: #232730;
-  --text: #f4f6f8;
-  --muted: #989fab;
-  --line: #303541;
-  --blue: #ff8faf;
+  --bg: #111318;
+  --surface: rgba(31, 33, 39, 0.86);
+  --solid: #1f2127;
+  --surface-2: #272a31;
+  --text: #f1f2f3;
+  --muted: #c9ccd0;
+  --subtle: #9499a0;
+  --line: #30333b;
+  --line-strong: #484c56;
+  --blue: #ff7aa8;
   --blue-soft: #3a202b;
+  --cyan: #33b6df;
+  --cyan-soft: #15313b;
   --positive: #44ce8f;
   --negative: #ff727e;
   --warning: #f4ac43;
-  --shadow: 0 18px 46px rgba(0, 0, 0, 0.25);
+  --shadow: 0 18px 48px rgba(0, 0, 0, 0.24), 0 1px 1px rgba(255, 255, 255, .025);
 }
 * {
   box-sizing: border-box;
@@ -2809,4 +3218,32 @@ dd {
   .ranking {
     margin-top: 12px;
   }
+}
+
+/* Final cascade guarantees for the redesigned workspaces. */
+.logoMark { background: linear-gradient(145deg, #ff6699, #ff8fb2); box-shadow: 0 9px 22px rgba(255,102,153,.24); }
+.aiButton { background: var(--blue) !important; color: #fff !important; }
+.kpiDelta { min-height: 18px; display: flex !important; align-items: center; gap: 3px; color: var(--subtle); }
+.kpiDelta svg { width: 15px; height: 15px; }
+.kpiDelta.up { color: var(--positive); }
+.kpiDelta.down { color: var(--negative); }
+.kpiDelta.flat,
+.kpiDelta.unavailable { color: var(--subtle); }
+.videosWorkspace { display: flex; flex-direction: column; gap: 18px; }
+.videoDetailWorkbench { width: 100%; position: static; padding: 22px; }
+.videoCardGrid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.matrixChartFrame { position: relative; min-height: 570px; }
+.matrixChartFrame .mapChart { position: relative; z-index: 1; margin-top: 0; }
+.matrixQuadrants { position: absolute; inset: 60px 32px 54px 64px; z-index: 2; pointer-events: none; }
+.jointAnalysisPanel { padding: 20px; overflow: hidden; }
+@media (max-width: 1360px) {
+  .videoCardGrid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 1023px) {
+  .videoCardGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 599px) {
+  .videoDetailWorkbench { padding: 14px; }
+  .videoCardGrid { grid-template-columns: minmax(0, 1fr); }
+  .matrixQuadrants { inset: 54px 12px 48px 48px; }
 }
