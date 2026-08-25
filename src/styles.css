@@ -435,6 +435,303 @@
   .analysisLayerChip { width: 100%; }
   .analysisLayerChip b { flex: 1; }
 }
+
+/* dev.11 — direct manuscript switching and readable multi-metric analysis */
+.videoSwitcher {
+  position: sticky;
+  top: 74px;
+  z-index: 18;
+  display: grid;
+  grid-template-columns: 132px minmax(0, 1fr);
+  gap: 14px;
+  padding: 12px;
+  border-color: color-mix(in srgb, var(--blue) 12%, var(--line));
+  background: color-mix(in srgb, var(--solid) 82%, transparent);
+  backdrop-filter: blur(24px) saturate(180%);
+  box-shadow: 0 18px 44px rgba(29, 38, 58, .11), inset 0 1px rgba(255,255,255,.45);
+}
+.videoSwitcher::after {
+  content: "";
+  position: absolute;
+  left: 18px;
+  right: 18px;
+  bottom: -14px;
+  height: 14px;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--bg) 72%, transparent), transparent);
+  pointer-events: none;
+}
+.videoSwitcherHead,
+.videoSwitcherPager,
+.detailTitleRow,
+.detailPager { display: flex; align-items: center; }
+.videoSwitcherHead { justify-content: space-between; gap: 8px; padding-left: 4px; }
+.videoSwitcherHead span,
+.videoSwitcherHead b { display: block; }
+.videoSwitcherHead span { color: var(--subtle); font-size: 10px; }
+.videoSwitcherHead b { margin-top: 3px; font-size: 13px; font-variant-numeric: tabular-nums; }
+.videoSwitcherPager,
+.detailPager { gap: 4px; }
+.videoSwitcherPager button,
+.detailPager button {
+  width: 44px;
+  min-height: 44px;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  color: var(--muted);
+  background: var(--surface-2);
+  transition: transform .18s cubic-bezier(.2,.8,.2,1), color .18s, background .18s;
+}
+.videoSwitcherPager button:hover,
+.detailPager button:hover { color: var(--blue); background: var(--blue-soft); }
+.videoSwitcherPager button:active,
+.detailPager button:active { transform: scale(.94); }
+.videoSwitcherPager svg,
+.detailPager svg { width: 17px; height: 17px; }
+.videoSwitcherRail {
+  display: flex;
+  gap: 8px;
+  min-width: 0;
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+  scrollbar-width: thin;
+  padding: 1px 1px 3px;
+}
+.videoSwitchItem {
+  flex: 0 0 218px;
+  min-height: 64px;
+  display: grid;
+  grid-template-columns: 78px minmax(0,1fr);
+  gap: 9px;
+  align-items: center;
+  padding: 6px;
+  scroll-snap-align: start;
+  text-align: left;
+  border: 1px solid transparent;
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--surface-2) 88%, transparent);
+  transition: transform .2s cubic-bezier(.2,.8,.2,1), border-color .2s, background .2s, box-shadow .2s;
+}
+.videoSwitchItem:hover { transform: translateY(-1px); background: var(--surface); }
+.videoSwitchItem.selected {
+  border-color: color-mix(in srgb, var(--blue) 52%, transparent);
+  background: color-mix(in srgb, var(--blue-soft) 72%, var(--surface));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--blue) 10%, transparent);
+}
+.videoSwitchItem:active { transform: scale(.98); }
+.videoSwitchItem img { width: 78px; aspect-ratio: 16/9; object-fit: cover; border-radius: 10px; }
+.videoSwitchItem span,
+.videoSwitchItem b,
+.videoSwitchItem small { min-width: 0; display: block; }
+.videoSwitchItem b { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 11px; line-height: 1.35; }
+.videoSwitchItem small { margin-top: 5px; color: var(--subtle); font-size: 9px; white-space: nowrap; }
+.detailTitleRow { justify-content: space-between; gap: 12px; }
+.metricProvenance {
+  margin: 12px 0 0 !important;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--blue-soft) 58%, transparent);
+  color: var(--muted) !important;
+  font-size: 10px !important;
+  line-height: 1.55;
+}
+
+.analysisWorkspace {
+  display: grid;
+  grid-template-columns: 310px minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+.analysisRecipePanel {
+  position: sticky;
+  top: 84px;
+  max-height: calc(100vh - 104px);
+  overflow: auto;
+  padding: 18px;
+  scrollbar-width: thin;
+}
+.analysisRecipePanel .layerBuilderIntro {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 0 2px 15px;
+  border-bottom: 1px solid var(--line);
+}
+.analysisRecipePanel .layerBuilderIntro > svg {
+  width: 38px;
+  height: 38px;
+  padding: 10px;
+  border-radius: 13px;
+  background: linear-gradient(145deg, color-mix(in srgb, var(--blue) 18%, transparent), color-mix(in srgb, var(--blue) 5%, transparent));
+  color: var(--blue);
+}
+.analysisRecipePanel h2,
+.analysisRecipePanel p { margin: 0; }
+.analysisRecipePanel h2 { font-size: 15px; letter-spacing: -.015em; }
+.analysisRecipePanel p { margin-top: 3px; color: var(--subtle); font-size: 10px; }
+.analysisRecipePanel .analysisPresets {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 6px;
+  margin: 14px 0 18px;
+  padding: 5px;
+  border-radius: 14px;
+  background: var(--surface-2);
+}
+.analysisRecipePanel .analysisPresets button {
+  min-height: 44px;
+  padding: 0 12px;
+  text-align: left;
+  border-radius: 10px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 650;
+  transition: transform .16s, color .18s, background .18s, box-shadow .18s;
+}
+.analysisRecipePanel .analysisPresets button.selected {
+  color: var(--blue);
+  background: var(--surface);
+  box-shadow: 0 6px 18px rgba(29,38,58,.08), inset 0 0 0 1px color-mix(in srgb, var(--blue) 13%, transparent);
+}
+.analysisRecipePanel .analysisPresets button:active { transform: scale(.98); }
+.analysisSectionLabel { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.analysisSectionLabel span { font-size: 11px; font-weight: 720; }
+.analysisSectionLabel small { color: var(--subtle); font-size: 9px; }
+.analysisRecipePanel .selectedLayers { display: grid; grid-template-columns: 1fr; gap: 7px; }
+.analysisLayerRow {
+  min-height: 52px;
+  display: grid;
+  grid-template-columns: 5px minmax(0,1fr) 74px 36px;
+  gap: 8px;
+  align-items: center;
+  padding: 6px 6px 6px 8px;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  background: color-mix(in srgb, var(--surface) 84%, transparent);
+}
+.analysisLayerRow > i { width: 5px; height: 30px; border-radius: 999px; }
+.analysisLayerRow > span,
+.analysisLayerRow b,
+.analysisLayerRow small { min-width: 0; display: block; }
+.analysisLayerRow b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 10px; }
+.analysisLayerRow small { margin-top: 3px; color: var(--subtle); font-size: 8px; }
+.analysisLayerRow select { height: 36px; min-width: 0; padding: 0 5px; border-radius: 9px; font-size: 9px; }
+.analysisLayerRow button { width: 36px; min-height: 36px; display: grid; place-items: center; border-radius: 9px; color: var(--subtle); }
+.analysisLayerRow button:hover { color: var(--blue); background: var(--blue-soft); }
+.analysisLayerRow svg { width: 14px; }
+.metricLibrary { margin-top: 13px; border-top: 1px solid var(--line); padding-top: 9px; }
+.metricLibrary summary { min-height: 44px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; color: var(--muted); font-size: 10px; font-weight: 650; list-style: none; }
+.metricLibrary summary::-webkit-details-marker { display: none; }
+.metricLibrary summary span { color: var(--blue); font-size: 18px; }
+.metricLibrary .metricPickerGroups { display: grid; grid-template-columns: 1fr; gap: 8px; }
+.metricLibrary .metricPickerGroups fieldset { padding: 10px; }
+.metricLibrary .metricPickerGroups label { min-height: 38px; }
+
+.analysisCanvasPanel { min-width: 0; overflow: hidden; padding: 20px; }
+.analysisCanvasHead { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; }
+.analysisCanvasHead h2,
+.analysisCanvasHead p { margin: 0; }
+.analysisCanvasHead h2 { margin-top: 4px; font-size: 20px; letter-spacing: -.03em; }
+.analysisCanvasHead p { margin-top: 5px; color: var(--muted); font-size: 10px; }
+.analysisViewControls { display: flex; align-items: end; gap: 10px; }
+.analysisViewControls [role="radiogroup"] {
+  height: 44px;
+  display: flex;
+  align-items: center;
+  padding: 4px;
+  border-radius: 12px;
+  background: var(--surface-2);
+}
+.analysisViewControls [role="radiogroup"] label {
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+  padding: 0 11px;
+  border-radius: 9px;
+  color: var(--subtle);
+  font-size: 9px;
+  cursor: pointer;
+}
+.analysisViewControls [role="radiogroup"] label:has(input:checked) { color: var(--blue); background: var(--surface); box-shadow: 0 4px 14px rgba(29,38,58,.08); }
+.analysisViewControls input { position: absolute; opacity: 0; pointer-events: none; }
+.analysisViewControls > label { display: grid; gap: 3px; color: var(--subtle); font-size: 8px; }
+.analysisViewControls select { height: 36px; min-width: 112px; border-radius: 10px; font-size: 9px; }
+.analysisSelectionRail {
+  margin: 17px -20px 0;
+  padding: 12px 20px;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  background: color-mix(in srgb, var(--surface-2) 52%, transparent);
+}
+.analysisSelectionRail > div:first-child { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.analysisSelectionRail > div:first-child b { font-size: 10px; }
+.analysisSelectionRail > div:first-child span { margin-right: auto; color: var(--subtle); font-size: 9px; }
+.analysisSelectionRail > div:first-child button { min-height: 32px; padding: 0 9px; border-radius: 9px; color: var(--blue); font-size: 9px; }
+.analysisSelectionRail > div:first-child button:hover { background: var(--blue-soft); }
+.analysisSelectionRail > div:last-child { display: flex; gap: 7px; overflow-x: auto; scrollbar-width: thin; padding-bottom: 2px; }
+.analysisSelectionRail > div:last-child button {
+  position: relative;
+  flex: 0 0 78px;
+  min-height: 48px;
+  padding: 3px;
+  border-radius: 11px;
+  opacity: .42;
+  filter: saturate(.55);
+  transition: transform .18s, opacity .18s, filter .18s, box-shadow .18s;
+}
+.analysisSelectionRail > div:last-child button.selected { opacity: 1; filter: none; box-shadow: 0 0 0 2px color-mix(in srgb, var(--blue) 62%, transparent); }
+.analysisSelectionRail > div:last-child button:active { transform: scale(.95); }
+.analysisSelectionRail img { width: 100%; aspect-ratio: 16/9; object-fit: cover; border-radius: 8px; display: block; }
+.analysisSelectionRail > div:last-child span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+.jointAnalysisChart { height: min(58vh, 580px); min-height: 450px; margin-top: 8px; }
+.analysisReadout { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 8px; margin-top: 4px; }
+.analysisReadout article { min-width: 0; padding: 11px 12px; border-radius: 13px; background: var(--surface-2); }
+.analysisReadout i { width: 20px; height: 4px; display: block; border-radius: 999px; margin-bottom: 9px; }
+.analysisReadout span,
+.analysisReadout b,
+.analysisReadout small { display: block; min-width: 0; }
+.analysisReadout span { color: var(--muted); font-size: 9px; }
+.analysisReadout b { margin-top: 4px; overflow: hidden; text-overflow: ellipsis; font-size: 15px; font-variant-numeric: tabular-nums; }
+.analysisReadout small { margin-top: 3px; color: var(--subtle); font-size: 8px; }
+
+@media (max-width: 1180px) {
+  .analysisWorkspace { grid-template-columns: 270px minmax(0,1fr); }
+  .analysisReadout { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .videoSwitcher { grid-template-columns: 110px minmax(0,1fr); }
+  .videoSwitcherHead { align-items: flex-start; flex-direction: column; }
+}
+@media (max-width: 1023px) {
+  .videoSwitcher { top: 12px; }
+  .analysisWorkspace { grid-template-columns: minmax(0,1fr); }
+  .analysisRecipePanel { position: static; max-height: none; }
+  .analysisRecipePanel .analysisPresets { grid-template-columns: repeat(3,minmax(0,1fr)); }
+  .analysisRecipePanel .selectedLayers { grid-template-columns: repeat(2,minmax(0,1fr)); }
+}
+@media (max-width: 599px) {
+  .analysisCanvasPanel { order: 0; }
+  .analysisRecipePanel { order: 1; }
+  .videoSwitcher { top: 6px; grid-template-columns: minmax(0,1fr); gap: 8px; margin-inline: -8px; padding: 9px; border-radius: 18px; }
+  .videoSwitcherHead { flex-direction: row; align-items: center; }
+  .videoSwitcherRail { margin-right: -3px; }
+  .videoSwitchItem { flex-basis: 190px; grid-template-columns: 68px minmax(0,1fr); min-height: 58px; }
+  .videoSwitchItem img { width: 68px; }
+  .detailPager { display: none; }
+  .analysisRecipePanel,
+  .analysisCanvasPanel { padding: 14px; }
+  .analysisRecipePanel .analysisPresets { grid-template-columns: minmax(0,1fr); }
+  .analysisRecipePanel .selectedLayers { grid-template-columns: minmax(0,1fr); }
+  .analysisCanvasHead { display: block; }
+  .analysisViewControls { margin-top: 13px; justify-content: space-between; }
+  .analysisViewControls [role="radiogroup"] { flex: 1; }
+  .analysisViewControls [role="radiogroup"] label { flex: 1; justify-content: center; }
+  .analysisSelectionRail { margin-inline: -14px; padding-inline: 14px; }
+  .jointAnalysisChart { min-height: 430px; height: 56vh; }
+  .analysisReadout { grid-template-columns: repeat(2,minmax(0,1fr)); }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .videoSwitcher { background: var(--solid); backdrop-filter: none; }
+}
 :root[data-theme="dark"] {
   color-scheme: dark;
   --bg: #111318;

@@ -2,16 +2,16 @@ export type AnalysisVisual = 'bar' | 'area' | 'line' | 'dot';
 export type AnalysisMetricDefinition = {
   id: string;
   label: string;
-  unit: 'count' | 'percent' | 'seconds';
+  unit: 'count' | 'percent' | 'seconds' | 'score';
   defaultVisual: AnalysisVisual;
   tone: 'pink' | 'cyan' | 'rose' | 'neutral';
 };
 
 export const quadrantLabels = [
-  '低点击 · 高深度｜包装待优化',
-  '高点击 · 高深度｜优质内容',
-  '低点击 · 低深度｜整体待诊断',
-  '高点击 · 低深度｜内容承接待优化',
+  '低吸引力 · 高深度｜包装待优化',
+  '高吸引力 · 高深度｜优质内容',
+  '低吸引力 · 低深度｜整体待诊断',
+  '高吸引力 · 低深度｜内容承接待优化',
 ] as const;
 
 export const analysisMetricGroups: Array<{ name: string; metrics: AnalysisMetricDefinition[] }> = [
@@ -19,7 +19,7 @@ export const analysisMetricGroups: Array<{ name: string; metrics: AnalysisMetric
     name: '流量',
     metrics: [
       { id: 'views', label: '播放量', unit: 'count', defaultVisual: 'bar', tone: 'pink' },
-      { id: 'cover_ctr', label: '封面点击率', unit: 'percent', defaultVisual: 'area', tone: 'pink' },
+      { id: 'cover_ctr', label: '封标吸引力评分', unit: 'score', defaultVisual: 'area', tone: 'pink' },
       { id: 'realtimePlay', label: '实时播放', unit: 'count', defaultVisual: 'line', tone: 'cyan' },
     ],
   },

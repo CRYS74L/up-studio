@@ -16,6 +16,8 @@ import {
   Bell,
   Bot,
   CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
   ChevronDown,
   Clock3,
   Database,
@@ -156,6 +158,8 @@ const compact = (n: number | null | undefined) =>
       : n.toLocaleString("zh-CN");
 const percent = (n: number | null | undefined, d = 1) =>
   n == null ? "—" : `${n.toFixed(d)}%`;
+const score = (n: number | null | undefined, d = 1) =>
+  n == null ? "—" : `${n.toFixed(d)} 星`;
 const PINK = "#FF6699";
 const PINK_BRIGHT = "#FF9AB8";
 const PINK_DARK = "#D64778";
@@ -345,12 +349,12 @@ function EmptyState({
 function KpiStrip({ summary }: { summary: Summary }) {
   const s = summary.summary;
   const items = [
-    ["播放总量", "views", compact(s.views)],
-    ["涨粉总量", "followers", compact(s.followers)],
-    ["封面点击率", "cover_ctr", percent(s.cover_ctr)],
-    ["平均播放百分比", "avg_watch_percent", percent(s.avg_watch_percent)],
-    ["平均播放时长", "avg_watch_seconds", seconds(s.avg_watch_seconds)],
-    ["综合互动率", "interaction_rate", percent(s.interaction_rate)],
+    ["稿件累计播放", "views", compact(s.views)],
+    ["稿件归因涨粉", "followers", compact(s.followers)],
+    ["封标吸引力均分", "cover_ctr", score(s.cover_ctr)],
+    ["单稿平均播放百分比", "avg_watch_percent", percent(s.avg_watch_percent)],
+    ["播放加权平均时长", "avg_watch_seconds", seconds(s.avg_watch_seconds)],
+    ["播放加权互动率", "interaction_rate", percent(s.interaction_rate)],
   ];
   return (
     <section className="kpiStrip">
@@ -359,7 +363,7 @@ function KpiStrip({ summary }: { summary: Summary }) {
         const DeltaIcon = delta?.direction === "up" ? ArrowUpRight : delta?.direction === "down" ? ArrowDownRight : Minus;
         const change = delta
           ? delta.deltaKind === "pp"
-            ? `${Math.abs(delta.delta).toFixed(2)}pp`
+            ? key === "cover_ctr" ? `${Math.abs(delta.delta).toFixed(2)} 分` : `${Math.abs(delta.delta).toFixed(2)}pp`
             : delta.changePercent == null
               ? "持平"
               : `${Math.abs(delta.changePercent).toFixed(1)}%`
@@ -379,7 +383,7 @@ function KpiStrip({ summary }: { summary: Summary }) {
 }
 const coverageMetricLabels: Record<string, string> = {
   views: "播放量",
-  coverCtr: "封面点击率",
+  coverAttractionScore: "封标吸引力评分",
   avgWatchSeconds: "平均播放时长",
   avgWatchPercent: "平均播放百分比",
   followersGained: "涨粉量",
@@ -396,9 +400,11 @@ const coverageMetricLabels: Record<string, string> = {
   guestAudiencePercent: "游客观众占比",
 };
 const plannedMetricLabels: Record<string, string> = {
+  absoluteCoverCtr: "封面点击率绝对值（B 站当前仅返回动态脱敏内部值）",
   impressions: "曝光量",
   retentionCurve: "留存曲线",
   trafficSources: "流量来源",
+  recommendationTrafficSources: "推荐 / 搜索等流量来源",
   viewerArea: "观众地区",
   viewerGender: "观众性别",
   viewerAge: "观众年龄",
@@ -582,7 +588,7 @@ function performanceOption(
   const ys = plottable.map((v) => Number(v[y]));
   const stableAxis = (metric: keyof Video, values: number[]) => {
     const maxValue = Math.max(0, ...values);
-    if (metric === "cover_ctr") return { min: 0, max: Math.max(8, Math.ceil(maxValue / 2) * 2), interval: 2 };
+    if (metric === "cover_ctr") return { min: 0, max: 5, interval: 1 };
     if (metric === "avg_watch_percent") return { min: 0, max: Math.max(80, Math.ceil(maxValue / 10) * 10), interval: 10 };
     if (metric === "avg_watch_seconds") return { min: 0, max: Math.max(120, Math.ceil(maxValue / 30) * 30) };
     return { min: 0, max: Math.max(10, Math.ceil(maxValue * 1.1 / 10) * 10) };
@@ -630,15 +636,23 @@ function performanceOption(
       confine: true,
       appendToBody: false,
       extraCssText: "max-width:280px;white-space:normal;overflow-wrap:anywhere;line-height:1.55;",
-      formatter: (p: any) =>
-        `<b>${p.data.title}</b><br/>${metricLabels[x]} ${p.data.sourceValue?.[0]?.toFixed?.(1) ?? "—"} · ${metricLabels[y]} ${p.data.sourceValue?.[1]?.toFixed?.(1) ?? "—"}<br/>${metricLabels[size]} ${compact(p.value[2])}`,
+      formatter: (p: any) => {
+        const formatAxisValue = (metric: keyof Video, value: number | null | undefined) => {
+          if (value == null || !Number.isFinite(value)) return "—";
+          if (metric === "cover_ctr") return score(value, 1);
+          if (metric === "avg_watch_percent") return percent(value, 1);
+          if (metric === "avg_watch_seconds") return seconds(value);
+          return compact(value);
+        };
+        return `<b>${p.data.title}</b><br/>${metricLabels[x]} ${formatAxisValue(x, p.data.sourceValue?.[0])} · ${metricLabels[y]} ${formatAxisValue(y, p.data.sourceValue?.[1])}<br/>${metricLabels[size]} ${formatAxisValue(size, p.value[2])}`;
+      },
     },
     xAxis: {
       name: metricLabels[x],
       ...xRange,
       axisLabel: {
         color: dark ? "#C9CCD0" : "#61666D",
-        formatter: (v: number) => (x === "cover_ctr" ? `${v}%` : v),
+        formatter: (v: number) => (x === "cover_ctr" ? `${v}星` : v),
       },
       splitLine: {
         lineStyle: { type: "dashed", color: dark ? "#313746" : "#dfe5ed" },
@@ -751,7 +765,7 @@ function performanceOption(
 }
 const metricLabels: Record<string, string> = {
   views: "播放量",
-  cover_ctr: "封面点击率",
+  cover_ctr: "封标吸引力评分",
   avg_watch_seconds: "平均播放时长",
   avg_watch_percent: "平均播放百分比",
   followers_gained: "涨粉量",
@@ -814,7 +828,7 @@ function OverviewPage({ setPage, theme }: { setPage: (p: string) => void; theme:
       extraCssText: "max-width:260px;white-space:normal;overflow-wrap:anywhere;line-height:1.55;",
       formatter: (params: any[]) => {
         const video = ctrVideos[params?.[0]?.dataIndex];
-        return video ? `<b>${video.title}</b><br/>封面点击率：${percent(video.cover_ctr, 2)}` : "";
+        return video ? `<b>${video.title}</b><br/>封标吸引力：${score(video.cover_ctr, 1)}` : "";
       },
     },
     xAxis: { type: "value", axisLabel: { show: false }, axisLine: { show: false }, axisTick: { show: false }, splitLine: { show: true, lineStyle: { color: chartGrid, width: 1 } } },
@@ -826,8 +840,8 @@ function OverviewPage({ setPage, theme }: { setPage: (p: string) => void; theme:
       showBackground: true,
       backgroundStyle: { color: dark ? "rgba(255,255,255,.055)" : "#F1F2F3", borderRadius: 8 },
       itemStyle: { color: PINK, borderRadius: 8 },
-      label: { show: true, position: "right", color: dark ? "#F2F3F5" : "#61666D", formatter: ({ value }: any) => `${Number(value).toFixed(1)}%` },
-      markLine: ctrMedian ? { silent: true, symbol: "none", label: { formatter: "中位数 {c}%", color: PINK_DARK, fontSize: 10 }, lineStyle: { color: PINK, type: "dashed", opacity: .55 }, data: [{ xAxis: Number(ctrMedian.toFixed(2)) }] } : undefined,
+      label: { show: true, position: "right", color: dark ? "#F2F3F5" : "#61666D", formatter: ({ value }: any) => `${Number(value).toFixed(1)} 星` },
+      markLine: ctrMedian ? { silent: true, symbol: "none", label: { formatter: "中位数 {c} 星", color: PINK_DARK, fontSize: 10 }, lineStyle: { color: PINK, type: "dashed", opacity: .55 }, data: [{ xAxis: Number(ctrMedian.toFixed(2)) }] } : undefined,
     }],
   };
   const watchLabels = videos.map((video, index) => `${String(index + 1).padStart(2, "0")} · ${video.title}`);
@@ -886,7 +900,7 @@ function OverviewPage({ setPage, theme }: { setPage: (p: string) => void; theme:
           <KpiStrip summary={summary} />
           <div className="homePrimaryGrid">
             <section className="panel homeCtrPanel">
-              <div className="panelHead"><div><h2>所有视频封面点击率</h2><p>按当前 B 站统计窗口排序 · 虚线为个人中位数</p></div></div>
+              <div className="panelHead"><div><h2>所有视频封标吸引力评分</h2><p>B 站稳定星级口径 · 虚线为个人中位数；绝对点击率未公开</p></div></div>
               <Chart className="homeCtrChart" option={ctrOption} />
             </section>
             <section className="panel recentVideosPanel">
@@ -895,7 +909,7 @@ function OverviewPage({ setPage, theme }: { setPage: (p: string) => void; theme:
                 {recent.map((video) => <button className="recentVideoCard" key={video.id} onClick={() => setPage("稿件")}>
                   <img src={coverSrc(video)} alt="" />
                   <div><h3>{video.title}</h3><p>{date(video.published_at)} · {compact(video.views)} 播放</p>
-                    <dl><div><dt>封面点击率</dt><dd>{percent(video.cover_ctr)}</dd></div><div><dt>平均播放</dt><dd>{seconds(video.avg_watch_seconds)}</dd></div><div><dt>平均进度</dt><dd>{percent(video.avg_watch_percent)}</dd></div></dl>
+                    <dl><div><dt>封标吸引力</dt><dd>{score(video.cover_ctr)}</dd></div><div><dt>平均播放</dt><dd>{seconds(video.avg_watch_seconds)}</dd></div><div><dt>平均进度</dt><dd>{percent(video.avg_watch_percent)}</dd></div></dl>
                   </div>
                 </button>)}
               </div>
@@ -911,11 +925,7 @@ function OverviewPage({ setPage, theme }: { setPage: (p: string) => void; theme:
   );
 }
 function metricWindow(video: Video) {
-  const dateValue = video.metrics["diagnose.log_date"];
-  const hourValue = video.metrics["diagnose.log_hour"];
-  if (dateValue == null || hourValue == null) return "B 站当前统计窗口";
-  const raw = String(dateValue);
-  return `${raw.slice(4, 6)}/${raw.slice(6, 8)} ${String(hourValue).padStart(2, "0")}:00 统计窗口`;
+  return video.captured_at ? `${date(video.captured_at)} 采集 · 稿件对比口径` : "B 站稿件对比口径";
 }
 function coverCtrConfidence(video: Video) {
   const passRate = video.metrics["diagnose.tm_pass_rate"];
@@ -960,7 +970,7 @@ function OverviewInspector({
       <p>发布于 {date(video.published_at)}</p>
       <div className="overviewMetrics">
         <Metric label="播放量" value={compact(video.views)} />
-        <Metric label="封面点击率" value={percent(video.cover_ctr)} />
+        <Metric label="封标吸引力" value={score(video.cover_ctr)} />
         <Metric
           label="3秒跳出率"
           value={percent(video.metrics.threeSecondBounceRate)}
@@ -970,11 +980,11 @@ function OverviewInspector({
         <Metric label="涨粉量" value={compact(video.followers_gained)} />
       </div>
       <p className="metricWindow">
-        封面点击率 · {metricWindow(video)} · {coverCtrConfidence(video)}
+        封标吸引力 · {metricWindow(video)} · {coverCtrConfidence(video)}
       </p>
       <div className="diagnosticSignals">
         <div className="signalGood">
-          <b>封面点击率表现</b>
+          <b>封标吸引力表现</b>
           <span>
             {video.cover_ctr == null
               ? "暂无数据"
@@ -1193,7 +1203,7 @@ function VideoInspector({ video }: { video?: Video }) {
       <h2>{video.title}</h2>
       <div className="metricGrid">
         <Metric label="播放" value={compact(video.views)} />
-        <Metric label="点击率" value={percent(video.cover_ctr)} />
+        <Metric label="吸引力" value={score(video.cover_ctr)} />
         <Metric label="平均进度" value={percent(video.avg_watch_percent)} />
         <Metric label="平均时长" value={seconds(video.avg_watch_seconds)} />
         <Metric label="涨粉" value={compact(video.followers_gained)} />
@@ -1233,6 +1243,12 @@ function VideosPage() {
     [videos, search, sort],
   );
   const current = shown.find((v) => v.id === (selected || shown[0]?.id));
+  const currentIndex = current ? shown.findIndex((video) => video.id === current.id) : -1;
+  const selectAt = (index: number) => {
+    if (!shown.length) return;
+    const target = shown[(index + shown.length) % shown.length];
+    setSelected(target.id);
+  };
   if (pending) return <Loading />;
   if (error) return <ErrorState error={error} />;
   return (
@@ -1257,13 +1273,30 @@ function VideosPage() {
         <EmptyState />
       ) : (
           <div className="videosWorkspace">
-          <VideoDetail video={current} />
+          <section className="panel videoSwitcher" data-sticky="true" aria-label="快速切换稿件">
+            <div className="videoSwitcherHead">
+              <div><span>正在诊断</span><b>{currentIndex + 1} / {shown.length}</b></div>
+              <div className="videoSwitcherPager">
+                <button aria-label="上一篇稿件" onClick={() => selectAt(currentIndex - 1)}><ChevronLeft /></button>
+                <button aria-label="下一篇稿件" onClick={() => selectAt(currentIndex + 1)}><ChevronRight /></button>
+              </div>
+            </div>
+            <div className="videoSwitcherRail">
+              {shown.map((video) => (
+                <button key={video.id} className={`videoSwitchItem ${video.id === current?.id ? "selected" : ""}`} aria-pressed={video.id === current?.id} onClick={() => setSelected(video.id)}>
+                  <img src={coverSrc(video)} alt="" />
+                  <span><b>{video.title}</b><small>{compact(video.views)} 播放 · {percent(video.avg_watch_percent)} 进度</small></span>
+                </button>
+              ))}
+            </div>
+          </section>
+          <VideoDetail video={current} onPrevious={() => selectAt(currentIndex - 1)} onNext={() => selectAt(currentIndex + 1)} />
            <section className="videoCardGrid" aria-label="稿件卡片列表">
              {shown.map((v) => (
                <button
                  key={v.id}
                  className={`videoLibraryCard ${v.id === current?.id ? "selected" : ""}`}
-                 onClick={() => setSelected(v.id)}
+                 onClick={() => { setSelected(v.id); document.querySelector('.videoDetailWorkbench')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }}
                >
                  <div className="videoLibraryCover"><img src={coverSrc(v)} alt="" /><span>{seconds(v.duration_seconds)}</span></div>
                  <div className="videoLibraryBody">
@@ -1271,7 +1304,7 @@ function VideosPage() {
                    <small>
                      {v.bvid} · {date(v.published_at)}
                    </small>
-                   <dl className="videoLibraryMetrics"><div><dt>播放</dt><dd>{compact(v.views)}</dd></div><div><dt>点击率</dt><dd>{percent(v.cover_ctr)}</dd></div><div><dt>平均进度</dt><dd>{percent(v.avg_watch_percent)}</dd></div><div><dt>涨粉</dt><dd>{compact(v.followers_gained)}</dd></div></dl>
+                   <dl className="videoLibraryMetrics"><div><dt>播放</dt><dd>{compact(v.views)}</dd></div><div><dt>吸引力</dt><dd>{score(v.cover_ctr)}</dd></div><div><dt>平均进度</dt><dd>{percent(v.avg_watch_percent)}</dd></div><div><dt>涨粉</dt><dd>{compact(v.followers_gained)}</dd></div></dl>
                  </div>
                </button>
              ))}
@@ -1291,7 +1324,7 @@ const terminalLabels: Record<string, string> = {
 function DetailSection({ title, children }: { title: string; children: React.ReactNode }) {
   return <section className="detailSection"><h3>{title}</h3>{children}</section>;
 }
-function VideoDetail({ video }: { video?: Video }) {
+function VideoDetail({ video, onPrevious, onNext }: { video?: Video; onPrevious?: () => void; onNext?: () => void }) {
   const q = useQuery({
     queryKey: ["timeseries", video?.id],
     queryFn: () =>
@@ -1331,7 +1364,7 @@ function VideoDetail({ video }: { video?: Video }) {
     series: [{ type: "line", smooth: .36, smoothMonotone: "x", symbol: "none", data: retentionPoints.map((point: any) => point.num), lineStyle: { color: PINK, width: 3 }, areaStyle: { color: areaGradient } }],
   };
   const diagnosis = [
-    ["封面点击", video.cover_ctr],
+    ["封标吸引力", video.cover_ctr == null ? null : video.cover_ctr / 5 * 100],
     ["3秒留存", video.metrics.threeSecondBounceRate == null ? null : 100 - Number(video.metrics.threeSecondBounceRate)],
     ["平均观看", video.avg_watch_percent],
     ["互动", video.metrics.interactionRate],
@@ -1352,16 +1385,13 @@ function VideoDetail({ video }: { video?: Video }) {
     legend: { type: "scroll", bottom: 0, icon: "circle", itemWidth: 8, itemHeight: 8, textStyle: { color: chartText } },
     series: [{ type: "pie", radius: ["48%", "72%"], center: ["50%", "44%"], avoidLabelOverlap: true, itemStyle: { borderColor: detailDark ? "#1F2127" : "#FFFFFF", borderWidth: 3, borderRadius: 5 }, label: { formatter: "{b}\n{d}%", fontSize: 10, color: chartText }, data: interactionEntries.map(([name, value], index) => ({ name, value, itemStyle: { color: [PINK, BILI_CYAN, "#FF9AB8", "#36B8D8", "#D64778", "#77C8E2"][index] } })) }],
   };
-  const fanCount = Number(video.metrics.fanAudienceCount);
-  const guestCount = Number(video.metrics.guestAudienceCount);
-  const audienceTotal = (Number.isFinite(fanCount) ? fanCount : 0) + (Number.isFinite(guestCount) ? guestCount : 0);
-  const fanPercent = audienceTotal > 0 ? fanCount / audienceTotal * 100 : Number(video.metrics.fanAudiencePercent) <= 100 ? Number(video.metrics.fanAudiencePercent) : null;
-  const guestPercent = audienceTotal > 0 ? guestCount / audienceTotal * 100 : Number(video.metrics.guestAudiencePercent) <= 100 ? Number(video.metrics.guestAudiencePercent) : null;
+  const fanPercent = video.metrics.fanAudiencePercent != null && Number(video.metrics.fanAudiencePercent) <= 100 ? Number(video.metrics.fanAudiencePercent) : null;
+  const guestPercent = video.metrics.guestAudiencePercent != null && Number(video.metrics.guestAudiencePercent) <= 100 ? Number(video.metrics.guestAudiencePercent) : null;
   return (
     <article className="panel videoDetail videoDetailWorkbench">
       <header className="videoDetailHero">
         <img className="detailCover" src={coverSrc(video)} alt="" />
-        <div><span className="detailEyebrow">当前选中稿件 · {metricWindow(video)}</span><h2>{video.title}</h2><p>{video.bvid} · {seconds(video.duration_seconds)} · 发布于 {date(video.published_at)}</p><div className="heroMetrics"><Metric label="累计播放" value={compact(video.views)} /><Metric label="封面点击率" value={percent(video.cover_ctr)} /><Metric label="平均播放" value={seconds(video.avg_watch_seconds)} /><Metric label="平均进度" value={percent(video.avg_watch_percent)} /><Metric label="涨粉" value={compact(video.followers_gained)} /></div></div>
+        <div><div className="detailTitleRow"><span className="detailEyebrow">当前选中稿件 · {metricWindow(video)}</span><div className="detailPager"><button aria-label="上一篇稿件" onClick={onPrevious}><ChevronLeft /></button><button aria-label="下一篇稿件" onClick={onNext}><ChevronRight /></button></div></div><h2>{video.title}</h2><p>{video.bvid} · {seconds(video.duration_seconds)} · 发布于 {date(video.published_at)}</p><div className="heroMetrics"><Metric label="累计播放" value={compact(video.views)} /><Metric label="封标吸引力" value={score(video.cover_ctr)} /><Metric label="平均播放" value={seconds(video.avg_watch_seconds)} /><Metric label="平均进度" value={percent(video.avg_watch_percent)} /><Metric label="涨粉" value={compact(video.followers_gained)} /></div><p className="metricProvenance">封标吸引力采用创作中心稳定星级；绝对点击率当前未公开。观看效率与观众占比使用稿件对比口径，播放与互动为累计值。</p></div>
       </header>
       <div className="detailMetricBand">
       <DetailSection title="完整数据总览">
@@ -1384,7 +1414,7 @@ function VideoDetail({ video }: { video?: Video }) {
         <DetailSection title="诊断漏斗"><p className="detailHint">封面点击 → 开头留存 → 观看深度 → 互动 → 转粉；均保留原始百分比口径。</p><Chart className="diagnosticChart" option={diagnosisOption} /></DetailSection>
         <DetailSection title="互动构成"><p className="detailHint">六类互动的数量构成，不用单个总数掩盖互动偏好。</p><Chart className="diagnosticChart" option={interactionOption} /></DetailSection>
         <DetailSection title="观众构成">
-          <div className="audienceVisual"><div className="audienceDonut" style={{ "--fan": `${Math.max(0, Math.min(100, fanPercent ?? 0))}%` } as React.CSSProperties}><span><b>{percent(fanPercent)}</b><small>粉丝观众</small></span></div><div className="audienceLegend"><Metric label="粉丝观众" value={percent(fanPercent)} /><Metric label="游客观众" value={percent(guestPercent)} /><p>B 站原始人数：粉丝 {compact(video.metrics.fanAudienceCount)} · 游客 {compact(video.metrics.guestAudienceCount)}</p></div></div>
+          <div className="audienceVisual"><div className="audienceDonut" style={{ "--fan": `${Math.max(0, Math.min(100, fanPercent ?? 0))}%` } as React.CSSProperties}><span><b>{percent(fanPercent)}</b><small>粉丝观看率</small></span></div><div className="audienceLegend"><Metric label="粉丝观看率" value={percent(fanPercent)} /><Metric label="游客占比" value={percent(guestPercent)} /><p>创作中心比例口径；去重观众人数仅作补充，不再用于反推百分比。</p></div></div>
         </DetailSection>
         <DetailSection title="播放终端来源">
           {terminalEntries.length ? <div className="terminalSources">{terminalEntries.map(([key, value]) => <div key={key}><span>{terminalLabels[key] || key}</span><div><i style={{ width: `${Math.min(100, value)}%` }} /></div><b>{percent(value)}</b></div>)}</div> : <p className="muted">该稿件尚未返回终端来源；这不等同于推荐、搜索等渠道来源。</p>}
@@ -1398,22 +1428,37 @@ function VideoDetail({ video }: { video?: Video }) {
     </article>
   );
 }
-function AnalysisLabPage() {
+function AnalysisLabPage({ theme }: { theme: Theme }) {
   const { summary, videos } = useData();
-  const analysisDark = document.documentElement.dataset.theme === "dark";
+  const analysisDark = theme === "dark";
   const analysisText = analysisDark ? "#C9CCD0" : "#61666D";
-  const presets: Record<string, string[]> = {
-    "包装与承接": ["views", "cover_ctr", "avg_watch_percent", "threeSecondBounceRate"],
-    "观看与互动": ["avg_watch_seconds", "avg_watch_percent", "interactionRate"],
-    "互动与转粉": ["interactionRate", "followers_gained", "playToFollowRate"],
+  const gridColor = analysisDark ? "rgba(255,255,255,.075)" : "rgba(96,105,120,.12)";
+  const presets: Record<string, Array<{ id: string; visual: AnalysisVisual }>> = {
+    "效率链路": [
+      { id: "cover_ctr", visual: "area" },
+      { id: "avg_watch_percent", visual: "line" },
+      { id: "interactionRate", visual: "line" },
+      { id: "playToFollowRate", visual: "dot" },
+    ],
+    "规模与转化": [
+      { id: "views", visual: "bar" },
+      { id: "followers_gained", visual: "line" },
+      { id: "playToFollowRate", visual: "dot" },
+    ],
+    "观看质量": [
+      { id: "avg_watch_seconds", visual: "area" },
+      { id: "avg_watch_percent", visual: "line" },
+      { id: "threeSecondBounceRate", visual: "dot" },
+    ],
   };
-  const [preset, setPreset] = useState("包装与承接");
-  const [layers, setLayers] = useState<Array<{ id: string; visual: AnalysisVisual }>>([
-    { id: "views", visual: "bar" },
-    { id: "cover_ctr", visual: "area" },
-    { id: "avg_watch_percent", visual: "line" },
-    { id: "threeSecondBounceRate", visual: "dot" },
-  ]);
+  const [preset, setPreset] = useState("效率链路");
+  const [layers, setLayers] = useState<Array<{ id: string; visual: AnalysisVisual }>>(presets["效率链路"]);
+  const [scaleMode, setScaleMode] = useState<"raw" | "relative">("raw");
+  const [sortBy, setSortBy] = useState("published");
+  const [selectedVideoIds, setSelectedVideoIds] = useState<string[]>(() => videos.map((video) => video.id));
+  useEffect(() => {
+    if (videos.length && !selectedVideoIds.length) setSelectedVideoIds(videos.map((video) => video.id));
+  }, [videos, selectedVideoIds.length]);
   const definitions = analysisMetricGroups.flatMap((group) => group.metrics);
   const definitionMap = Object.fromEntries(definitions.map((definition) => [definition.id, definition]));
   const metricValue = (video: Video, id: string) => {
@@ -1423,62 +1468,99 @@ function AnalysisLabPage() {
   };
   const applyPreset = (name: string) => {
     setPreset(name);
-    const visuals: AnalysisVisual[] = ["bar", "area", "line", "dot"];
-    setLayers((presets[name] || []).map((id, index) => ({ id, visual: visuals[index] || "line" })));
+    setLayers(presets[name].map((layer) => ({ ...layer })));
+    setScaleMode("raw");
   };
   const toggleMetric = (id: string) => {
     setPreset("自定义");
     setLayers((current) => current.some((layer) => layer.id === id)
       ? current.filter((layer) => layer.id !== id)
-      : [...current, { id, visual: current.length ? "line" : "bar" }]);
+      : [...current, { id, visual: definitionMap[id]?.defaultVisual || "line" }]);
   };
-  const palette = [BILI_CYAN, PINK, PINK_DARK, "#1FABDA", PINK_BRIGHT, "#77C8E2"];
-  const rawByMetric = Object.fromEntries(layers.map((layer) => [layer.id, videos.map((video) => metricValue(video, layer.id))]));
+  const toggleVideo = (id: string) => setSelectedVideoIds((current) => current.includes(id)
+    ? current.filter((videoId) => videoId !== id)
+    : [...current, id]);
+  const primaryMetric = layers[0]?.id;
+  const displayVideos = videos
+    .filter((video) => selectedVideoIds.includes(video.id))
+    .slice()
+    .sort((a, b) => sortBy === "views"
+      ? Number(b.views || 0) - Number(a.views || 0)
+      : sortBy === "primary" && primaryMetric
+        ? Number(metricValue(b, primaryMetric) || 0) - Number(metricValue(a, primaryMetric) || 0)
+        : b.published_at.localeCompare(a.published_at));
+  const palette = [PINK, BILI_CYAN, PINK_DARK, "#7D5DE8", PINK_BRIGHT, "#31B6D8"];
+  const rawByMetric = Object.fromEntries(layers.map((layer) => [layer.id, displayVideos.map((video) => metricValue(video, layer.id))]));
   const normalizedByMetric = Object.fromEntries(layers.map((layer) => [layer.id, normalizeMetricValues(rawByMetric[layer.id])]));
   const formatRaw = (id: string, value: number | null) => {
     if (value == null) return "—";
     const definition = definitionMap[id];
     if (definition?.unit === "percent") return percent(value, 2);
     if (definition?.unit === "seconds") return seconds(value);
+    if (definition?.unit === "score") return score(value, 1);
     return compact(value);
   };
+  const unitLabels = { count: "数量", percent: "百分比", seconds: "时长（秒）", score: "星级（0–5）" } as const;
+  const usedUnits = [...new Set(layers.map((layer) => definitionMap[layer.id]?.unit).filter(Boolean))] as Array<"count" | "percent" | "seconds" | "score">;
+  const axisIndex = Object.fromEntries(usedUnits.map((unit, index) => [unit, index]));
+  const rawAxes = usedUnits.map((unit, index) => ({
+    type: "value",
+    name: unitLabels[unit],
+    position: index === 1 ? "right" : "left",
+    offset: index > 1 ? 52 : 0,
+    nameTextStyle: { color: palette[index % palette.length], fontWeight: 650 },
+    axisLabel: { color: analysisText, formatter: unit === "percent" ? "{value}%" : unit === "score" ? "{value}星" : "{value}" },
+    axisLine: { show: index > 0, lineStyle: { color: palette[index % palette.length], opacity: .45 } },
+    splitLine: { show: index === 0, lineStyle: { color: gridColor } },
+    min: unit === "percent" || unit === "score" ? 0 : undefined,
+    max: unit === "score" ? 5 : undefined,
+  }));
   const option = {
-    animationDuration: 560,
+    animationDuration: 480,
     animationEasing: "cubicOut",
-    grid: { left: 48, right: 26, top: 56, bottom: 94 },
+    grid: { left: 64 + Math.max(0, usedUnits.length - 2) * 44, right: usedUnits.length > 1 ? 64 : 28, top: 58, bottom: 84 },
     legend: { type: "scroll", top: 4, data: layers.map((layer) => definitionMap[layer.id]?.label || layer.id), icon: "roundRect", itemWidth: 18, itemHeight: 8, textStyle: { color: analysisText } },
     tooltip: {
       trigger: "axis",
       confine: true,
-      extraCssText: "max-width:320px;white-space:normal;overflow-wrap:anywhere;line-height:1.65;",
+      extraCssText: "max-width:340px;white-space:normal;overflow-wrap:anywhere;line-height:1.65;",
       formatter: (params: any[]) => {
         const index = params?.[0]?.dataIndex;
-        const video = videos[index];
+        const video = displayVideos[index];
         if (!video) return "";
         return `<b>${video.title}</b><br/>${layers.map((layer) => `${definitionMap[layer.id]?.label || layer.id}：${formatRaw(layer.id, rawByMetric[layer.id][index])}`).join("<br/>")}`;
       },
     },
-    xAxis: { type: "category", data: videos.map((video, index) => `${String(index + 1).padStart(2, "0")} · ${video.title}`), axisLabel: { interval: 0, rotate: 34, width: 94, overflow: "truncate", fontSize: 9, color: analysisText, formatter: (value: string) => value.length > 12 ? `${value.slice(0, 12)}…` : value }, axisTick: { show: false } },
-    yAxis: { type: "value", name: "统一尺度", nameTextStyle: { color: analysisText }, min: 0, max: 100, interval: 20, axisLabel: { formatter: "{value}", color: analysisText }, splitLine: { lineStyle: { color: analysisDark ? "rgba(255,255,255,.08)" : "rgba(148,153,160,.16)" } } },
+    xAxis: { type: "category", data: displayVideos.map((video, index) => `${String(index + 1).padStart(2, "0")} · ${video.title}`), axisLabel: { interval: 0, rotate: 30, width: 112, overflow: "truncate", fontSize: 9, color: analysisText, formatter: (value: string) => value.length > 16 ? `${value.slice(0, 16)}…` : value }, axisTick: { show: false }, axisLine: { lineStyle: { color: gridColor } } },
+    yAxis: scaleMode === "relative" ? [{ type: "value", name: "相对位置", min: 0, max: 100, interval: 20, axisLabel: { formatter: "{value}", color: analysisText }, nameTextStyle: { color: analysisText }, splitLine: { lineStyle: { color: gridColor } } }] : rawAxes,
     series: layers.map((layer, index) => {
       const color = palette[index % palette.length];
       const label = definitionMap[layer.id]?.label || layer.id;
-      const base = { name: label, data: normalizedByMetric[layer.id], emphasis: { focus: "series" } };
-      if (layer.visual === "bar") return { ...base, type: "bar", barMaxWidth: 22, itemStyle: { color, opacity: .72, borderRadius: [6, 6, 2, 2] } };
-      if (layer.visual === "dot") return { ...base, type: "scatter", symbolSize: 9, itemStyle: { color, borderColor: "#fff", borderWidth: 2 } };
-      return { ...base, type: "line", smooth: .38, smoothMonotone: "x", showSymbol: false, lineStyle: { color, width: layer.visual === "area" ? 3 : 2.5 }, itemStyle: { color }, areaStyle: layer.visual === "area" ? { color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{ offset: 0, color: index % 2 ? "rgba(255,102,153,.30)" : "rgba(0,161,214,.28)" }, { offset: 1, color: "rgba(255,255,255,0)" }]) } : undefined };
+      const base = { name: label, data: scaleMode === "relative" ? normalizedByMetric[layer.id] : rawByMetric[layer.id], yAxisIndex: scaleMode === "relative" ? 0 : axisIndex[definitionMap[layer.id]?.unit], emphasis: { focus: "series" } };
+      if (layer.visual === "bar") return { ...base, type: "bar", barMaxWidth: 26, itemStyle: { color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{ offset: 0, color }, { offset: 1, color: `${color}66` }]), borderRadius: [7, 7, 2, 2] } };
+      if (layer.visual === "dot") return { ...base, type: "scatter", symbolSize: 10, itemStyle: { color, borderColor: analysisDark ? "#202228" : "#fff", borderWidth: 2 } };
+      return { ...base, type: "line", smooth: .32, smoothMonotone: "x", showSymbol: displayVideos.length <= 8, symbolSize: 6, lineStyle: { color, width: layer.visual === "area" ? 3.2 : 2.6 }, itemStyle: { color }, areaStyle: layer.visual === "area" ? { color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{ offset: 0, color: `${color}55` }, { offset: .65, color: `${color}12` }, { offset: 1, color: `${color}00` }]) } : undefined };
     }),
   };
   return (
     <>
-      <PageIntro eyebrow="把不同指标图层叠加到同一张图表" title="联合分析" />
-      <section className="panel analysisLayerBuilder">
-        <div className="layerBuilderIntro"><Layers3 /><div><h2>指标图层</h2><p>把不同指标叠加到同一张图表；每层可独立选择柱形、渐变面积、折线或数据点。</p></div></div>
-        <div className="analysisPresets">{Object.keys(presets).map((name) => <button className={preset === name ? "selected" : ""} onClick={() => applyPreset(name)} key={name}>{name}</button>)}</div>
-        <div className="metricPickerGroups">{analysisMetricGroups.map((group) => <fieldset key={group.name}><legend>{group.name}</legend>{group.metrics.map((metric) => <label key={metric.id}><input type="checkbox" checked={layers.some((layer) => layer.id === metric.id)} onChange={() => toggleMetric(metric.id)} /><span>{metric.label}</span></label>)}</fieldset>)}</div>
-        <div className="selectedLayers"><span>当前图层</span><div>{layers.map((layer, index) => <div className="analysisLayerChip" key={layer.id}><i style={{ background: palette[index % palette.length] }} /><b>{definitionMap[layer.id]?.label || layer.id}</b><select aria-label={`${definitionMap[layer.id]?.label || layer.id}图形`} value={layer.visual} onChange={(event) => { const visual = event.target.value as AnalysisVisual; setPreset("自定义"); setLayers((current) => current.map((item) => item.id === layer.id ? { ...item, visual } : item)); }}><option value="bar">柱形</option><option value="area">渐变面积</option><option value="line">折线</option><option value="dot">数据点</option></select><button aria-label={`移除${definitionMap[layer.id]?.label || layer.id}`} onClick={() => toggleMetric(layer.id)}><X /></button></div>)}</div></div>
-      </section>
-      {!summary?.configured ? <EmptyState /> : <section className="panel jointAnalysisPanel"><div className="panelHead"><div><h2>多指标统一视图</h2><p>为避免单位差异挤压图形，各指标按自身范围映射至 0–100；悬停显示真实原始值。</p></div><span className="dataEncodingLegend"><i /> B 站粉色与创作中心青色共同编码</span></div>{layers.length ? <Chart className="jointAnalysisChart" option={option} /> : <div className="labEmpty"><Layers3 /><b>至少选择一个指标</b><p>从上方指标组中勾选后，图层会立即加入同一张图表。</p></div>}<p className="sourceNote">统一尺度只改变视觉比较方式，不改变 tooltip 中的原始数据，也不代表因果关系。</p></section>}
+      <PageIntro eyebrow="把不同指标放进同一张图，仍保留真实单位与原始值" title="联合分析" />
+      {!summary?.configured ? <EmptyState /> : <div className="analysisWorkspace">
+        <aside className="panel analysisRecipePanel">
+          <div className="layerBuilderIntro"><Layers3 /><div><h2>分析配方</h2><p>先选问题，再调整数据层。</p></div></div>
+          <div className="analysisPresets">{Object.keys(presets).map((name) => <button aria-pressed={preset === name} className={preset === name ? "selected" : ""} onClick={() => applyPreset(name)} key={name}>{name}</button>)}</div>
+          <div className="analysisSectionLabel"><span>数据层</span><small>{layers.length} 项已启用</small></div>
+          <div className="selectedLayers">{layers.map((layer, index) => <div className="analysisLayerRow" key={layer.id}><i style={{ background: palette[index % palette.length] }} /><span><b>{definitionMap[layer.id]?.label || layer.id}</b><small>{unitLabels[definitionMap[layer.id]?.unit]}</small></span><select aria-label={`${definitionMap[layer.id]?.label || layer.id}图形`} value={layer.visual} onChange={(event) => { const visual = event.target.value as AnalysisVisual; setPreset("自定义"); setLayers((current) => current.map((item) => item.id === layer.id ? { ...item, visual } : item)); }}><option value="bar">柱形</option><option value="area">渐变面积</option><option value="line">折线</option><option value="dot">数据点</option></select><button aria-label={`移除${definitionMap[layer.id]?.label || layer.id}`} onClick={() => toggleMetric(layer.id)}><X /></button></div>)}</div>
+          <details className="metricLibrary"><summary>添加更多指标 <span>＋</span></summary><div className="metricPickerGroups">{analysisMetricGroups.map((group) => <fieldset key={group.name}><legend>{group.name}</legend>{group.metrics.map((metric) => <label key={metric.id}><input type="checkbox" aria-label={metric.label} checked={layers.some((layer) => layer.id === metric.id)} onChange={() => toggleMetric(metric.id)} /><span>{metric.label}</span></label>)}</fieldset>)}</div></details>
+        </aside>
+        <section className="panel analysisCanvasPanel">
+          <div className="analysisCanvasHead"><div><span className="detailEyebrow">{preset === "自定义" ? "自定义组合" : preset}</span><h2>多指标对照</h2><p>{scaleMode === "raw" ? "按真实单位使用独立坐标轴，数值可以直接阅读。" : "每项指标映射为自身稿件范围内的相对位置。"}</p></div><div className="analysisViewControls"><div role="radiogroup" aria-label="数值尺度"><label><input type="radio" name="analysis-scale" checked={scaleMode === "raw"} onChange={() => setScaleMode("raw")} />原始值</label><label><input type="radio" name="analysis-scale" checked={scaleMode === "relative"} onChange={() => setScaleMode("relative")} />相对尺度</label></div><label>排序<select aria-label="稿件排序" value={sortBy} onChange={(event) => setSortBy(event.target.value)}><option value="published">发布时间</option><option value="views">播放量</option><option value="primary">首项指标</option></select></label></div></div>
+          <div className="analysisSelectionRail" aria-label="纳入分析的稿件"><div><b>稿件范围</b><span>{displayVideos.length} / {videos.length}</span><button onClick={() => setSelectedVideoIds(videos.map((video) => video.id))}>全部</button><button onClick={() => setSelectedVideoIds([])}>清除</button></div><div>{videos.map((video) => <button key={video.id} aria-pressed={selectedVideoIds.includes(video.id)} className={selectedVideoIds.includes(video.id) ? "selected" : ""} onClick={() => toggleVideo(video.id)} title={video.title}><img src={coverSrc(video)} alt="" /><span>{video.title}</span></button>)}</div></div>
+          {layers.length && displayVideos.length ? <Chart className="jointAnalysisChart" option={option} /> : <div className="labEmpty"><Layers3 /><b>{layers.length ? "请选择至少一篇稿件" : "请添加至少一个指标"}</b><p>图表会在选择后立即重绘，并保留每项原始数值。</p></div>}
+          <div className="analysisReadout">{layers.map((layer, index) => { const values = rawByMetric[layer.id].filter((value): value is number => value != null); const average = values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : null; return <article key={layer.id}><i style={{ background: palette[index % palette.length] }} /><span>{definitionMap[layer.id]?.label}</span><b>{formatRaw(layer.id, average)}</b><small>{values.length} 篇有值 · {unitLabels[definitionMap[layer.id]?.unit]}</small></article>; })}</div>
+          <p className="sourceNote">播放、互动为稿件累计值；封标吸引力采用创作中心稳定星级；绝对点击率尚未公开。观看效率、跳出、互动率、转粉率与观众占比采用稿件对比口径。相对尺度只用于找同一指标内的高低。</p>
+        </section>
+      </div>}
     </>
   );
 }
@@ -1943,7 +2025,7 @@ function App() {
     ) : page === "稿件" ? (
       <VideosPage />
     ) : page === "联合分析" ? (
-      <AnalysisLabPage />
+      <AnalysisLabPage theme={theme} />
     ) : page === "数据源" ? (
       <DataSourcePage />
     ) : (

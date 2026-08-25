@@ -19,10 +19,10 @@ describe('dashboard visual model', () => {
 
   it('defines all four matrix outcomes and a broad selectable metric catalog', () => {
     expect(quadrantLabels).toEqual([
-      '低点击 · 高深度｜包装待优化',
-      '高点击 · 高深度｜优质内容',
-      '低点击 · 低深度｜整体待诊断',
-      '高点击 · 低深度｜内容承接待优化',
+      '低吸引力 · 高深度｜包装待优化',
+      '高吸引力 · 高深度｜优质内容',
+      '低吸引力 · 低深度｜整体待诊断',
+      '高吸引力 · 低深度｜内容承接待优化',
     ]);
     expect(analysisMetricGroups.flatMap((group) => group.metrics).map((metric) => metric.id)).toEqual(expect.arrayContaining([
       'views',

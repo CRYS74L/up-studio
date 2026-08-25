@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import type { VideoSnapshot } from '../shared/contracts';
+import { bilibiliDataUrl, deriveBilibiliMetrics } from './bilibili-metrics';
 
 export type VideoRecord = {
   id: string; bvid: string; title: string; coverUrl: string | null;
@@ -157,7 +158,7 @@ function sessionFromLogin(urlValue: string | undefined, headers: Headers) {
 }
 
 export class BilibiliWebDataSource implements BilibiliDataSource {
-  readonly version = 'web-data-v8';
+  readonly version = 'web-data-v10';
   private requestCounter = 0;
 
   async startQrLogin() {
@@ -181,7 +182,7 @@ export class BilibiliWebDataSource implements BilibiliDataSource {
     for (let attempt = 0; attempt < 2; attempt += 1) {
       try {
         this.requestCounter += 1;
-        const response = await fetch(`https://member.bilibili.com${path}`, { headers: { ...baseHeaders, cookie: session }, signal: AbortSignal.timeout(timeoutMs) });
+        const response = await fetch(bilibiliDataUrl(path, Date.now() + attempt), { headers: { ...baseHeaders, cookie: session, 'cache-control': 'no-cache', pragma: 'no-cache' }, signal: AbortSignal.timeout(timeoutMs) });
         if (!response.ok) throw new Error(`BILIBILI_HTTP_${response.status}`);
         const parsed = schema.parse(await response.json()) as T & { code?: number };
         if (parsed.code !== 0) throw new Error(`BILIBILI_API_${parsed.code}`);
@@ -281,10 +282,14 @@ export class BilibiliWebDataSource implements BilibiliDataSource {
       rawRealtime[item.bvid] = realtimeResult.status === 'fulfilled' ? realtimeResult.value.data : { error: 'unavailable' };
       rawArchiveView[item.bvid] = archiveViewResult.status === 'fulfilled' ? archiveViewResult.value.data : { error: 'unavailable' };
       rawRetention[item.bvid] = retentionResult.status === 'fulfilled' ? retentionResult.value.data : { error: 'unavailable' };
-      const totalDuration = ov?.stat.total_duration || item.duration || null;
-      const reportedAverage = ov?.stat.play_avg_duration || null;
-      const avgWatchPercent = reportedAverage != null && totalDuration ? reportedAverage / totalDuration * 100 : percent10000(cmp?.full_play_ratio ?? item.stat.full_play_ratio);
-      const avgWatchSeconds = reportedAverage ?? (avgWatchPercent != null && totalDuration ? avgWatchPercent / 100 * totalDuration : null);
+      const derived = deriveBilibiliMetrics({
+        durationSeconds: item.duration,
+        compare: cmp,
+        diagnose: diagnose?.guest_interact,
+        overview: ov,
+      });
+      const avgWatchPercent = derived.avgWatchPercent ?? percent10000(item.stat.full_play_ratio);
+      const avgWatchSeconds = derived.avgWatchSeconds ?? (avgWatchPercent != null && item.duration ? avgWatchPercent / 100 * item.duration : null);
       const sourceNumericMetrics: Record<string, number | null> = {};
       for (const [key, value] of Object.entries(cmp ?? {})) if (typeof value === 'number') sourceNumericMetrics[`compare.${key}`] = value;
       for (const [key, value] of Object.entries(diagnose?.guest_interact ?? {})) if (typeof value === 'number') sourceNumericMetrics[`diagnose.${key}`] = value;
@@ -292,11 +297,10 @@ export class BilibiliWebDataSource implements BilibiliDataSource {
       for (const [key, value] of Object.entries(realtime ?? {})) if (typeof value === 'number') sourceNumericMetrics[`realtime.${key}`] = value;
       const audienceFans = ov?.audience_proportion?.fans ?? null;
       const audienceGuests = ov?.audience_proportion?.guest ?? null;
-      const audienceTotal = audienceFans != null && audienceGuests != null ? audienceFans + audienceGuests : null;
       videos.push({ id: String(item.aid), bvid: item.bvid, title: item.title, coverUrl: item.cover ?? null, durationSeconds: item.duration ?? null, publishedAt: new Date(item.pubtime * 1000).toISOString() });
       snapshots.push({
         videoId: String(item.aid), capturedAt, views: ov?.stat.play ?? cmp?.play ?? item.stat.play ?? null,
-        impressions: null, coverCtr: percent10000(diagnose?.guest_interact.tm_rate), avgWatchSeconds, avgWatchPercent,
+        impressions: null, coverCtr: derived.coverCtr, avgWatchSeconds, avgWatchPercent,
         followersGained: ov?.stat.fan ?? cmp?.total_new_attention_cnt ?? item.stat.fans ?? null,
         metrics: {
           ...sourceNumericMetrics,
@@ -306,10 +310,13 @@ export class BilibiliWebDataSource implements BilibiliDataSource {
           threeSecondBounceRate: percent10000(diagnose?.guest_interact.crash_rate), interactionRate: percent10000(diagnose?.guest_interact.interact_rate),
           playToFollowRate: percent10000(diagnose?.guest_interact.play_trans_fan_rate),
           fanAudienceCount: audienceFans, guestAudienceCount: audienceGuests,
-          fanAudiencePercent: audienceTotal ? audienceFans! / audienceTotal * 100 : null,
-          guestAudiencePercent: audienceTotal ? audienceGuests! / audienceTotal * 100 : null,
+          fanAudiencePercent: derived.fanAudiencePercent,
+          guestAudiencePercent: derived.guestAudiencePercent,
+          coverAttractionScore: derived.coverAttractionScore,
+          coverAttractionIndex: derived.coverAttractionIndex,
+          ...derived.metrics,
           realtimePlay: typeof realtime?.play === 'number' ? realtime.play : typeof realtime?.real_time_play === 'number' ? realtime.real_time_play : typeof realtime?.num === 'number' ? realtime.num : null,
-          avgWatchSecondsDerived: reportedAverage == null && avgWatchSeconds != null ? 1 : 0
+          avgWatchSecondsDerived: !(Number(ov?.stat.play_avg_duration) > 0) && avgWatchSeconds != null ? 1 : 0
         },
         dimensions: {
           audienceProportion: ov?.audience_proportion ?? null,
@@ -345,7 +352,7 @@ export class BilibiliWebDataSource implements BilibiliDataSource {
     const successfulCompare = archiveItems.filter((item) => compareByBvid.has(item.bvid)).length;
     const metricAccessors: Record<string, (snapshot: VideoSnapshot) => number | null | undefined> = {
       views: (snapshot) => snapshot.views,
-      coverCtr: (snapshot) => snapshot.coverCtr,
+      coverAttractionScore: (snapshot) => snapshot.metrics.coverAttractionScore,
       avgWatchSeconds: (snapshot) => snapshot.avgWatchSeconds,
       avgWatchPercent: (snapshot) => snapshot.avgWatchPercent,
       followersGained: (snapshot) => snapshot.followersGained,
@@ -397,7 +404,7 @@ export class BilibiliWebDataSource implements BilibiliDataSource {
       realtime: [...new Set(realtimeResults.flatMap((result) => result.status === 'fulfilled' ? Object.keys(result.value.data) : []))].sort()
       ,retention: [...new Set(retentionResults.flatMap((result) => result.status === 'fulfilled' ? Object.keys(result.value.data) : []))].sort()
     };
-    const plannedNotIntegrated = ['impressions', 'recommendationTrafficSources'];
+    const plannedNotIntegrated = ['absoluteCoverCtr', 'impressions', 'recommendationTrafficSources'];
     const capabilityCounts = {
       archive: { available: archiveItems.length, total: archiveItems.length },
       compare: { available: successfulCompare, total: archiveItems.length },
