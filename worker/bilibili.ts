@@ -158,8 +158,11 @@ function sessionFromLogin(urlValue: string | undefined, headers: Headers) {
 }
 
 export class BilibiliWebDataSource implements BilibiliDataSource {
-  readonly version = 'web-data-v10';
+  readonly version = 'web-data-v11';
   private requestCounter = 0;
+  private activeRequests = 0;
+  private waiting: Array<() => void> = [];
+  private fatalError: Error | null = null;
 
   async startQrLogin() {
     const response = await fetch('https://passport.bilibili.com/x/passport-login/web/qrcode/generate', { headers: baseHeaders });
@@ -178,18 +181,41 @@ export class BilibiliWebDataSource implements BilibiliDataSource {
   }
 
   private async request<T>(session: string, path: string, schema: z.ZodType<T>, timeoutMs = 8_000): Promise<T> {
+    if (this.activeRequests >= 4) await new Promise<void>((resolve) => this.waiting.push(resolve));
+    else this.activeRequests += 1;
+    try {
+      if (this.fatalError) throw this.fatalError;
+      return await this.requestWithRetry(session, path, schema, timeoutMs);
+    } finally {
+      const next = this.waiting.shift();
+      if (next) next();
+      else this.activeRequests -= 1;
+    }
+  }
+
+  private async requestWithRetry<T>(session: string, path: string, schema: z.ZodType<T>, timeoutMs: number): Promise<T> {
     let lastError: unknown;
     for (let attempt = 0; attempt < 2; attempt += 1) {
       try {
         this.requestCounter += 1;
         const response = await fetch(bilibiliDataUrl(path, Date.now() + attempt), { headers: { ...baseHeaders, cookie: session, 'cache-control': 'no-cache', pragma: 'no-cache' }, signal: AbortSignal.timeout(timeoutMs) });
         if (!response.ok) throw new Error(`BILIBILI_HTTP_${response.status}`);
-        const parsed = schema.parse(await response.json()) as T & { code?: number };
-        if (parsed.code !== 0) throw new Error(`BILIBILI_API_${parsed.code}`);
-        return parsed;
+        const body: unknown = await response.json();
+        const result = z.object({ code: z.number() }).parse(body);
+        if (result.code !== 0) throw new Error(`BILIBILI_API_${result.code}`);
+        return schema.parse(body);
       } catch (error) {
         lastError = error;
-        if (attempt === 0 && !/BILIBILI_API_(-101|-111|-352)/.test(error instanceof Error ? error.message : '')) continue;
+        const message = error instanceof Error ? error.message : '';
+        if (/BILIBILI_API_(-101|-111|-352|-412)|BILIBILI_HTTP_(401|403|412|429)/.test(message)) {
+          this.fatalError = error instanceof Error ? error : new Error('BILIBILI_ACCESS_DENIED');
+          throw this.fatalError;
+        }
+        if (attempt === 0 && !(error instanceof z.ZodError) && !/BILIBILI_API_|BILIBILI_HTTP_4/.test(message)) {
+          await new Promise((resolve) => setTimeout(resolve, 350));
+          if (this.fatalError) throw this.fatalError;
+          continue;
+        }
         throw error;
       }
     }
@@ -198,17 +224,22 @@ export class BilibiliWebDataSource implements BilibiliDataSource {
 
   async collect(session: string): Promise<CollectResult> {
     this.requestCounter = 0;
+    this.fatalError = null;
     const startedAt = performance.now();
     const capturedAt = new Date().toISOString();
     const [firstArchive, compare] = await Promise.all([
       this.request(session, '/x/web/data/archive/index?pn=1&ps=20&scene=archive_compare&order=0', archiveSchema),
-      this.request(session, '/x/web/data/archive_diagnose/compare?size=10', compareSchema)
+      this.request(session, '/x/web/data/archive_diagnose/compare?size=10', compareSchema).catch(() => ({ code: 0, data: { list: [] } }))
     ]);
     const totalPages = Math.max(1, Math.ceil(firstArchive.data.pager.total / 20));
     const remainingArchivePages = await Promise.all(Array.from({ length: totalPages - 1 }, (_, index) =>
       this.request(session, `/x/web/data/archive/index?pn=${index + 2}&ps=20&scene=archive_compare&order=0`, archiveSchema)
     ));
     const archiveItems = [firstArchive.data.list, ...remainingArchivePages.map((page) => page.data.list)].flat();
+    if (archiveItems.length !== firstArchive.data.pager.total || new Set(archiveItems.map((item) => item.bvid)).size !== archiveItems.length
+      || remainingArchivePages.some((page) => page.data.pager.total !== firstArchive.data.pager.total)) {
+      throw new Error('BILIBILI_INVENTORY_INCOMPLETE');
+    }
     const indexMs = Math.round(performance.now() - startedAt);
     const compareByBvid = new Map(compare.data.list.map((item) => [item.bvid, item.stat]));
     const missingCompareItems = archiveItems.filter((item) => !compareByBvid.has(item.bvid));
@@ -248,6 +279,7 @@ export class BilibiliWebDataSource implements BilibiliDataSource {
       return this.request(session, `/x/web/data/v2/archive/analyze/graph?cid=${encodeURIComponent(String(cid))}`, retentionSchema, 10_000);
     });
     const enrichmentMs = Math.round(performance.now() - startedAt - indexMs);
+    if (this.fatalError) throw this.fatalError;
     const rawOverview: Record<string, unknown> = {};
     const rawDiagnose: Record<string, unknown> = {};
     const rawTrend: Record<string, unknown> = {};

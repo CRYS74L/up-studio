@@ -7,7 +7,7 @@ import { analysisQuerySchema } from '../shared/contracts';
 import { BilibiliWebDataSource } from './bilibili';
 import { buildManifest } from './backup';
 import { decryptJson, encryptJson, hmac, sha256 } from './crypto';
-import { buildSummaryComparison } from './summary';
+import { buildSummaryComparison, previousCalendarMonth } from './summary';
 
 type Bindings = {
   DB: D1Database; BUCKET: R2Bucket; ASSETS: Fetcher; APP_ORIGIN: string;
@@ -38,6 +38,7 @@ app.delete('/api/devices/:id', async (c) => { await c.env.DB.prepare('UPDATE dev
 app.post('/api/auth/logout', async (c) => { c.header('Set-Cookie', 'insights_session=; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=0'); return c.json({ ok: true }); });
 
 app.post('/api/bilibili/qr/start', async (c) => {
+  if (!c.env.MASTER_ENCRYPTION_KEY_BASE64) return jsonError(c, 503, 'not_configured', '尚未配置登录会话加密密钥，暂时无法连接');
   const source = new BilibiliWebDataSource();
   try { return c.json({ ok: true, ...(await source.startQrLogin()) }); } catch { return jsonError(c, 502, 'bilibili_unavailable', '暂时无法生成 B 站二维码'); }
 });
@@ -54,26 +55,39 @@ app.get('/api/bilibili/qr/status/:key', async (c) => {
 });
 
 async function loadSummaryAt(db: D1Database, capturedAt: string) {
-  const rows = await db.prepare("SELECT COUNT(DISTINCT video_id) videos, MAX(captured_at) fresh, SUM(views) views, SUM(followers_gained) followers, AVG(CAST(json_extract(metrics_json,'$.coverAttractionScore') AS REAL)) cover_ctr, AVG(avg_watch_percent) avg_watch_percent, SUM(avg_watch_seconds*views)/NULLIF(SUM(views),0) avg_watch_seconds FROM video_snapshots WHERE captured_at=?").bind(capturedAt).first<any>();
+  const rows = await db.prepare("SELECT COUNT(DISTINCT video_id) videos, MAX(captured_at) fresh, SUM(views) views, SUM(followers_gained) followers, AVG(CAST(json_extract(metrics_json,'$.coverAttractionScore') AS REAL)) cover_ctr, AVG(avg_watch_percent) avg_watch_percent, SUM(avg_watch_seconds*views)/NULLIF(SUM(CASE WHEN avg_watch_seconds IS NOT NULL THEN views END),0) avg_watch_seconds FROM video_snapshots WHERE captured_at=?").bind(capturedAt).first<any>();
   const latest = await db.prepare('SELECT views,metrics_json FROM video_snapshots WHERE captured_at=?').bind(capturedAt).all<{ views: number; metrics_json: string }>();
   let interactions = 0; let totalViews = 0;
-  for (const item of latest.results) { const metrics = JSON.parse(item.metrics_json || '{}'); interactions += ['likes','comments','danmaku','favorites','coins','shares'].reduce((sum,key)=>sum+(Number(metrics[key])||0),0); totalViews += Number(item.views)||0; }
+  for (const item of latest.results) {
+    const metrics = JSON.parse(item.metrics_json || '{}');
+    const values = ['likes','comments','danmaku','favorites','coins','shares'].map((key) => metrics[key]);
+    if (item.views == null || !values.every((value) => typeof value === 'number' && Number.isFinite(value))) continue;
+    interactions += values.reduce((sum, value) => sum + value, 0); totalViews += item.views;
+  }
   return { ...(rows ?? {}), interaction_rate: totalViews ? interactions / totalViews * 100 : null };
 }
 
 app.get('/api/dashboard/summary', async (c) => {
   const current = await c.env.DB.prepare('SELECT captured_at,source FROM video_snapshots ORDER BY captured_at DESC LIMIT 1').first<{ captured_at: string; source: string }>();
   const currentAt = current?.captured_at;
-  const previous = currentAt && current?.source ? await c.env.DB.prepare('SELECT captured_at FROM video_snapshots WHERE source=? AND captured_at<? GROUP BY captured_at ORDER BY captured_at DESC LIMIT 1').bind(current.source, currentAt).first<{ captured_at: string }>() : null;
+  const comparisonPeriod = currentAt ? previousCalendarMonth(currentAt) : null;
+  // Compare normalized Bilibili metrics across adapter upgrades, not across imports.
+  const sourceFamily = current?.source.startsWith('web-data-v') ? 'web-data-v%' : current?.source;
+  const previous = comparisonPeriod && sourceFamily ? await c.env.DB.prepare('SELECT captured_at FROM video_snapshots WHERE source LIKE ? AND captured_at>=? AND captured_at<? GROUP BY captured_at ORDER BY captured_at DESC LIMIT 1').bind(sourceFamily, comparisonPeriod.start, comparisonPeriod.end).first<{ captured_at: string }>() : null;
   const previousAt = previous?.captured_at;
   const summary = currentAt ? await loadSummaryAt(c.env.DB, currentAt) : {};
   const previousSummary = previousAt ? await loadSummaryAt(c.env.DB, previousAt) : {};
   const comparison = previousAt ? buildSummaryComparison(summary, previousSummary) : buildSummaryComparison(summary, {});
   const lastRun = await c.env.DB.prepare('SELECT status,coverage,coverage_json,started_at,finished_at,error_code,safe_error_detail FROM acquisition_runs ORDER BY started_at DESC LIMIT 1').first<any>();
-  return c.json({ ok: true, configured: Boolean(currentAt), summary, comparison, comparisonCapturedAt: previousAt ?? null, freshnessMinutes: currentAt ? Math.floor((Date.now() - Date.parse(currentAt)) / 60000) : null, acquisition: lastRun ? { ...lastRun, details: JSON.parse(lastRun.coverage_json || '{}'), coverage_json: undefined } : null });
+  return c.json({ ok: true, configured: Boolean(currentAt), summary, comparison, comparisonPeriod, comparisonCapturedAt: previousAt ?? null, freshnessMinutes: currentAt ? Math.floor((Date.now() - Date.parse(currentAt)) / 60000) : null, acquisition: lastRun ? { ...lastRun, details: JSON.parse(lastRun.coverage_json || '{}'), coverage_json: undefined } : null });
 });
 app.get('/api/videos', async (c) => {
-  const rows = (await c.env.DB.prepare('SELECT v.*,s.views,s.impressions,s.cover_ctr,s.avg_watch_seconds,s.avg_watch_percent,s.followers_gained,s.metrics_json,s.dimensions_json,s.captured_at FROM videos v LEFT JOIN video_snapshots s ON s.id=(SELECT id FROM video_snapshots WHERE video_id=v.id ORDER BY captured_at DESC LIMIT 1) ORDER BY v.published_at DESC').all()).results;
+  const capturedAt = c.req.query('capturedAt');
+  if (capturedAt && !z.string().datetime().safeParse(capturedAt).success) return jsonError(c, 400, 'invalid_snapshot', '快照时间格式无效');
+  const query = capturedAt
+    ? c.env.DB.prepare('SELECT v.*,s.views,s.impressions,s.cover_ctr,s.avg_watch_seconds,s.avg_watch_percent,s.followers_gained,s.metrics_json,s.dimensions_json,s.captured_at FROM videos v JOIN video_snapshots s ON s.video_id=v.id WHERE s.captured_at=? ORDER BY v.published_at DESC').bind(capturedAt)
+    : c.env.DB.prepare('SELECT v.*,s.views,s.impressions,s.cover_ctr,s.avg_watch_seconds,s.avg_watch_percent,s.followers_gained,s.metrics_json,s.dimensions_json,s.captured_at FROM videos v LEFT JOIN video_snapshots s ON s.id=(SELECT id FROM video_snapshots WHERE video_id=v.id ORDER BY captured_at DESC LIMIT 1) ORDER BY v.published_at DESC');
+  const rows = (await query.all()).results;
   return c.json({ ok: true, videos: rows.map((row: any) => { const metrics=JSON.parse(row.metrics_json || '{}'); return { ...row, cover_ctr:metrics.coverAttractionScore ?? null, cover_url:`/api/covers/${encodeURIComponent(row.id)}`, metrics, dimensions: JSON.parse(row.dimensions_json || '{}'), metrics_json: undefined, dimensions_json: undefined }; }) });
 });
 app.get('/api/videos/:id', async (c) => {
@@ -187,11 +201,11 @@ app.post('/api/backups/verify', async (c) => c.json({ ok: true, status: 'preflig
 app.post('/api/backups/restore/preflight', async (c) => c.json({ ok: true, status: 'requires_manifest', destructive: false }));
 
 async function collect(env: Bindings, trigger: string) {
-  const active = await env.DB.prepare("SELECT id,started_at FROM acquisition_runs WHERE status='running' AND started_at>? ORDER BY started_at DESC LIMIT 1").bind(new Date(Date.now() - 10 * 60_000).toISOString()).first<{ id: string; started_at: string }>();
-  if (active) return { id: active.id, status: 'skipped', reason: 'already_running', startedAt: active.started_at };
   const id = crypto.randomUUID(); const started = new Date().toISOString();
   const source = new BilibiliWebDataSource();
-  await env.DB.prepare("INSERT INTO acquisition_runs(id,started_at,status,source_version,coverage,retries) VALUES(?,?,'running',?,0,0)").bind(id, started, source.version).run();
+  const cutoff = new Date(Date.now() - 10 * 60_000).toISOString();
+  const claimed = await env.DB.prepare("INSERT INTO acquisition_runs(id,started_at,status,source_version,coverage,retries) SELECT ?,?,'running',?,0,0 WHERE NOT EXISTS (SELECT 1 FROM acquisition_runs WHERE status='running' AND started_at>?)").bind(id, started, source.version, cutoff).run();
+  if (!claimed.meta.changes) return { status: 'skipped', reason: 'already_running' };
   try {
     if (!env.MASTER_ENCRYPTION_KEY_BASE64) throw new Error('ENCRYPTION_KEY_MISSING');
     const stored = await env.DB.prepare("SELECT ciphertext,iv FROM encrypted_secrets WHERE id='bilibili_session'").first<{ ciphertext: string; iv: string }>();
@@ -217,7 +231,7 @@ async function collect(env: Bindings, trigger: string) {
     return { id, status, coverage: result.coverage, details: result.coverageDetails, videos: result.videos.length, trigger, timings, requestCount: result.requestCount };
   } catch (error) {
     const detail = error instanceof Error ? `${error.name}: ${error.message}${error.cause ? ` | cause: ${String(error.cause)}` : ''}` : String(error || 'UNKNOWN');
-    const errorCode = /SESSION|API_-101|API_-111/.test(detail) ? 'session_expired' : error instanceof z.ZodError ? 'schema_changed' : 'network';
+    const errorCode = /SESSION|API_-101|API_-111|HTTP_401/.test(detail) ? 'session_expired' : /API_(-352|-412)|HTTP_(403|412|429)/.test(detail) ? 'risk_control' : /INVENTORY_INCOMPLETE/.test(detail) ? 'inventory_incomplete' : error instanceof z.ZodError ? 'schema_changed' : 'network';
     await env.DB.prepare('UPDATE acquisition_runs SET finished_at=?,status=\'failed\',error_code=?,safe_error_detail=? WHERE id=?').bind(new Date().toISOString(), errorCode, detail.slice(0, 160), id).run();
     return { id, status: 'failed', errorCode };
   }

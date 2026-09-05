@@ -130,7 +130,7 @@
   max-width: 152px;
   padding: 8px 11px;
   color: var(--text);
-  font-size: 10px;
+  font-size: 12px;
   line-height: 1.35;
   font-weight: 650;
   border: 1px solid color-mix(in srgb, var(--blue) 18%, var(--line));
@@ -180,7 +180,7 @@
 .videoDetailHero p,
 .detailEyebrow {
   color: var(--muted);
-  font-size: 11px;
+  font-size: 12px;
 }
 .detailEyebrow {
   display: inline-flex;
@@ -217,7 +217,7 @@
 .detailMetricGrid span,
 .audienceLegend span {
   color: var(--subtle);
-  font-size: 9px;
+  font-size: 12px;
 }
 .heroMetrics b,
 .detailMetricGrid b,
@@ -257,7 +257,7 @@
 .detailHint {
   margin: -4px 0 8px;
   color: var(--subtle);
-  font-size: 9px;
+  font-size: 12px;
   line-height: 1.55;
 }
 .audienceVisual {
@@ -293,9 +293,9 @@
 .audienceDonut b,
 .audienceDonut small { display: block; }
 .audienceDonut b { font-size: 22px; }
-.audienceDonut small { margin-top: 3px; color: var(--muted); font-size: 9px; }
+.audienceDonut small { margin-top: 3px; color: var(--muted); font-size: 12px; }
 .audienceLegend { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
-.audienceLegend p { grid-column: 1/-1; color: var(--subtle); font-size: 9px; line-height: 1.55; }
+.audienceLegend p { grid-column: 1/-1; color: var(--subtle); font-size: 12px; line-height: 1.55; }
 .videoCardGrid {
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
@@ -319,7 +319,7 @@
   background: var(--blue-soft);
 }
 .layerBuilderIntro h2 { margin: 0 0 4px; font-size: 17px; }
-.layerBuilderIntro p { margin: 0; color: var(--muted); font-size: 11px; }
+.layerBuilderIntro p { margin: 0; color: var(--muted); font-size: 12px; }
 .analysisPresets {
   display: flex;
   flex-wrap: wrap;
@@ -331,7 +331,7 @@
   border: 1px solid var(--line);
   border-radius: 999px;
   background: var(--surface-2);
-  font-size: 11px;
+  font-size: 12px;
 }
 .analysisPresets button.selected {
   color: var(--blue);
@@ -355,7 +355,7 @@
 .metricPickerGroups legend {
   padding: 0 5px;
   color: var(--subtle);
-  font-size: 9px;
+  font-size: 12px;
   font-weight: 650;
 }
 .metricPickerGroups label {
@@ -364,7 +364,7 @@
   align-items: center;
   gap: 7px;
   margin-right: 10px;
-  font-size: 10px;
+  font-size: 12px;
   cursor: pointer;
 }
 .metricPickerGroups input { accent-color: var(--blue); }
@@ -377,7 +377,7 @@
   padding-top: 16px;
   border-top: 1px solid var(--line);
 }
-.selectedLayers > span { padding-top: 11px; color: var(--subtle); font-size: 10px; }
+.selectedLayers > span { padding-top: 11px; color: var(--subtle); font-size: 12px; }
 .selectedLayers > div { display: flex; flex-wrap: wrap; gap: 8px; }
 .analysisLayerChip {
   min-height: 44px;
@@ -390,8 +390,8 @@
   background: var(--solid);
 }
 .analysisLayerChip > i { width: 7px; height: 22px; border-radius: 999px; }
-.analysisLayerChip b { font-size: 10px; }
-.analysisLayerChip select { height: 34px; padding: 0 5px; color: var(--muted); font-size: 9px; }
+.analysisLayerChip b { font-size: 12px; }
+.analysisLayerChip select { height: 34px; padding: 0 5px; color: var(--muted); font-size: 12px; }
 .analysisLayerChip button { width: 34px; min-height: 34px; display: grid; place-items: center; border-radius: 9px; }
 .analysisLayerChip button:hover { background: var(--blue-soft); color: var(--blue); }
 .analysisLayerChip button svg { width: 15px; height: 15px; }
@@ -430,7 +430,7 @@
   .diagnosticChart,
   .detailTrendLarge { height: 240px; }
   .matrixQuadrants { inset: 54px 12px 48px 48px; }
-  .matrixQuadrants .quadrant { max-width: 112px; padding: 6px 8px; font-size: 8px; }
+  .matrixQuadrants .quadrant { max-width: 112px; padding: 6px 8px; font-size: 12px; }
   .analysisLayerBuilder { padding: 15px; }
   .analysisLayerChip { width: 100%; }
   .analysisLayerChip b { flex: 1; }
@@ -467,7 +467,7 @@
 .videoSwitcherHead { justify-content: space-between; gap: 8px; padding-left: 4px; }
 .videoSwitcherHead span,
 .videoSwitcherHead b { display: block; }
-.videoSwitcherHead span { color: var(--subtle); font-size: 10px; }
+.videoSwitcherHead span { color: var(--subtle); font-size: 12px; }
 .videoSwitcherHead b { margin-top: 3px; font-size: 13px; font-variant-numeric: tabular-nums; }
 .videoSwitcherPager,
 .detailPager { gap: 4px; }
@@ -523,8 +523,8 @@
 .videoSwitchItem span,
 .videoSwitchItem b,
 .videoSwitchItem small { min-width: 0; display: block; }
-.videoSwitchItem b { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 11px; line-height: 1.35; }
-.videoSwitchItem small { margin-top: 5px; color: var(--subtle); font-size: 9px; white-space: nowrap; }
+.videoSwitchItem b { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 12px; line-height: 1.35; }
+.videoSwitchItem small { margin-top: 5px; color: var(--subtle); font-size: 12px; white-space: nowrap; }
 .detailTitleRow { justify-content: space-between; gap: 12px; }
 .metricProvenance {
   margin: 12px 0 0 !important;
@@ -532,7 +532,7 @@
   border-radius: 12px;
   background: color-mix(in srgb, var(--blue-soft) 58%, transparent);
   color: var(--muted) !important;
-  font-size: 10px !important;
+  font-size: 12px !important;
   line-height: 1.55;
 }
 
@@ -568,7 +568,7 @@
 .analysisRecipePanel h2,
 .analysisRecipePanel p { margin: 0; }
 .analysisRecipePanel h2 { font-size: 15px; letter-spacing: -.015em; }
-.analysisRecipePanel p { margin-top: 3px; color: var(--subtle); font-size: 10px; }
+.analysisRecipePanel p { margin-top: 3px; color: var(--subtle); font-size: 12px; }
 .analysisRecipePanel .analysisPresets {
   display: grid;
   grid-template-columns: 1fr;
@@ -584,7 +584,7 @@
   text-align: left;
   border-radius: 10px;
   color: var(--muted);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 650;
   transition: transform .16s, color .18s, background .18s, box-shadow .18s;
 }
@@ -595,8 +595,8 @@
 }
 .analysisRecipePanel .analysisPresets button:active { transform: scale(.98); }
 .analysisSectionLabel { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
-.analysisSectionLabel span { font-size: 11px; font-weight: 720; }
-.analysisSectionLabel small { color: var(--subtle); font-size: 9px; }
+.analysisSectionLabel span { font-size: 12px; font-weight: 720; }
+.analysisSectionLabel small { color: var(--subtle); font-size: 12px; }
 .analysisRecipePanel .selectedLayers { display: grid; grid-template-columns: 1fr; gap: 7px; }
 .analysisLayerRow {
   min-height: 52px;
@@ -613,14 +613,14 @@
 .analysisLayerRow > span,
 .analysisLayerRow b,
 .analysisLayerRow small { min-width: 0; display: block; }
-.analysisLayerRow b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 10px; }
-.analysisLayerRow small { margin-top: 3px; color: var(--subtle); font-size: 8px; }
-.analysisLayerRow select { height: 36px; min-width: 0; padding: 0 5px; border-radius: 9px; font-size: 9px; }
+.analysisLayerRow b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; }
+.analysisLayerRow small { margin-top: 3px; color: var(--subtle); font-size: 12px; }
+.analysisLayerRow select { height: 36px; min-width: 0; padding: 0 5px; border-radius: 9px; font-size: 12px; }
 .analysisLayerRow button { width: 36px; min-height: 36px; display: grid; place-items: center; border-radius: 9px; color: var(--subtle); }
 .analysisLayerRow button:hover { color: var(--blue); background: var(--blue-soft); }
 .analysisLayerRow svg { width: 14px; }
 .metricLibrary { margin-top: 13px; border-top: 1px solid var(--line); padding-top: 9px; }
-.metricLibrary summary { min-height: 44px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; color: var(--muted); font-size: 10px; font-weight: 650; list-style: none; }
+.metricLibrary summary { min-height: 44px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; color: var(--muted); font-size: 12px; font-weight: 650; list-style: none; }
 .metricLibrary summary::-webkit-details-marker { display: none; }
 .metricLibrary summary span { color: var(--blue); font-size: 18px; }
 .metricLibrary .metricPickerGroups { display: grid; grid-template-columns: 1fr; gap: 8px; }
@@ -632,7 +632,7 @@
 .analysisCanvasHead h2,
 .analysisCanvasHead p { margin: 0; }
 .analysisCanvasHead h2 { margin-top: 4px; font-size: 20px; letter-spacing: -.03em; }
-.analysisCanvasHead p { margin-top: 5px; color: var(--muted); font-size: 10px; }
+.analysisCanvasHead p { margin-top: 5px; color: var(--muted); font-size: 12px; }
 .analysisViewControls { display: flex; align-items: end; gap: 10px; }
 .analysisViewControls [role="radiogroup"] {
   height: 44px;
@@ -649,13 +649,13 @@
   padding: 0 11px;
   border-radius: 9px;
   color: var(--subtle);
-  font-size: 9px;
+  font-size: 12px;
   cursor: pointer;
 }
 .analysisViewControls [role="radiogroup"] label:has(input:checked) { color: var(--blue); background: var(--surface); box-shadow: 0 4px 14px rgba(29,38,58,.08); }
 .analysisViewControls input { position: absolute; opacity: 0; pointer-events: none; }
-.analysisViewControls > label { display: grid; gap: 3px; color: var(--subtle); font-size: 8px; }
-.analysisViewControls select { height: 36px; min-width: 112px; border-radius: 10px; font-size: 9px; }
+.analysisViewControls > label { display: grid; gap: 3px; color: var(--subtle); font-size: 12px; }
+.analysisViewControls select { height: 36px; min-width: 112px; border-radius: 10px; font-size: 12px; }
 .analysisSelectionRail {
   margin: 17px -20px 0;
   padding: 12px 20px;
@@ -664,9 +664,9 @@
   background: color-mix(in srgb, var(--surface-2) 52%, transparent);
 }
 .analysisSelectionRail > div:first-child { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
-.analysisSelectionRail > div:first-child b { font-size: 10px; }
-.analysisSelectionRail > div:first-child span { margin-right: auto; color: var(--subtle); font-size: 9px; }
-.analysisSelectionRail > div:first-child button { min-height: 32px; padding: 0 9px; border-radius: 9px; color: var(--blue); font-size: 9px; }
+.analysisSelectionRail > div:first-child b { font-size: 12px; }
+.analysisSelectionRail > div:first-child span { margin-right: auto; color: var(--subtle); font-size: 12px; }
+.analysisSelectionRail > div:first-child button { min-height: 32px; padding: 0 9px; border-radius: 9px; color: var(--blue); font-size: 12px; }
 .analysisSelectionRail > div:first-child button:hover { background: var(--blue-soft); }
 .analysisSelectionRail > div:last-child { display: flex; gap: 7px; overflow-x: auto; scrollbar-width: thin; padding-bottom: 2px; }
 .analysisSelectionRail > div:last-child button {
@@ -690,9 +690,9 @@
 .analysisReadout span,
 .analysisReadout b,
 .analysisReadout small { display: block; min-width: 0; }
-.analysisReadout span { color: var(--muted); font-size: 9px; }
+.analysisReadout span { color: var(--muted); font-size: 12px; }
 .analysisReadout b { margin-top: 4px; overflow: hidden; text-overflow: ellipsis; font-size: 15px; font-variant-numeric: tabular-nums; }
-.analysisReadout small { margin-top: 3px; color: var(--subtle); font-size: 8px; }
+.analysisReadout small { margin-top: 3px; color: var(--subtle); font-size: 12px; }
 
 @media (max-width: 1180px) {
   .analysisWorkspace { grid-template-columns: 270px minmax(0,1fr); }
@@ -837,7 +837,7 @@ svg {
   white-space: nowrap;
 }
 .logo span {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--muted);
   margin-top: 2px;
 }
@@ -1126,7 +1126,7 @@ main {
 }
 .quadrant {
   position: absolute;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   color: var(--blue);
   background: color-mix(in srgb, var(--solid) 82%, transparent);
@@ -1166,7 +1166,7 @@ main {
   min-width: 0;
 }
 .count {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--muted);
 }
 .heroCover {
@@ -1215,7 +1215,7 @@ main {
   background: rgba(0, 0, 0, 0.66);
   border-radius: 6px;
   padding: 3px 5px;
-  font-size: 10px;
+  font-size: 12px;
 }
 .diagnosis h3 {
   font-size: 14px;
@@ -1224,7 +1224,7 @@ main {
 }
 .muted {
   color: var(--muted);
-  font-size: 11px;
+  font-size: 12px;
 }
 .metricGrid {
   display: grid;
@@ -1248,7 +1248,7 @@ main {
   display: block;
 }
 .metricGrid span {
-  font-size: 10px;
+  font-size: 12px;
   color: var(--muted);
 }
 .metricGrid b {
@@ -1268,7 +1268,7 @@ main {
 .signals b,
 .signals span {
   display: block;
-  font-size: 11px;
+  font-size: 12px;
 }
 .signals span {
   color: var(--muted);
@@ -1298,7 +1298,7 @@ main {
   text-align: center;
   color: var(--muted);
   margin-top: 9px;
-  font-size: 9px;
+  font-size: 12px;
 }
 .trendPanel {
   padding: 20px;
@@ -1313,7 +1313,7 @@ main {
   background: var(--blue-soft);
   color: var(--blue);
   padding: 7px 10px;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 650;
 }
 .statusChip svg {
@@ -1332,7 +1332,7 @@ main {
   display: block;
 }
 .trendStats span {
-  font-size: 10px;
+  font-size: 12px;
   color: var(--muted);
 }
 .trendStats b {
@@ -1403,7 +1403,7 @@ main {
   font-size: 13px;
 }
 .setupCards span {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--muted);
   margin-top: 5px;
   line-height: 1.5;
@@ -1451,7 +1451,7 @@ main {
   font-size: 16px;
 }
 .sheetHead p {
-  font-size: 10px;
+  font-size: 12px;
   color: var(--muted);
   margin-top: 3px;
 }
@@ -1498,7 +1498,7 @@ main {
   padding: 0 12px;
   border: 1px solid var(--line);
   border-radius: var(--radius-tag);
-  font-size: 11px;
+  font-size: 12px;
 }
 .composer {
   margin: 8px 16px 16px;
@@ -1690,7 +1690,7 @@ main {
     max-width: 280px;
   }
   .pageIntro p {
-    font-size: 11px;
+    font-size: 12px;
   }
   .pageIntro .filter {
     width: 44px;
@@ -1757,7 +1757,7 @@ main {
     font-size: 16px;
   }
   .sectionTitle p {
-    font-size: 10px;
+    font-size: 12px;
     color: var(--muted);
     margin-top: 3px;
   }
@@ -1766,7 +1766,7 @@ main {
     align-items: center;
     gap: 5px;
     color: var(--blue);
-    font-size: 11px;
+    font-size: 12px;
   }
   .mobileVideos > button {
     width: 100%;
@@ -1794,7 +1794,7 @@ main {
     display: grid;
     place-items: center;
     text-align: center;
-    font-size: 10px;
+    font-size: 12px;
     font-weight: 850;
     line-height: 1;
   }
@@ -1821,7 +1821,7 @@ main {
   }
   .videoText small,
   .videoNumbers small {
-    font-size: 9px;
+    font-size: 12px;
     color: var(--muted);
     margin-top: 4px;
   }
@@ -1879,7 +1879,7 @@ main {
     justify-content: center;
     gap: 3px;
     color: var(--muted);
-    font-size: 9px;
+    font-size: 12px;
     width: 58px;
   }
   .mobileNav button.active {
@@ -1996,7 +1996,7 @@ main {
 .coverageNoticeHead div span {
   margin-top: 4px;
   color: var(--muted);
-  font-size: 10px;
+  font-size: 12px;
 }
 .coverageBadge {
   padding: 7px 9px;
@@ -2004,7 +2004,7 @@ main {
   border-radius: 10px;
   background: color-mix(in srgb, var(--warning) 12%, var(--solid));
   color: var(--warning);
-  font-size: 10px;
+  font-size: 12px;
   white-space: nowrap;
 }
 .coverageMetrics,
@@ -2021,7 +2021,7 @@ main {
   border-radius: 9px;
   background: var(--surface-2);
   color: var(--muted);
-  font-size: 9px;
+  font-size: 12px;
 }
 .coverageMetrics .complete,
 .runMetricCoverage .complete,
@@ -2038,7 +2038,7 @@ main {
 .runCoverageReport details {
   margin-top: 10px;
   color: var(--muted);
-  font-size: 10px;
+  font-size: 12px;
 }
 .coverageNotice summary,
 .runCoverageReport summary {
@@ -2067,7 +2067,7 @@ main {
 }
 .mapCoverage {
   margin-top: 6px !important;
-  font-size: 10px !important;
+  font-size: 12px !important;
 }
 .mapCoverage.complete {
   color: var(--positive) !important;
@@ -2101,14 +2101,14 @@ main {
 .overviewMap .panelHead h2 small,
 .overviewTrend h2 small {
   color: var(--muted);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 450;
   margin-left: 7px;
 }
 .mapHelp {
   min-height: 36px;
   color: var(--muted);
-  font-size: 11px;
+  font-size: 12px;
 }
 .overviewMapChart {
   height: 448px;
@@ -2132,7 +2132,7 @@ main {
 .quadrantCards span small {
   display: block;
   color: var(--muted);
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 450;
   margin-top: 5px;
 }
@@ -2175,7 +2175,7 @@ main {
 }
 .inspectorHead > span {
   color: var(--muted);
-  font-size: 11px;
+  font-size: 12px;
 }
 .inspectorHead > div {
   margin-left: auto;
@@ -2205,7 +2205,7 @@ main {
   overflow: hidden;
 }
 .overviewInspector > p {
-  font-size: 10px;
+  font-size: 12px;
   color: var(--muted);
   margin: 7px 0 16px;
 }
@@ -2218,7 +2218,7 @@ main {
 .metricWindow {
   margin: 8px 0 0 !important;
   color: var(--muted) !important;
-  font-size: 9px !important;
+  font-size: 12px !important;
   text-align: right;
 }
 .overviewMetrics > div {
@@ -2235,7 +2235,7 @@ main {
   display: block;
 }
 .overviewMetrics span {
-  font-size: 9px;
+  font-size: 12px;
   color: var(--muted);
 }
 .overviewMetrics b {
@@ -2264,7 +2264,7 @@ main {
   place-items: center;
   background: var(--positive);
   color: #fff;
-  font-size: 10px;
+  font-size: 12px;
 }
 .diagnosticSignals .signalWarn:before {
   content: "−";
@@ -2273,7 +2273,7 @@ main {
 .diagnosticSignals b,
 .diagnosticSignals span {
   display: block;
-  font-size: 10px;
+  font-size: 12px;
 }
 .diagnosticSignals span {
   color: var(--muted);
@@ -2313,7 +2313,7 @@ main {
   display: block;
 }
 .trendSide span {
-  font-size: 9px;
+  font-size: 12px;
   color: var(--muted);
 }
 .trendSide b {
@@ -2612,13 +2612,13 @@ main {
   display: block;
 }
 .ranking strong {
-  font-size: 11px;
+  font-size: 12px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 .ranking small {
-  font-size: 9px;
+  font-size: 12px;
   color: var(--muted);
   margin-top: 4px;
 }
@@ -2645,7 +2645,7 @@ main {
   height: 44px;
 }
 .mapControls span {
-  font-size: 9px;
+  font-size: 12px;
   color: var(--muted);
 }
 select {
@@ -2674,7 +2674,7 @@ select {
 }
 .mapLegend span,
 .statusPill {
-  font-size: 10px;
+  font-size: 12px;
   background: var(--surface-2);
   border: 1px solid var(--line);
   border-radius: var(--radius-tag);
@@ -2696,7 +2696,7 @@ select {
   background: var(--surface-2);
 }
 .inspector > p {
-  font-size: 10px;
+  font-size: 12px;
   color: var(--muted);
   margin: 14px 0 5px;
 }
@@ -2708,7 +2708,7 @@ select {
 .inspector > small {
   display: block;
   color: var(--muted);
-  font-size: 9px;
+  font-size: 12px;
   text-align: center;
 }
 .videoToolbar {
@@ -2786,7 +2786,7 @@ select {
   text-overflow: ellipsis;
 }
 .videoTable small {
-  font-size: 9px;
+  font-size: 12px;
   color: var(--muted);
   margin-top: 5px;
 }
@@ -2795,7 +2795,7 @@ select {
   display: block;
 }
 .videoTable button > div span {
-  font-size: 9px;
+  font-size: 12px;
   color: var(--muted);
 }
 .videoTable button > div b {
@@ -2814,7 +2814,7 @@ select {
   margin: 13px 0 4px;
 }
 .videoDetail > p {
-  font-size: 10px;
+  font-size: 12px;
   color: var(--muted);
 }
 .videoDetail h3 {
@@ -2840,7 +2840,7 @@ select {
   display: block;
 }
 .audience span {
-  font-size: 9px;
+  font-size: 12px;
   color: var(--muted);
 }
 .audience b {
@@ -2861,7 +2861,7 @@ select {
   gap: 5px;
 }
 .labControls label span {
-  font-size: 10px;
+  font-size: 12px;
   color: var(--muted);
 }
 .labControls select {
@@ -2999,7 +2999,7 @@ select {
   font-size: 12px;
 }
 .qrBox button {
-  font-size: 11px;
+  font-size: 12px;
   color: #666;
 }
 .runHero {
@@ -3028,7 +3028,7 @@ select {
 }
 .runCoverageReport > div:first-child > span {
   color: var(--muted);
-  font-size: 9px;
+  font-size: 12px;
 }
 .runMetricCoverage > span {
   display: flex;
@@ -3036,7 +3036,7 @@ select {
   gap: 5px;
 }
 .runMetricCoverage > span b {
-  font-size: 9px;
+  font-size: 12px;
 }
 .plannedMetrics {
   padding-top: 10px;
@@ -3059,12 +3059,12 @@ select {
   letter-spacing: -0.04em;
 }
 .sourceFieldSummary > span {
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
 }
 .sourceFieldSummary > small {
   color: var(--muted);
-  font-size: 9px;
+  font-size: 12px;
 }
 .plannedMetrics p {
   margin: 7px 0;
@@ -3087,7 +3087,7 @@ select {
   margin: 8px 0 0;
   padding-left: 18px;
   color: var(--warning);
-  font-size: 10px;
+  font-size: 12px;
   line-height: 1.65;
 }
 .capabilityCoverage {
@@ -3106,16 +3106,16 @@ select {
   border: 1px solid var(--line);
   background: var(--surface-2);
   color: var(--muted);
-  font-size: 9px;
+  font-size: 12px;
 }
 .capabilityCoverage > span.complete { color: var(--positive); border-color: color-mix(in srgb, var(--positive) 25%, var(--line)); }
 .capabilityCoverage > span.missing { color: var(--warning); border-color: color-mix(in srgb, var(--warning) 32%, var(--line)); }
 .runWarnings { margin-top: 10px; padding: 10px 12px; border-radius: 12px; background: color-mix(in srgb, var(--warning) 8%, var(--surface)); }
-.runWarnings summary { color: var(--warning); font-size: 10px; font-weight: 700; cursor: pointer; }
+.runWarnings summary { color: var(--warning); font-size: 12px; font-weight: 700; cursor: pointer; }
 .runHero > b {
   display: inline-block;
   text-transform: uppercase;
-  font-size: 10px;
+  font-size: 12px;
   padding: 6px 9px;
   border-radius: 8px;
   background: var(--surface-2);
@@ -3143,7 +3143,7 @@ select {
   margin-top: 14px;
 }
 .runHero span {
-  font-size: 10px;
+  font-size: 12px;
   color: var(--muted);
 }
 .runCard dl {
@@ -3164,7 +3164,7 @@ select {
   border-bottom: 1px solid var(--line);
 }
 dt {
-  font-size: 9px;
+  font-size: 12px;
   color: var(--muted);
 }
 dd {
@@ -3196,7 +3196,7 @@ dd {
   margin: 0;
 }
 .importCard p {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--muted);
   margin-top: 5px;
 }
@@ -3266,7 +3266,7 @@ dd {
   align-items: center;
   gap: 8px;
   color: var(--positive);
-  font-size: 11px;
+  font-size: 12px;
   background: color-mix(in srgb, var(--positive) 8%, transparent);
   padding: 10px 12px;
   border-radius: 12px;
@@ -3297,13 +3297,13 @@ dd {
 .recentVideoCard img { width: 100%; aspect-ratio: 16/9; object-fit: cover; display: block; background: var(--surface-2); }
 .recentVideoCard > div { padding: 12px; }
 .recentVideoCard h3 { font-size: 12px; line-height: 1.45; margin: 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-.recentVideoCard p { color: var(--muted); font-size: 9px; margin: 7px 0 10px; }
+.recentVideoCard p { color: var(--muted); font-size: 12px; margin: 7px 0 10px; }
 .recentVideoCard dl, .videoLibraryMetrics { margin: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; }
-.recentVideoCard dt, .videoLibraryMetrics dt { color: var(--muted); font-size: 8px; }
-.recentVideoCard dd, .videoLibraryMetrics dd { font-size: 11px; font-weight: 700; margin: 4px 0 0; }
+.recentVideoCard dt, .videoLibraryMetrics dt { color: var(--muted); font-size: 12px; }
+.recentVideoCard dd, .videoLibraryMetrics dd { font-size: 12px; font-weight: 700; margin: 4px 0 0; }
 .homeWatchPanel { margin-top: 14px; }
 .homeWatchChart { height: 390px; }
-.textButton { color: var(--blue); font-size: 11px; padding: 0 10px; }
+.textButton { color: var(--blue); font-size: 12px; padding: 0 10px; }
 
 /* Bilibili-style rectangular manuscript cards. */
 .videoCardGrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; align-content: start; }
@@ -3313,23 +3313,23 @@ dd {
 .videoLibraryCard:active { transform: scale(.985); }
 .videoLibraryCover { position: relative; }
 .videoLibraryCover img { width: 100%; aspect-ratio: 16/9; object-fit: cover; display: block; background: var(--surface-2); }
-.videoLibraryCover span { position: absolute; right: 8px; bottom: 8px; padding: 3px 6px; border-radius: 7px; color: #fff; background: rgba(0,0,0,.68); font-size: 9px; backdrop-filter: blur(8px); }
+.videoLibraryCover span { position: absolute; right: 8px; bottom: 8px; padding: 3px 6px; border-radius: 7px; color: #fff; background: rgba(0,0,0,.68); font-size: 12px; backdrop-filter: blur(8px); }
 .videoLibraryBody { padding: 12px; }
 .videoLibraryBody > strong { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 35px; font-size: 12px; line-height: 1.45; }
-.videoLibraryBody > small { display: block; color: var(--muted); font-size: 9px; margin-top: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.videoLibraryBody > small { display: block; color: var(--muted); font-size: 12px; margin-top: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .videoLibraryMetrics { grid-template-columns: repeat(4, 1fr); padding-top: 11px; margin-top: 11px; border-top: 1px solid var(--line); }
-.audienceEvidence { font-size: 9px !important; line-height: 1.5; color: var(--muted); }
+.audienceEvidence { font-size: 12px !important; line-height: 1.5; color: var(--muted); }
 
 /* Composable dashboard builder: modules instead of arbitrary axes. */
 .compositionPicker { padding: 20px; display: grid; grid-template-columns: 250px minmax(0, 1fr); gap: 20px; margin-bottom: 14px; }
 .compositionPicker h2 { margin: 0 0 6px; font-size: 16px; }
-.compositionPicker p { margin: 0; color: var(--muted); font-size: 11px; line-height: 1.6; }
+.compositionPicker p { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.6; }
 .compositionChoices { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 9px; }
 .compositionChoices button { min-width: 0; display: grid; grid-template-columns: 8px 1fr; column-gap: 8px; align-items: center; text-align: left; padding: 10px; border: 1px solid var(--line); border-radius: 13px; background: var(--surface-2); }
 .compositionChoices button.selected { border-color: var(--blue); background: var(--blue-soft); }
 .compositionChoices button > span { width: 8px; height: 28px; border-radius: 5px; grid-row: 1/3; }
-.compositionChoices b { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 10px; }
-.compositionChoices small { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--muted); font-size: 8px; }
+.compositionChoices b { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; }
+.compositionChoices small { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--muted); font-size: 12px; }
 .compositionGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
 .compositionBlock { padding: 18px; min-width: 0; }
 .compositionChart { height: 360px; }
@@ -3339,18 +3339,18 @@ dd {
 .jointAnalysisPicker .compositionChoices button > span { background: linear-gradient(180deg, #ff9fba, #fb7299 55%, #d94f7a); }
 .jointAnalysisPanel { padding: 20px; }
 .jointAnalysisChart { height: min(62vh, 610px); min-height: 440px; }
-.dataEncodingLegend { display: inline-flex; align-items: center; gap: 7px; color: var(--muted); font-size: 10px; }
+.dataEncodingLegend { display: inline-flex; align-items: center; gap: 7px; color: var(--muted); font-size: 12px; }
 .dataEncodingLegend i { width: 10px; height: 10px; border-radius: 50%; background: var(--blue); box-shadow: 0 0 0 4px color-mix(in srgb, var(--blue) 16%, transparent); }
 .detailSection { padding-top: 18px; margin-top: 18px; border-top: 1px solid var(--line); }
 .detailSection > h3 { margin: 0 0 12px; font-size: 13px; }
-.detailSection h4 { margin: 18px 0 8px; font-size: 11px; color: var(--muted); }
+.detailSection h4 { margin: 18px 0 8px; font-size: 12px; color: var(--muted); }
 .detailMetricGrid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .terminalSources { display: grid; gap: 9px; }
-.terminalSources > div { display: grid; grid-template-columns: 64px minmax(0, 1fr) 48px; align-items: center; gap: 10px; font-size: 10px; }
+.terminalSources > div { display: grid; grid-template-columns: 64px minmax(0, 1fr) 48px; align-items: center; gap: 10px; font-size: 12px; }
 .terminalSources > div > div { height: 7px; overflow: hidden; border-radius: 999px; background: color-mix(in srgb, var(--blue) 10%, var(--surface-2)); }
 .terminalSources i { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #ff9fba, #fb7299); }
 .terminalSources b { text-align: right; font-variant-numeric: tabular-nums; }
-.sourceNote { margin: 10px 0 0; color: var(--muted); font-size: 9px; line-height: 1.55; }
+.sourceNote { margin: 10px 0 0; color: var(--muted); font-size: 12px; line-height: 1.55; }
 .retentionSummary { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-bottom: 10px; }
 .retentionSummary > div { padding: 10px; border-radius: 12px; background: var(--surface-2); }
 .homeWatchChart { min-height: 430px; }

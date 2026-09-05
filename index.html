@@ -6,6 +6,9 @@
     <meta name="theme-color" content="#f4f6f9" />
     <meta name="description" content="面向哔哩哔哩创作者的私有数据洞察看板" />
     <title>哔哩哔哩数据看板</title>
+    <script>
+      try { const saved = localStorage.getItem('insights-theme'); document.documentElement.dataset.theme = saved === 'light' || saved === 'dark' ? saved : matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'; } catch {}
+    </script>
   </head>
   <body>
     <div id="root"></div>

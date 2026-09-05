@@ -1,0 +1,153 @@
+/* Shared iOS / iPadOS-inspired web design system. Native text, controls and charts. */
+:root {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI Variable", "PingFang SC", "Microsoft YaHei UI", system-ui, sans-serif;
+  font-size: 15px; line-height: 1.5;
+  --bg: #f2f2f7; --surface: #fff; --solid: #fff; --surface-2: #f5f5f8;
+  --text: #1c1c1e; --muted: #686873; --subtle: #777781;
+  --line: #e9e9ee; --line-strong: #d3d3dc; --blue: #de477b; --blue-soft: #fce8ef;
+  --cyan: #2599a8; --positive: #20885a; --negative: #d34343; --warning: #a86b17;
+  --shadow: 0 2px 12px #25254b03; --radius-surface: 26px; --radius-control: 12px;
+  --glass: rgba(255,255,255,.58); --glass-border: rgba(255,255,255,.85);
+}
+:root[data-theme="dark"] {
+  --bg: #101014; --surface: #1c1c20; --solid: #1c1c20; --surface-2: #27272d;
+  --text: #f5f5f7; --muted: #b1b1bb; --subtle: #a0a0ac; --line: #303036; --line-strong: #494952;
+  --blue: #ff81ac; --blue-soft: #392430; --cyan: #58c4d1; --warning: #efbe6e;
+  --glass: rgba(36,36,43,.65); --glass-border: rgba(255,255,255,.09); --shadow: 0 2px 12px #00000006;
+}
+button, input, select, textarea { font: inherit; }
+button, a, input, select, summary { -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+button, a { transition: background-color 160ms, color 160ms, transform 180ms; }
+button:active { transform: scale(.975); transition-duration: 70ms; }
+button:disabled { opacity: .45; cursor: default; transform: none; }
+button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, summary:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }
+h1, h2, h3, p { overflow-wrap: anywhere; }
+.app { display: grid; grid-template-columns: 280px minmax(0, 1fr); }
+.sidebar { inset: 20px auto 20px 20px; width: 244px; padding: 28px 16px 20px; border-radius: 32px; border: 1px solid var(--glass-border); background: var(--glass); backdrop-filter: blur(32px) saturate(150%); box-shadow: 0 12px 40px #25254b08; }
+.logo { gap: 12px; padding: 0 7px; margin-bottom: 34px; }
+.logoMark { flex-shrink: 0; width: 48px; height: 48px; border-radius: 16px; background: var(--solid); color: #f35b8d; box-shadow: 0 3px 14px #00000008; }
+.logoMark svg { width: 25px; height: 25px; }
+.sidebar .logo b { font-size: 20px; height: auto; line-height: 1.35; letter-spacing: -.025em; }
+.logo span { font-size: 12px; margin-top: 3px; }
+.sidebar nav { gap: 8px; }
+.sidebar nav button, .sideBottom > button { height: 50px; min-height: 50px; font-size: 15px; padding: 0 14px; border-radius: 15px; color: var(--text); }
+.sidebar nav button.active { box-shadow: none; background: var(--blue-soft); color: var(--blue); }
+.sidebar nav button svg, .sideBottom > button svg { width: 22px; height: 22px; }
+.sidebar nav button:last-child { margin-top: 16px; }
+.profile { padding-top: 20px; }
+.profile b { font-size: 12px; }.profile span { font-size: 12px; }
+.avatar { background: var(--blue-soft); color: var(--blue); box-shadow: none; }
+.app > main { padding: 34px 30px 48px; overflow: visible; min-width: 0; width: 100%; max-width: 1660px; margin: 0 auto; }
+.iosHeader { display: flex; flex-wrap: wrap; gap: 20px; justify-content: space-between; align-items: center; margin: 0 2px 22px; }
+.iosTitle h1 { margin: 0; font-size: clamp(30px, 3vw, 42px); font-weight: 750; line-height: 1.25; letter-spacing: -.035em; }
+.iosTitle p { margin: 7px 0 0; color: var(--muted); font-size: 14px; }
+.iosHeaderActions { display: flex; align-items: center; gap: 12px; }
+.glassCircle { display: inline-grid; place-items: center; width: 46px; height: 46px; flex-shrink: 0; border-radius: 50%; border: 1px solid var(--glass-border); background: var(--glass); backdrop-filter: blur(16px); box-shadow: 0 3px 16px #00000004; }
+.glassCircle svg { width: 21px; height: 21px; }
+.syncCapsule { display: flex; gap: 8px; align-items: center; padding: 0 20px; height: 46px; border-radius: 25px; background: var(--blue-soft); color: var(--blue); border: 1px solid var(--glass-border); font-size: 14px; font-weight: 600; }
+.syncNotice { flex: 0 0 100%; display: flex; align-items: center; gap: 12px; padding: 10px 16px; background: var(--surface); border-radius: 16px; font-size: 13px; }
+.syncNotice.error { color: var(--negative); }.syncNotice button:first-of-type { margin-left: auto; color: var(--blue); white-space: nowrap; }
+.pageStage { animation: iosPage 240ms ease-out; }
+.pageStage > .pageIntro { margin: 0 0 18px; }.pageStage > .pageIntro h1 { display: none; }.pageIntro p { color: var(--muted); font-size: 13px; }
+.snapshotStatus { display: flex; justify-content: flex-end; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); margin: -6px 4px 14px; flex-wrap: wrap; }
+.snapshotStatus > svg { width: 15px; height: 15px; }.snapshotStatus.stale { color: var(--warning); }
+.snapshotStatus button { display: flex; align-items: center; gap: 3px; color: var(--blue); font-size: 12px; min-height: 32px; }.snapshotStatus button svg { width: 15px; }
+.snapshotTimestamp { color: var(--subtle); font-size: 12px; }
+.iosMetrics, .iosChartPanel, .iosRecent, .iosHealth { background: var(--surface); border-radius: 26px; box-shadow: var(--shadow); min-width: 0; }
+.iosMetrics { padding: 20px 24px 14px; margin-bottom: 18px; }
+.iosMetrics h2, .iosSectionHead h2 { font-size: 19px; line-height: 1.3; font-weight: 700; letter-spacing: -.02em; margin: 0; }
+.metricCells { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: 10px; }
+.metricCells article { padding: 16px 24px 14px; position: relative; min-width: 0; }
+.metricCells article:nth-child(3n+1) { padding-left: 4px; }.metricCells article:nth-child(-n+3) { border-bottom: 1px solid var(--line); }
+.metricCells article:not(:nth-child(3n))::after { content: ''; position: absolute; top: 18px; bottom: 18px; right: 0; width: 1px; background: var(--line); }
+.metricLabel { display: flex; align-items: center; gap: 9px; color: var(--muted); font-size: 13px; }
+.metricLabel svg { width: 21px; height: 21px; stroke-width: 2.2; }
+.tone-pink { color: #f35b8d; }.tone-blue { color: #3799e5; }.tone-orange { color: #f58a35; }.tone-purple { color: #9b77df; }.tone-teal { color: #2cb0bc; }
+.metricCells strong { display: block; margin-top: 6px; font-size: clamp(26px, 2.65vw, 38px); font-weight: 720; line-height: 1.3; letter-spacing: -.045em; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.metricCells strong em { font-style: normal; font-size: .65em; color: var(--muted); margin-left: 10px; font-weight: 450; letter-spacing: -.02em; }
+.metricComparison { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 5px; font-size: 12px; color: var(--subtle); }.metricComparison small { font-size: inherit; }
+.iosChartPanel { padding: 20px 24px 12px; margin-bottom: 18px; }
+.iosSectionHead { display: flex; align-items: center; justify-content: space-between; gap: 14px; }
+.iosSegments { display: grid; grid-template-columns: repeat(var(--segments), 1fr); padding: 3px; border-radius: 12px; background: var(--surface-2); position: relative; isolation: isolate; }
+.segmentThumb { position: absolute; top: 3px; bottom: 3px; left: 3px; width: calc((100% - 6px) / var(--segments)); border-radius: 9px; background: var(--solid); box-shadow: 0 1px 5px #00000013; transform: translateX(calc(var(--selected) * 100%)); transition: transform 280ms cubic-bezier(.22,1,.36,1); z-index: -1; }
+.iosSegments button { min-height: 34px; font-size: 12px; padding: 0 18px; white-space: nowrap; }.iosSegments button[aria-pressed=true] { font-weight: 600; }
+.chartContext { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 10px 0 0; color: var(--subtle); font-size: 12px; }
+.chartContext select { background: none; border: 0; color: var(--muted); font-size: 12px; height: 32px; min-width: 100px; }
+.iosPerformanceChart { height: 220px; width: 100%; }
+.chartTable { border-top: 1px solid var(--line); margin-top: 6px; font-size: 12px; }.chartTable summary { cursor: pointer; color: var(--subtle); padding: 10px 0 2px; }.tableScroll { overflow: auto; max-height: 400px; }.chartTable table { width: 100%; border-collapse: collapse; text-align: left; }.chartTable th, .chartTable td { padding: 8px; border-bottom: 1px solid var(--line); }.chartTable td:first-child { min-width: 180px; }.chartTable td:not(:first-child) { white-space: nowrap; }.chartTable td button { text-align: left; font-size: 12px; }
+.iosOverviewBottom { display: grid; grid-template-columns: 1.25fr 1fr; gap: 18px; align-items: start; }
+.iosRecent, .iosHealth { padding: 20px 22px 14px; }.iosRecent .textButton { font-size: 12px; display: flex; align-items: center; gap: 3px; min-height: 32px; }
+.iosVideoRow { display: flex; align-items: center; gap: 12px; padding: 12px 0; width: 100%; text-align: left; border-bottom: 1px solid var(--line); }.iosVideoRow:last-child { border: 0; }.iosVideoRow:hover { background: var(--surface-2); }.iosVideoRow img { width: 90px; aspect-ratio: 16/9; object-fit: cover; border-radius: 9px; background: var(--surface-2); }
+.rowTitle { min-width: 0; flex: 1; }.rowTitle b { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; font-size: 12px; font-weight: 550; line-height: 1.5; }.rowTitle small { display: block; margin-top: 4px; color: var(--subtle); font-size: 12px; }.rowValue { font-size: 13px; white-space: nowrap; font-variant-numeric: tabular-nums; }.rowValue small { display: block; font-size: 12px; text-align: right; color: var(--subtle); }.iosVideoRow > svg { width: 14px; flex-shrink: 0; color: var(--subtle); }
+.healthRow { display: flex; align-items: center; gap: 12px; width: 100%; padding: 14px 0; text-align: left; border-bottom: 1px solid var(--line); }.healthRow > span:nth-child(2) { flex: 1; }.healthRow b, .healthRow small { display: block; }.healthRow b { font-size: 13px; font-weight: 550; }.healthRow small { font-size: 12px; color: var(--subtle); margin-top: 2px; }.healthRow strong { font-size: 13px; font-weight: 500; white-space: nowrap; }.healthIcon { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 12px; flex-shrink: 0; }.healthIcon.blue { color: #348bea; background: #348bea16; }.healthIcon.purple { color: #9872dc; background: #9872dc16; }.healthIcon.teal { color: #28a6b7; background: #28a6b716; }.healthFootnote { color: var(--subtle); font-size: 12px; line-height: 1.65; margin: 13px 0 0; }
+.panel { border: 0; background: var(--surface); box-shadow: var(--shadow); border-radius: 24px; }
+.primary { background: var(--blue); color: #fff; border-radius: 24px; box-shadow: none; }.secondary { background: var(--surface-2); border: 0; border-radius: 24px; }.primary, .secondary { padding: 10px 20px; font-size: 13px; min-height: 44px; }
+.videoToolbar { gap: 12px; }.search { background: var(--surface); border: 0; border-radius: 14px; }.search input { font-size: 14px; }.videoToolbar > select { border: 0; border-radius: 14px; background: var(--surface); font-size: 13px; }
+.videoSwitcher { top: 12px; border-radius: 20px; border: 1px solid var(--glass-border); background: var(--glass); backdrop-filter: blur(26px) saturate(150%); box-shadow: 0 8px 25px #00000006; }.videoSwitcher::after { display: none; }.videoSwitchItem { border-radius: 12px; }.videoSwitchItem b { font-size: 12px; }.videoSwitchItem small { font-size: 12px; }.videoSwitchItem.selected { background: var(--blue-soft); box-shadow: none; border-color: transparent; }.videoLibraryCard { border: 0; border-radius: 20px; box-shadow: none; }.videoLibraryCard.selected { box-shadow: 0 0 0 2px var(--blue); }.videoLibraryCard:hover { transform: translateY(-2px); box-shadow: none; }.videoLibraryBody { padding: 16px; }.videoLibraryBody > strong { font-size: 14px; }.videoLibraryBody > small { font-size: 12px; }.videoLibraryMetrics dt { font-size: 12px; }.videoLibraryMetrics dd { font-size: 13px; }.videoDetailHero h2 { font-size: 24px; }.videoDetailHero p, .metricProvenance { font-size: 12px; line-height: 1.65; }.detailSection { border-radius: 18px; }.detailSection h3 { font-size: 15px; }.heroMetrics .metric span, .heroMetrics dt { font-size: 12px; }.heroMetrics .metric b { font-size: 20px; }
+.analysisWorkspace { gap: 18px; grid-template-columns: 280px minmax(0, 1fr); }.analysisRecipePanel { top: 16px; padding: 20px; border: 0; }.analysisRecipePanel h2 { font-size: 18px; }.analysisRecipePanel p { font-size: 12px; }.analysisRecipePanel .analysisPresets button { font-size: 12px; }.analysisLayerRow { border-radius: 12px; }.analysisLayerRow span b { font-size: 12px; }.analysisLayerRow select { font-size: 12px; }.analysisSectionLabel span { font-size: 13px; }.analysisSectionLabel small { font-size: 12px; }.analysisReadout span, .analysisReadout small { font-size: 12px; }.analysisReadout b { font-size: 18px; }.analysisCanvasPanel { padding: 22px; border-radius: 24px; }.analysisLayerRow button { min-height: 36px; }
+.sourceGrid, .settingsGrid { gap: 20px; }.connectionCard, .settingCard { padding: 26px; }.connectionCard p, .settingCard p { font-size: 13px; line-height: 1.7; }.sourceGrid h2, .settingsGrid h2 { font-size: 20px; }.runHero { border-radius: 18px; }.capabilityCoverage span { font-size: 12px; }.coverageNotice { font-size: 12px; border-radius: 18px; }.coverageNotice summary { line-height: 1.6; }.metricProvenance { color: var(--subtle); }
+.iosEmpty { padding: 70px 30px; text-align: center; background: var(--surface); border-radius: 28px; }.iosEmpty h2 { font-size: 25px; }.iosEmpty p { max-width: 430px; margin: 14px auto 24px; color: var(--muted); font-size: 14px; }.iosEmpty .primary { display: inline-flex; align-items: center; gap: 8px; }.iosEmpty small { display: block; margin-top: 20px; font-size: 12px; color: var(--subtle); }.emptySymbol { display: grid; place-items: center; color: var(--blue); background: var(--blue-soft); width: 70px; height: 70px; margin: 0 auto 24px; border-radius: 24px; }.emptySymbol svg { width: 32px; height: 32px; }
+.iosLoading { position: relative; }.iosLoading > span { display: block; padding: 20px; color: var(--subtle); text-align: center; }.skeleton { background: linear-gradient(100deg, var(--surface) 20%, var(--surface-2) 45%, var(--surface) 70%); background-size: 300% 100%; animation: shimmer 1.8s ease-in-out infinite; border-radius: 26px; }.metricsSkeleton { height: 280px; margin-bottom: 18px; }.chartSkeleton { height: 300px; }
+.insightsDialog { color: var(--text); background: var(--solid); border: 1px solid var(--glass-border); border-radius: 30px; padding: 28px; width: min(540px, calc(100vw - 32px)); max-height: 85dvh; overflow: auto; box-shadow: 0 20px 100px #0003; animation: sheetEnter 280ms cubic-bezier(.22,1,.36,1); }.insightsDialog::backdrop { background: #10102055; backdrop-filter: blur(4px); }.insightsDialog h2 { font-size: 27px; line-height: 1.35; letter-spacing: -.025em; margin-bottom: 12px; }.insightSymbol { display: grid; place-items: center; width: 48px; height: 48px; color: var(--blue); background: var(--blue-soft); border-radius: 16px; }.insightsDescription, .insightsFootnote { font-size: 12px; color: var(--muted); line-height: 1.7; }.insightItem { width: 100%; text-align: left; position: relative; padding: 18px 24px 18px 0; border-top: 1px solid var(--line); }.insightItem small { color: var(--blue); display: block; font-size: 12px; }.insightItem b { display: block; margin-top: 8px; font-size: 15px; }.insightItem p { color: var(--muted); font-size: 13px; line-height: 1.65; }.insightItem > svg { position: absolute; right: 0; top: 50%; }.sheetHandle { display: none; }
+.menuScrim { display: none; }
+.detailTabs { margin: 24px 0; max-width: 520px; }
+.detailSections .detailMetricBand, .detailSections .diagnosticChartGrid, .detailSections .detailTrendGrid { display: contents; }
+.detailSections { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+.detailSections .detailSection { display: none; }
+.detailSections.section-0 .detailMetricBand .detailSection { display: block; }
+.detailSections.section-0 .diagnosticChartGrid > :nth-child(2) { display: block; }
+.detailSections.section-1 .diagnosticChartGrid > :first-child, .detailSections.section-1 .detailTrendGrid > :first-child { display: block; }
+.detailSections.section-2 .diagnosticChartGrid > :nth-child(3), .detailSections.section-2 .diagnosticChartGrid > :nth-child(4) { display: block; }
+.detailSections.section-3 .detailTrendGrid > :nth-child(2) { display: block; grid-column: 1/-1; }
+.detailMetricGrid { display: grid; grid-template-columns: repeat(3,1fr); gap: 1px; background: var(--line); border-radius: 15px; overflow: hidden; }
+.detailMetricGrid .metric { border-radius: 0; border: 0; padding: 16px; background: var(--surface-2); }
+.metric > span { font-size: 12px; }.metric > b { font-size: 18px; }.heroMetrics .metric { background: none; border: 0; border-left: 1px solid var(--line); border-radius: 0; padding-left: 14px; }.heroMetrics .metric:first-child { border: 0; padding-left: 0; }
+.videoSwitcherHead { min-width: 132px; }.videoSwitcherHead b, .videoSwitcherHead span { white-space: nowrap; }
+.detailHint, .sourceNote { font-size: 12px; line-height: 1.65; }.detailEyebrow { background: none; color: var(--subtle); padding: 0; border-radius: 0; }.metricProvenance { background: none; padding: 0; }
+.videoDetailHero .detailCover { aspect-ratio: 16/9; height: auto; object-fit: cover; box-shadow: none; }
+.analysisViewControls input[type="radio"] { position: static; opacity: 1; width: 15px; height: 15px; margin: 0 6px 0 0; accent-color: var(--blue); appearance: auto; clip: auto; clip-path: none; pointer-events: auto; }
+@media (max-width: 899px) { .detailSections { grid-template-columns: 1fr; }.detailTabs { max-width: none; }.videoSwitcherHead { min-width: 100px; } }
+@media (max-width: 1100px) { .sourceGrid, .settingsGrid { grid-template-columns: minmax(0,1fr); }.sourceGrid > *, .settingsGrid > * { min-width: 0; }.importCard { flex-wrap: wrap; }.importCard > div { min-width: 0; } }
+@keyframes iosPage { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes sheetEnter { from { opacity: 0; transform: translateY(24px) scale(.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+@keyframes shimmer { to { background-position: -150% 0; } }
+::view-transition-old(root) { animation: iosFadeOut 180ms ease-out both; z-index: 1; }
+::view-transition-new(root) { animation: iosFadeIn 180ms ease-out both; z-index: 2; }
+@keyframes iosFadeOut { to { opacity: 0; } } @keyframes iosFadeIn { from { opacity: 0; } }
+@media (min-width: 1600px) { .app > main { padding-left: 44px; padding-right: 44px; }.iosPerformanceChart { height: 270px; }.metricCells article { padding-top: 20px; padding-bottom: 20px; } }
+@media (max-width: 1190px) { .app { grid-template-columns: 236px minmax(0,1fr); }.sidebar { width: 212px; left: 12px; }.sidebar .logo b { font-size: 18px; }.logo { gap: 8px; }.logoMark { width: 40px; height: 40px; }.logo span { font-size: 12px; }.app > main { padding: 28px 20px 40px; }.iosOverviewBottom { grid-template-columns: 1fr; }.iosHealth { display: grid; grid-template-columns: repeat(3,1fr); gap: 0 16px; }.iosHealth .iosSectionHead, .iosHealth .healthFootnote { grid-column: 1/-1; }.healthRow { flex-wrap: wrap; }.healthRow strong { margin-left: 50px; }.metricCells article { padding-left: 18px; padding-right: 18px; }.analysisWorkspace { grid-template-columns: 1fr; }.analysisRecipePanel { position: static; }.analysisCanvasPanel { grid-row: 1; } }
+@media (max-width: 1023px) and (min-width: 700px) { .app { grid-template-columns: 84px minmax(0,1fr); }.sidebar { width: 64px; padding: 20px 8px; border-radius: 25px; }.sidebar .logo { padding: 0; justify-content: center; }.sidebar .logo > div:last-child, .sidebar nav span, .sideBottom > button span, .profile { display: none; }.sidebar nav button, .sideBottom > button { padding: 0; justify-content: center; }.iosHeaderActions { gap: 8px; }.iosTitle h1 { font-size: 34px; } }
+@media (max-width: 699px) {
+  .app { display: block; }.app > main { padding: 22px 16px calc(100px + env(safe-area-inset-bottom)); }.sidebar { display: none; }.mobileHeader { display: flex; position: absolute; top: 20px; right: 16px; background: none; padding: 0; border: 0; }.mobileHeader .logo { display: none; }.mobileHeader .iconButton { background: var(--glass); border-radius: 50%; width: 42px; height: 42px; }.iosHeader { align-items: flex-start; gap: 14px; margin-bottom: 18px; }.iosTitle { padding-right: 50px; width: 100%; }.iosTitle h1 { font-size: 34px; }.iosTitle p { font-size: 13px; }.iosHeaderActions { width: 100%; justify-content: flex-end; gap: 8px; }.glassCircle { width: 42px; height: 42px; }.syncCapsule { height: 44px; padding: 0 16px; }.snapshotStatus { justify-content: flex-start; margin-top: -2px; font-size: 12px; }.snapshotTimestamp { display: none; }.snapshotStatus button { margin-left: auto; }
+  .iosMetrics { padding: 20px 20px 10px; border-radius: 24px; }.metricCells { grid-template-columns: repeat(2,minmax(0,1fr)); }.metricCells article { padding: 15px 0 15px 18px; }.metricCells article:nth-child(3n+1) { padding-left: 18px; }.metricCells article:nth-child(odd) { padding-left: 0; }.metricCells article:nth-child(-n+4) { border-bottom: 1px solid var(--line); }.metricCells article::after { display: none; }.metricCells article:nth-child(odd)::after { display: block; }.metricCells strong { font-size: 31px; }.metricLabel { font-size: 12px; gap: 6px; }.metricLabel svg { width: 18px; }.metricComparison { font-size: 12px; }
+  .iosChartPanel { padding: 20px 16px 12px; }.iosChartPanel .iosSectionHead { align-items: flex-start; flex-direction: column; }.iosSegments { width: 100%; }.iosSegments button { min-height: 38px; padding: 0 10px; }.chartContext { align-items: flex-start; }.chartContext span { max-width: 60%; line-height: 1.5; }.iosPerformanceChart { height: 240px; }.iosOverviewBottom { gap: 16px; }.iosRecent, .iosHealth { padding: 20px 18px 12px; border-radius: 24px; }.iosVideoRow { gap: 10px; }.iosVideoRow img { width: 76px; }.rowTitle b { font-size: 12px; }.rowTitle small { font-size: 12px; }.rowValue { font-size: 12px; }.iosVideoRow > svg { display: none; }.iosHealth { display: block; }.healthRow { flex-wrap: nowrap; }.healthRow strong { margin-left: 0; }
+  .mobileNav { display: grid; grid-template-columns: repeat(4,1fr); position: fixed; bottom: calc(12px + env(safe-area-inset-bottom)); left: 20px; right: 20px; width: auto; height: 68px; padding: 5px; border-radius: 30px; border: 1px solid var(--glass-border); background: var(--glass); backdrop-filter: blur(24px) saturate(180%); box-shadow: 0 8px 35px #00000012; z-index: 40; }.mobileNav button { min-height: 54px; display: flex; flex-direction: column; justify-content: center; align-items: center; border-radius: 24px; gap: 2px; padding: 0; font-size: 12px; }.mobileNav button svg { width: 21px; height: 21px; }.mobileNav button.active { color: var(--blue); background: var(--blue-soft); }
+  .menuOpen .sidebar { display: flex; width: 244px; top: 12px; bottom: 12px; left: 12px; z-index: 60; padding: 28px 16px 20px; animation: iosPage 180ms; }.menuOpen .sidebar .logo > div:last-child, .menuOpen .sidebar nav span, .menuOpen .sideBottom > button span { display: block; }.menuOpen .sidebar nav button, .menuOpen .sideBottom > button { justify-content: flex-start; padding: 0 14px; }.menuOpen .sidebar .profile { display: flex; }.menuOpen .menuScrim { display: block; position: fixed; inset: 0; width: 100%; height: 100dvh; border-radius: 0; background: #0005; z-index: 55; }
+  .videoToolbar { flex-wrap: wrap; }.videoToolbar .search { width: 100%; }.videoToolbar > select { height: 44px; }.videoCardGrid { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; }.videoLibraryBody { padding: 12px; }.videoLibraryBody > strong { font-size: 12px; }.videoLibraryMetrics { grid-template-columns: repeat(2,1fr); }.videoDetailWorkbench { padding: 18px; }.videoDetailHero h2 { font-size: 21px; }.videoSwitcher { top: 6px; }.analysisRecipePanel, .analysisCanvasPanel { padding: 18px; }.sourceGrid, .settingsGrid { grid-template-columns: 1fr; }.connectionCard, .settingCard { padding: 22px; }
+  .insightsDialog { margin: auto 0 0; width: 100%; max-width: 100%; padding: 18px 24px calc(28px + env(safe-area-inset-bottom)); border-radius: 30px 30px 0 0; }.sheetHandle { display: block; width: 36px; height: 5px; border-radius: 3px; background: var(--line-strong); margin: -6px auto 16px; }.insightsDialog h2 { font-size: 25px; }
+  .syncNotice { flex-wrap: wrap; }.syncNotice button:first-of-type { margin-left: 0; }
+}
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }.pageStage, .insightsDialog { transform: none; } }
+@media (prefers-reduced-transparency: reduce) { .sidebar, .mobileNav, .glassCircle, .videoSwitcher { background: var(--solid); backdrop-filter: none; } }
+@media (prefers-contrast: more) { :root { --subtle: var(--text); --muted: var(--text); }.sidebar, .mobileNav, .panel, .iosMetrics, .iosChartPanel { border: 1px solid var(--text); background: var(--solid); } }
+
+/* A narrower type scale: titles 28–30, primary numbers 28, body 14, supporting text 12–13. */
+.iosTitle h1 { font-size: 30px; line-height: 1.3; letter-spacing: -.025em; }
+.metricCells strong { font-size: 28px; letter-spacing: -.025em; }
+.metricLabel { font-size: 14px; }
+.metricComparison, .metricComparison small { font-size: 12px; }
+.comparisonBasis { margin: 8px 0 2px; font-size: 12px; color: var(--muted); line-height: 1.6; }
+.snapshotStatus, .snapshotStatus button, .snapshotTimestamp, .chartContext, .chartContext select { font-size: 12px; }
+.logo span { font-size: 12px; }.profile span { font-size: 12px; }
+.iosSegments button { font-size: 13px; }.rowTitle b { font-size: 14px; }.rowTitle small, .rowValue small { font-size: 12px; }.rowValue { font-size: 14px; }
+.healthRow b, .healthRow strong { font-size: 14px; }.healthRow small, .healthFootnote, .iosRecent .textButton { font-size: 12px; }
+.videoSwitchItem b { font-size: 13px; }.videoSwitchItem small, .videoSwitcherHead span { font-size: 12px; }
+.videoLibraryBody > strong { font-size: 14px; }.videoLibraryBody > small, .videoLibraryMetrics dt { font-size: 12px; }
+.analysisRecipePanel p, .analysisRecipePanel .analysisPresets button, .analysisSectionLabel small, .analysisLayerRow select, .analysisReadout span, .analysisReadout small, .sourceNote, .detailHint, .detailEyebrow { font-size: 12px; }
+.detailMetricGrid .metric > span { font-size: 12px; }.detailMetricGrid .metric > b { font-size: 17px; }
+.insightsDialog h2 { font-size: 24px; }.iosEmpty h2 { font-size: 24px; }.videoDetailHero h2 { font-size: 22px; }
+@media (max-width: 699px) {
+  .iosTitle h1 { font-size: 28px; }.metricCells strong { font-size: 27px; }.metricLabel { font-size: 13px; }.metricComparison { font-size: 12px; }
+  .iosHeaderActions { gap: 10px; }.snapshotStatus { font-size: 12px; }.rowTitle b { font-size: 13px; }.rowTitle small, .rowValue small { font-size: 12px; }
+  .mobileNav button { font-size: 12px; }.iosVideoRow img { width: 72px; }.videoLibraryBody > small { white-space: normal; }.videoDetailHero h2 { font-size: 21px; }
+}

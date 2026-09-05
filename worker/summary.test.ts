@@ -1,5 +1,17 @@
 import { describe, expect, it } from 'vitest';
-import { buildSummaryComparison } from './summary';
+import { buildSummaryComparison, previousCalendarMonth } from './summary';
+
+describe('previous calendar month in Asia/Shanghai', () => {
+  it('uses the previous natural month, not the previous sample or a rolling 30 days', () => {
+    expect(previousCalendarMonth('2026-09-05T00:00:00.000Z')).toEqual({ start: '2026-07-31T16:00:00.000Z', end: '2026-08-31T16:00:00.000Z', label: '2026年8月' });
+  });
+  it('handles year rollover at local midnight', () => {
+    expect(previousCalendarMonth('2025-12-31T16:00:00.000Z')).toEqual({ start: '2025-11-30T16:00:00.000Z', end: '2025-12-31T16:00:00.000Z', label: '2025年12月' });
+  });
+  it('handles leap February', () => {
+    expect(previousCalendarMonth('2024-03-31T02:00:00.000Z')).toEqual({ start: '2024-01-31T16:00:00.000Z', end: '2024-02-29T16:00:00.000Z', label: '2024年2月' });
+  });
+});
 
 describe('summary comparison', () => {
   it('reports honest value, percent, and percentage-point deltas', () => {
