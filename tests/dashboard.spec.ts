@@ -43,12 +43,12 @@ test('overview presents stale data honestly and switches metrics without replaci
 
 test('overview identifies its monthly baseline and uses a readable type scale', async ({ page }) => {
   await page.route('**/api/dashboard/summary', (route) => route.fulfill({ json: { ok: true, ...summary,
-    comparisonPeriod: { label: '2026年7月' }, comparisonCapturedAt: '2026-07-29T08:00:00.000Z',
+    comparisonPeriod: { label: '2026年7月25日' }, comparisonCapturedAt: '2026-07-25T08:00:00.000Z',
     comparison: { views: { current: 6000, previous: 5000, delta: 1000, changePercent: 20, direction: 'up', deltaKind: 'percent' } },
   } }));
   await page.goto('/');
-  await expect(page.locator('.comparisonBasis')).toContainText('2026/07/29');
-  await expect(page.locator('.metricComparison').first()).toContainText('较上月');
+  await expect(page.locator('.comparisonBasis')).toContainText('2026/07/25');
+  await expect(page.locator('.metricComparison').first()).toContainText('较一个月前');
   await expect(page.getByText('较上个快照')).toHaveCount(0);
   const sizes = await page.evaluate(() => ({ title: parseFloat(getComputedStyle(document.querySelector('.iosTitle h1')!).fontSize), number: parseFloat(getComputedStyle(document.querySelector('.metricCells strong')!).fontSize), caption: parseFloat(getComputedStyle(document.querySelector('.metricComparison')!).fontSize) }));
   expect(sizes.title).toBeLessThanOrEqual(30);

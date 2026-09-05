@@ -48,10 +48,10 @@ export function OverviewPage({ navigate, theme }: { navigate: (page: string, id?
   const stale = summary.freshnessMinutes == null || summary.freshnessMinutes > 60;
   return <div className="iosOverview">
     <div className={`snapshotStatus ${stale ? 'stale' : ''}`}><Clock3 /><span>{stale ? '历史快照' : '最近快照'} · {ageLabel(summary.freshnessMinutes)}</span><span className="snapshotTimestamp">{date(s.fresh)}</span><button onClick={() => navigate('数据源')}>查看详情 <ChevronRight /></button></div>
-    <section className="iosMetrics"><h2>创作表现</h2><p className="comparisonBasis">{summary.comparisonCapturedAt ? `上月基准：${date(summary.comparisonCapturedAt)} · 与上月最后一份快照比较` : `${summary.comparisonPeriod?.label ?? '上月'}暂无有效快照，不计算变化`}</p><div className="metricCells">{cards.map(({ label, key, value, suffix, Icon, tone, note }) => {
+    <section className="iosMetrics"><h2>创作表现</h2><p className="comparisonBasis">{summary.comparisonCapturedAt ? `一个月前基准：${date(summary.comparisonCapturedAt)} · 按对应日期回溯完整一个月` : `比较基准：${summary.comparisonPeriod?.label ?? '一个月前的对应日期'} · 缺少当天历史数据，不计算变化`}</p><div className="metricCells">{cards.map(({ label, key, value, suffix, Icon, tone, note }) => {
       const delta = summary.comparison?.[key];
-      const change = !delta && summary.comparisonCapturedAt ? '上月该指标缺失' : formatChange(delta, key);
-      return <article key={key} title={note}><div className="metricLabel"><Icon className={`tone-${tone}`} /><span>{label}</span></div><strong>{value}{suffix && <em>{suffix}</em>}</strong><div className="metricComparison"><span>{change}</span>{delta && delta.delta !== 0 && <small>较上月</small>}</div></article>;
+      const change = !delta && summary.comparisonCapturedAt ? '基准日该指标缺失' : formatChange(delta, key);
+      return <article key={key} title={note}><div className="metricLabel"><Icon className={`tone-${tone}`} /><span>{label}</span></div><strong>{value}{suffix && <em>{suffix}</em>}</strong><div className="metricComparison"><span>{change}</span>{delta && delta.delta !== 0 && <small>较一个月前</small>}</div></article>;
     })}</div></section>
     <section className="iosChartPanel"><div className="iosSectionHead"><h2>稿件表现</h2><Segmented items={['播放量', '观看质量', '吸引力']} value={metric} onChange={setMetric} label="表现指标" /></div>
       <div className="chartContext"><span>全部 {videos.length} 篇 · {metric === '吸引力' ? '稳定星级，非绝对点击率' : metric === '观看质量' ? '平均观看进度' : '每篇稿件累计播放'} · 点击柱形查看稿件</span><select aria-label="表现图排序" value={sort} onChange={(e) => setSort(e.target.value)}><option value="published">按发布时间</option><option value="views">按播放量</option></select></div>

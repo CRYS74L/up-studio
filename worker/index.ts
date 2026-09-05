@@ -7,7 +7,7 @@ import { analysisQuerySchema } from '../shared/contracts';
 import { BilibiliWebDataSource } from './bilibili';
 import { buildManifest } from './backup';
 import { decryptJson, encryptJson, hmac, sha256 } from './crypto';
-import { buildSummaryComparison, previousCalendarMonth } from './summary';
+import { buildSummaryComparison, monthAgoReference } from './summary';
 
 type Bindings = {
   DB: D1Database; BUCKET: R2Bucket; ASSETS: Fetcher; APP_ORIGIN: string;
@@ -70,10 +70,10 @@ async function loadSummaryAt(db: D1Database, capturedAt: string) {
 app.get('/api/dashboard/summary', async (c) => {
   const current = await c.env.DB.prepare('SELECT captured_at,source FROM video_snapshots ORDER BY captured_at DESC LIMIT 1').first<{ captured_at: string; source: string }>();
   const currentAt = current?.captured_at;
-  const comparisonPeriod = currentAt ? previousCalendarMonth(currentAt) : null;
+  const comparisonPeriod = currentAt ? monthAgoReference(currentAt) : null;
   // Compare normalized Bilibili metrics across adapter upgrades, not across imports.
   const sourceFamily = current?.source.startsWith('web-data-v') ? 'web-data-v%' : current?.source;
-  const previous = comparisonPeriod && sourceFamily ? await c.env.DB.prepare('SELECT captured_at FROM video_snapshots WHERE source LIKE ? AND captured_at>=? AND captured_at<? GROUP BY captured_at ORDER BY captured_at DESC LIMIT 1').bind(sourceFamily, comparisonPeriod.start, comparisonPeriod.end).first<{ captured_at: string }>() : null;
+  const previous = comparisonPeriod && sourceFamily ? await c.env.DB.prepare('SELECT captured_at FROM video_snapshots WHERE source LIKE ? AND captured_at>=? AND captured_at<=? GROUP BY captured_at ORDER BY captured_at DESC LIMIT 1').bind(sourceFamily, comparisonPeriod.start, comparisonPeriod.end).first<{ captured_at: string }>() : null;
   const previousAt = previous?.captured_at;
   const summary = currentAt ? await loadSummaryAt(c.env.DB, currentAt) : {};
   const previousSummary = previousAt ? await loadSummaryAt(c.env.DB, previousAt) : {};

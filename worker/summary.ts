@@ -1,16 +1,18 @@
 export type SummaryValues = Record<string, number | null | undefined>;
 
-/** Calendar boundaries in Asia/Shanghai, returned as UTC instants for D1. */
-export function previousCalendarMonth(capturedAt: string) {
+/** Same local date/time one month ago; clamp month-end dates without rolling forward. */
+export function monthAgoReference(capturedAt: string) {
   const offset = 8 * 60 * 60 * 1000;
   const local = new Date(Date.parse(capturedAt) + offset);
   const year = local.getUTCFullYear();
   const month = local.getUTCMonth();
-  const previous = new Date(Date.UTC(year, month - 1, 1));
+  const day = Math.min(local.getUTCDate(), new Date(Date.UTC(year, month, 0)).getUTCDate());
+  const previous = new Date(Date.UTC(year, month - 1, day));
+  const target = new Date(Date.UTC(year, month - 1, day, local.getUTCHours(), local.getUTCMinutes(), local.getUTCSeconds(), local.getUTCMilliseconds()));
   return {
     start: new Date(previous.getTime() - offset).toISOString(),
-    end: new Date(Date.UTC(year, month, 1) - offset).toISOString(),
-    label: `${previous.getUTCFullYear()}年${previous.getUTCMonth() + 1}月`,
+    end: new Date(target.getTime() - offset).toISOString(),
+    label: `${previous.getUTCFullYear()}年${previous.getUTCMonth() + 1}月${day}日`,
   };
 }
 

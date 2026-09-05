@@ -1,15 +1,15 @@
 import { describe, expect, it } from 'vitest';
-import { buildSummaryComparison, previousCalendarMonth } from './summary';
+import { buildSummaryComparison, monthAgoReference } from './summary';
 
-describe('previous calendar month in Asia/Shanghai', () => {
-  it('uses the previous natural month, not the previous sample or a rolling 30 days', () => {
-    expect(previousCalendarMonth('2026-09-05T00:00:00.000Z')).toEqual({ start: '2026-07-31T16:00:00.000Z', end: '2026-08-31T16:00:00.000Z', label: '2026年8月' });
+describe('one complete month before the current snapshot', () => {
+  it('uses the matching date one month ago, not calendar month end', () => {
+    expect(monthAgoReference('2026-09-05T00:00:00.000Z')).toEqual({ start: '2026-08-04T16:00:00.000Z', end: '2026-08-05T00:00:00.000Z', label: '2026年8月5日' });
   });
   it('handles year rollover at local midnight', () => {
-    expect(previousCalendarMonth('2025-12-31T16:00:00.000Z')).toEqual({ start: '2025-11-30T16:00:00.000Z', end: '2025-12-31T16:00:00.000Z', label: '2025年12月' });
+    expect(monthAgoReference('2025-12-31T16:00:00.000Z')).toEqual({ start: '2025-11-30T16:00:00.000Z', end: '2025-11-30T16:00:00.000Z', label: '2025年12月1日' });
   });
   it('handles leap February', () => {
-    expect(previousCalendarMonth('2024-03-31T02:00:00.000Z')).toEqual({ start: '2024-01-31T16:00:00.000Z', end: '2024-02-29T16:00:00.000Z', label: '2024年2月' });
+    expect(monthAgoReference('2024-03-31T02:00:00.000Z')).toEqual({ start: '2024-02-28T16:00:00.000Z', end: '2024-02-29T02:00:00.000Z', label: '2024年2月29日' });
   });
 });
 

@@ -25,8 +25,8 @@ export const coverSrc = (video: Pick<Video, 'id'>, variant: 'cover' | 'thumb' = 
 export const escapeHtml = (s: string) => s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!);
 export const ageLabel = (minutes: number | null | undefined) => minutes == null ? '时间未知' : minutes < 1 ? '刚刚' : minutes < 60 ? `${minutes} 分钟前` : minutes < 1440 ? `${Math.floor(minutes / 60)} 小时前` : `${Math.floor(minutes / 1440)} 天前`;
 export function formatChange(delta: NonNullable<Summary['comparison']>[string] | undefined, key: string) {
-  if (!delta) return '暂无上月数据';
-  if (delta.delta === 0) return '与上月持平';
+  if (!delta) return '缺少一个月前的数据';
+  if (delta.delta === 0) return '与一个月前持平';
   const arrow = delta.delta > 0 ? '↑' : '↓';
   const sign = delta.delta > 0 ? '+' : '';
   if (key === 'cover_ctr') return Math.abs(delta.delta) < .01 ? `${arrow} <0.01 分` : `${sign}${delta.delta.toFixed(2)} 分`;
