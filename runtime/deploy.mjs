@@ -16,6 +16,8 @@ fs.copyFileSync(path.join(project,'dist/bilibili_data_dashboard/index.js'),path.
 function copyTree(source,target){fs.mkdirSync(target,{recursive:true});for(const entry of fs.readdirSync(source,{withFileTypes:true})){const from=path.join(source,entry.name),to=path.join(target,entry.name);if(entry.isDirectory())copyTree(from,to);else if(entry.isFile())fs.copyFileSync(from,to);}}
 copyTree(path.join(project,'dist/client'),path.join(release,'client'));
 for(const file of ['server.mjs','d1.mjs','launch.ps1'])fs.copyFileSync(path.join(project,'runtime',file),path.join(root,file));
+const csc=path.join(process.env.SystemRoot,'Microsoft.NET','Framework64','v4.0.30319','csc.exe');
+execFileSync(csc,['/nologo','/target:winexe','/optimize+','/out:'+path.join(root,'ServiceHost.exe'),path.join(project,'runtime','ServiceHost.cs')],{windowsHide:true,stdio:'pipe'});
 if(!fs.existsSync(path.join(root,'bin/node.exe')))fs.copyFileSync(process.execPath,path.join(root,'bin/node.exe'));
 const allowed=new Set(['MASTER_ENCRYPTION_KEY_BASE64','APP_PASSWORD_HASH','INTERNAL_COLLECT_SECRET','DEEPSEEK_API_KEY','GOOGLE_CLIENT_ID','GOOGLE_CLIENT_SECRET','RESEND_API_KEY','ALERT_RECIPIENT']);
 const config={APP_ORIGIN:'http://localhost:5173',DEEPSEEK_MODEL:'deepseek-v4-flash',AI_DAILY_CNY_LIMIT:'1',AI_MONTHLY_CNY_LIMIT:'5'};

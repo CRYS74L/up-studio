@@ -12,6 +12,9 @@ if ($LASTEXITCODE -ne 0) { throw 'Type check failed; running release unchanged' 
 if ($LASTEXITCODE -ne 0) { throw 'Build failed; running release unchanged' }
 $runtimeRoot=Join-Path $projectRoot '.local-runtime'
 $currentFile=Join-Path $runtimeRoot 'current.json'
+if(!(Test-Path -LiteralPath (Join-Path $runtimeRoot 'ServiceHost.exe') -PathType Leaf)) {
+  throw 'Legacy runtime requires native-host migration first; the running service was left unchanged'
+}
 function Wait-OwnedStopped {
   $deadline=(Get-Date).AddSeconds(140)
   do {

@@ -8,7 +8,7 @@
 
 ```powershell
 node runtime/d1.test.mjs
-node runtime/deploy.mjs v0.1.0-dev.14
+node runtime/deploy.mjs v0.1.0-dev.15
 ./runtime/manage.ps1 -Action Install # 仅首次，拒绝覆盖同名任务
 ./runtime/manage.ps1 -Action Start
 ./runtime/manage.ps1 -Action Stop   # 正常退出，不触发故障重启
@@ -22,3 +22,7 @@ node runtime/deploy.mjs v0.1.0-dev.14
 安装前后 `.local-runtime/audit` 的清单记录其他计划任务 XML、Run/RunOnce 注册值与 Startup 文件 SHA-256；不输出这些项目的原始启动命令。安装、移除、启动、停止均只操作核验 action 路径、描述及 owner SID 的唯一任务。此工具不修改其他自启项、Clash、Codex 或 Explorer。
 
 SQLite 适配器验证涵盖批量写入事务原子性；Node SQLite 为当前 Node 的实验性 API，运行时已固定版本。Windows 登录触发和关机后恢复仍须实际登录周期验收。
+
+dev.15 使用 Windows GUI 子系统的 ServiceHost.exe 作为任务目标，Node 子服务也以无控制台方式启动。旧 PowerShell 宿主曾出现 0xC000013A 控制台中断退出；新宿主不依赖长期驻留的命令行解释器。
+
+从旧 PowerShell 安装迁移时，先停止本项目服务、运行 deploy 构建宿主，然后执行 manage.ps1 -Action MigrateHost，最后 Start。MigrateHost 只接受归属校验通过的本项目任务，并核对其他自启清单；当前机器已完成迁移。普通升级会保存/恢复 ServiceHost.exe 在内的六个具体文件，保留数据库。

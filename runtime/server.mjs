@@ -40,7 +40,7 @@ const server=http.createServer(async(req,res)=>{
     const allowedHosts=new Set(['localhost:5173','127.0.0.1:5173']);
     if(!allowedHosts.has(req.headers.host) || (req.headers.origin && !['http://localhost:5173','http://127.0.0.1:5173'].includes(req.headers.origin))) {res.writeHead(403);res.end('Local origin required');return;}
     const url=new URL(req.url,'http://localhost:5173');
-    if(url.pathname==='/api/local/status') {res.writeHead(200,{'Content-Type':'application/json','Cache-Control':'no-store'});res.end(JSON.stringify({ok:true,pid:process.pid,version:current.version,uptime:Math.floor((Date.now()-started)/1000),autoCollect:true,intervalMinutes:15,collecting,lastCollection,runtime:'standalone-node',release:current.id}));return;}
+    if(url.pathname==='/api/local/status') {res.writeHead(200,{'Content-Type':'application/json','Cache-Control':'no-store'});res.end(JSON.stringify({ok:true,pid:process.pid,supervisorPid:Number(process.env.BILIBILI_SUPERVISOR_PID)||null,version:current.version,uptime:Math.floor((Date.now()-started)/1000),autoCollect:true,intervalMinutes:15,collecting,lastCollection,runtime:'standalone-node',release:current.id}));return;}
     const chunks=[];let size=0;for await(const chunk of req){size+=chunk.length;if(size>5_000_000){res.writeHead(413);res.end();return;}chunks.push(chunk);}
     const request=new Request(url,{method:req.method,headers:req.headers,...(!['GET','HEAD'].includes(req.method)?{body:Buffer.concat(chunks)}:{})});
     const response=await worker.fetch(request,env,{waitUntil(p){p.catch(()=>log({event:'background_failed'}));},passThroughOnException(){}});
