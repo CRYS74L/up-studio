@@ -61,6 +61,9 @@ export type Summary = {
     avg_watch_percent?: number;
     avg_watch_seconds?: number;
     interaction_rate?: number;
+    account_followers?: number|null;
+    avg_views?: number|null;
+    avg_interactions?: number|null;
   };
   comparison?: Record<string, {
     current: number;
@@ -71,6 +74,7 @@ export type Summary = {
     deltaKind: "percent" | "pp";
   } | null>;
   comparisonCapturedAt?: string | null;
+  comparisonLabels?: Record<string,string|null>;
   comparisonPeriod?: { start: string; end: string; label: string } | null;
   acquisition?: Acquisition | null;
 };

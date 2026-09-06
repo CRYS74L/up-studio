@@ -7,6 +7,7 @@ export type VideoRecord = {
   durationSeconds: number | null; publishedAt: string;
 };
 export type CollectResult = {
+  account?: { capturedAt: string; stat: Record<string, unknown> | null; graphs: Record<string, Record<string, unknown> | null> };
   videos: VideoRecord[]; snapshots: VideoSnapshot[]; coverage: number;
   coverageDetails: CoverageDetails;
   sourceVersion: string; raw: unknown; timings: Record<string, number>; requestCount: number;
@@ -58,6 +59,7 @@ const overviewSchema = envelope(z.object({
   play_proportion: z.record(z.string(), z.number()).nullable().optional(),
   viewer_area: z.array(z.object({ location: z.string(), count: z.number() })).nullable().optional(),
   gender: z.record(z.string(), z.number()).nullable().optional(),
+  viewer_ty: z.array(z.record(z.string(), z.unknown())).nullable().optional(),
   viewer_age: z.record(z.string(), z.number()).nullable().optional()
 }).passthrough());
 const playAnalyzeSchema = envelope(z.object({
@@ -70,9 +72,10 @@ const playAnalyzeSchema = envelope(z.object({
   improve_idea: z.record(z.string(), z.unknown()).nullable().optional()
 }).passthrough());
 const trendSchema = envelope(z.object({
-  tendency: z.array(z.object({ date_key: z.number(), total_inc: z.number(), sub_total_inc: z.number() })).optional().default([]),
+  tendency: z.array(z.object({ date_key: z.number(), total_inc: z.number(), sub_total_inc: z.number() }).passthrough()).optional().default([]),
   last_30_day_tendency: z.array(z.object({ date_key: z.number(), total_inc: z.number(), sub_total_inc: z.number().optional() }).passthrough()).nullable().optional(),
-  hour_realtime_tendency: z.array(z.object({ date_key: z.number(), total_inc: z.number(), sub_total_inc: z.number() })).nullable().optional()
+  hour_tendency: z.array(z.object({ date_key: z.number(), total_inc: z.number(), sub_total_inc: z.number().optional() }).passthrough()).nullable().optional(),
+  hour_realtime_tendency: z.array(z.object({ date_key: z.number(), total_inc: z.number(), sub_total_inc: z.number() }).passthrough()).nullable().optional()
 }).passthrough());
 const realtimeSchema = envelope(z.record(z.string(), z.unknown()));
 const archiveViewSchema = envelope(z.record(z.string(), z.unknown()));
@@ -158,7 +161,7 @@ function sessionFromLogin(urlValue: string | undefined, headers: Headers) {
 }
 
 export class BilibiliWebDataSource implements BilibiliDataSource {
-  readonly version = 'web-data-v11';
+  readonly version = 'web-data-v12';
   private requestCounter = 0;
   private activeRequests = 0;
   private waiting: Array<() => void> = [];
@@ -336,6 +339,7 @@ export class BilibiliWebDataSource implements BilibiliDataSource {
         followersGained: ov?.stat.fan ?? cmp?.total_new_attention_cnt ?? item.stat.fans ?? null,
         metrics: {
           ...sourceNumericMetrics,
+          ...Object.fromEntries(Object.entries({ fanCoverScore: ["tm_fan_star", 10], guestCoverScore: ["tm_viewer_star", 10], fanBounceRate: ["crash_fan_rate", 100], guestBounceRate: ["crash_viewer_rate", 100], fanInteractionRate: ["interact_fan_rate", 100], guestInteractionRate: ["interact_viewer_rate", 100] } as Record<string, [string, number]>).map(([key, [field, divisor]]) => [key, typeof cmp?.[field] === "number" ? (cmp[field] as number) / divisor : null])),
           likes: ov?.stat.like ?? cmp?.like ?? item.stat.likes ?? null, comments: ov?.stat.comment ?? cmp?.comment ?? item.stat.reply ?? null,
           danmaku: ov?.stat.dm ?? cmp?.dm ?? null, favorites: ov?.stat.fav ?? cmp?.fav ?? null, coins: ov?.stat.coin ?? cmp?.coin ?? null,
           shares: ov?.stat.share ?? cmp?.share ?? null, unfollows: ov?.stat.unfollow ?? cmp?.unfollow ?? null,
@@ -351,15 +355,18 @@ export class BilibiliWebDataSource implements BilibiliDataSource {
           avgWatchSecondsDerived: !(Number(ov?.stat.play_avg_duration) > 0) && avgWatchSeconds != null ? 1 : 0
         },
         dimensions: {
+          playAnalyze: diagnose,
           audienceProportion: ov?.audience_proportion ?? null,
           playProportion: ov?.play_proportion ?? null,
           viewerArea: ov?.viewer_area ?? null,
           viewerGender: ov?.gender ?? null,
           viewerAge: ov?.viewer_age ?? null,
+          viewerInterests: ov?.viewer_ty ?? null,
           trend: playTrendResult.status === 'fulfilled' || fanTrendResult.status === 'fulfilled' ? trend : null,
           realtime: realtime ?? null,
           playbackTerminalSources: ov?.play_proportion ?? null,
           retention: retention ? {
+            dm: retention.dm ?? null, peerDm: retention.peer_dm ?? null, danmuInfo: retention.danmu_info ?? null,
             viewerQuit: retention.viewer_quit,
             peerViewerQuit: retention.peer_viewer_quit,
             quitInfo: retention.quit_info ?? null,
@@ -368,6 +375,17 @@ export class BilibiliWebDataSource implements BilibiliDataSource {
         }
       });
     });
+    for (const snapshot of snapshots) for (const key of ['likes','comments','danmaku','favorites','coins','shares']) {
+      const value = snapshot.metrics[key];
+      snapshot.metrics[`${key}RateDerived`] = value != null && snapshot.views != null && snapshot.views > 0 ? value / snapshot.views * 100 : null;
+    }
+    // Account collection cannot discard the already collected manuscript data.
+    const accountResults = await Promise.allSettled([
+      this.request(session, '/x/web/data/v3/fans/stat/num?period=2&tmid=', realtimeSchema),
+      ...['total', 'follow', 'unfollow'].map((type) => this.request(session, `/x/web/data/v3/fans/stat/graph?period=2&type=${type}&tmid=`, realtimeSchema))
+    ]);
+    const account = { capturedAt, stat: accountResults[0].status === 'fulfilled' ? accountResults[0].value.data : null,
+      graphs: Object.fromEntries(['total', 'follow', 'unfollow'].map((type, index) => [type, accountResults[index + 1].status === 'fulfilled' ? (accountResults[index + 1] as PromiseFulfilledResult<z.infer<typeof realtimeSchema>>).value.data : null])) };
     const successfulOverview = overviewResults.filter((item) => item.status === 'fulfilled').length;
     const successfulDiagnose = diagnoseResults.filter((item) => item.status === 'fulfilled').length;
     const successfulPlayTrend = playTrendResults.filter((item) => item.status === 'fulfilled').length;
@@ -413,6 +431,7 @@ export class BilibiliWebDataSource implements BilibiliDataSource {
     const completeVideos = archiveItems.length - missingByVideo.length;
     const coverage = archiveItems.length ? Math.min(successfulOverview, successfulDiagnose) / archiveItems.length : 0;
     const warnings = [
+      accountResults.some((result) => result.status === "rejected") ? "账号粉丝接口部分不可用，稿件数据已保留" : "",
       successfulOverview < archiveItems.length ? `${archiveItems.length - successfulOverview} 篇稿件的详情接口失败` : '',
       successfulDiagnose < archiveItems.length ? `${archiveItems.length - successfulDiagnose} 篇稿件的单稿诊断接口失败` : '',
       successfulPlayTrend < archiveItems.length ? `${archiveItems.length - successfulPlayTrend} 篇稿件的播放趋势接口失败` : '',
@@ -450,10 +469,10 @@ export class BilibiliWebDataSource implements BilibiliDataSource {
       terminalSources: { available: successfulTerminalSources, total: archiveItems.length }
     };
     return {
-      videos, snapshots, coverage,
+      videos, snapshots, coverage, account,
       coverageDetails: { totalVideos: archiveItems.length, completeVideos, metricCounts, missingByVideo, warnings, sourceFields, capabilityCounts, plannedNotIntegrated },
       sourceVersion: this.version,
-      raw: { archive: { total: firstArchive.data.pager.total, pages: [firstArchive.data, ...remainingArchivePages.map((page) => page.data)] }, compare: { batch: compare.data, supplemental: supplementalCompareResults.map((result, index) => result.status === 'fulfilled' ? result.value.data : { bvid: missingCompareItems[index].bvid, error: 'unavailable' }) }, overview: rawOverview, diagnose: rawDiagnose, trend: rawTrend, realtime: rawRealtime, archiveView: rawArchiveView, retention: rawRetention },
+      raw: { account, archive: { total: firstArchive.data.pager.total, pages: [firstArchive.data, ...remainingArchivePages.map((page) => page.data)] }, compare: { batch: compare.data, supplemental: supplementalCompareResults.map((result, index) => result.status === 'fulfilled' ? result.value.data : { bvid: missingCompareItems[index].bvid, error: 'unavailable' }) }, overview: rawOverview, diagnose: rawDiagnose, trend: rawTrend, realtime: rawRealtime, archiveView: rawArchiveView, retention: rawRetention },
       timings: { indexMs, enrichmentMs, totalNetworkMs: Math.round(performance.now() - startedAt) },
       requestCount: this.requestCounter
     };

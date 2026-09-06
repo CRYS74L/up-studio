@@ -7,6 +7,7 @@ import { analysisQuerySchema } from '../shared/contracts';
 import { BilibiliWebDataSource } from './bilibili';
 import { buildManifest } from './backup';
 import { decryptJson, encryptJson, hmac, sha256 } from './crypto';
+import { historyStatements, trendWindows, recentWindow } from './history';
 import { buildSummaryComparison, monthAgoReference } from './summary';
 
 type Bindings = {
@@ -57,29 +58,61 @@ app.get('/api/bilibili/qr/status/:key', async (c) => {
 async function loadSummaryAt(db: D1Database, capturedAt: string) {
   const rows = await db.prepare("SELECT COUNT(DISTINCT video_id) videos, MAX(captured_at) fresh, SUM(views) views, SUM(followers_gained) followers, AVG(CAST(json_extract(metrics_json,'$.coverAttractionScore') AS REAL)) cover_ctr, AVG(avg_watch_percent) avg_watch_percent, SUM(avg_watch_seconds*views)/NULLIF(SUM(CASE WHEN avg_watch_seconds IS NOT NULL THEN views END),0) avg_watch_seconds FROM video_snapshots WHERE captured_at=?").bind(capturedAt).first<any>();
   const latest = await db.prepare('SELECT views,metrics_json FROM video_snapshots WHERE captured_at=?').bind(capturedAt).all<{ views: number; metrics_json: string }>();
-  let interactions = 0; let totalViews = 0;
+  let interactions = 0; let totalViews = 0; let completeInteractions = 0;
   for (const item of latest.results) {
     const metrics = JSON.parse(item.metrics_json || '{}');
     const values = ['likes','comments','danmaku','favorites','coins','shares'].map((key) => metrics[key]);
-    if (item.views == null || !values.every((value) => typeof value === 'number' && Number.isFinite(value))) continue;
-    interactions += values.reduce((sum, value) => sum + value, 0); totalViews += item.views;
+    if (!values.every((value) => typeof value === 'number' && Number.isFinite(value))) continue;
+    completeInteractions += 1;
+    interactions += values.reduce((sum, value) => sum + value, 0); totalViews += item.views ?? 0;
   }
-  return { ...(rows ?? {}), interaction_rate: totalViews ? interactions / totalViews * 100 : null };
+  return { ...(rows ?? {}), avg_views: latest.results.length && latest.results.every(item => item.views != null) ? rows.views / latest.results.length : null, avg_interactions: latest.results.length && completeInteractions === latest.results.length ? interactions / latest.results.length : null, interaction_rate: totalViews ? interactions / totalViews * 100 : null };
 }
 
 app.get('/api/dashboard/summary', async (c) => {
   const current = await c.env.DB.prepare('SELECT captured_at,source FROM video_snapshots ORDER BY captured_at DESC LIMIT 1').first<{ captured_at: string; source: string }>();
   const currentAt = current?.captured_at;
-  const comparisonPeriod = currentAt ? monthAgoReference(currentAt) : null;
-  // Compare normalized Bilibili metrics across adapter upgrades, not across imports.
+  const now = new Date().toISOString();
+  const comparisonPeriod = monthAgoReference(now);
+  const day = (at: string) => new Date(Date.parse(at) + 8 * 3600_000).toISOString().slice(0,10);
+  const periods = [
+    { day: day(comparisonPeriod.start), label: '相比上月' },
+    { day: day(new Date(Date.parse(now)-7*86400_000).toISOString()), label: '相比上周' },
+    { day: day(new Date(Date.parse(now)-86400_000).toISOString()), label: '相比昨天' }
+  ];
   const sourceFamily = current?.source.startsWith('web-data-v') ? 'web-data-v%' : current?.source;
-  const previous = comparisonPeriod && sourceFamily ? await c.env.DB.prepare('SELECT captured_at FROM video_snapshots WHERE source LIKE ? AND captured_at>=? AND captured_at<=? GROUP BY captured_at ORDER BY captured_at DESC LIMIT 1').bind(sourceFamily, comparisonPeriod.start, comparisonPeriod.end).first<{ captured_at: string }>() : null;
-  const previousAt = previous?.captured_at;
-  const summary = currentAt ? await loadSummaryAt(c.env.DB, currentAt) : {};
-  const previousSummary = previousAt ? await loadSummaryAt(c.env.DB, previousAt) : {};
-  const comparison = previousAt ? buildSummaryComparison(summary, previousSummary) : buildSummaryComparison(summary, {});
+  const account = await c.env.DB.prepare('SELECT followers FROM account_snapshots WHERE followers IS NOT NULL ORDER BY captured_at DESC LIMIT 1').first<{ followers: number }>();
+  const summary = { ...(currentAt ? await loadSummaryAt(c.env.DB, currentAt) : {}), account_followers: account?.followers ?? null };
+  const comparison = buildSummaryComparison(summary, {});
+  const comparisonLabels: Record<string, string | null> = Object.fromEntries(Object.keys(comparison).map(key => [key,null]));
+  let previousAt: string | null = null;
+  for (const period of periods) {
+    const start = new Date(`${period.day}T00:00:00+08:00`).toISOString(), end = new Date(`${period.day}T23:59:59.999+08:00`).toISOString();
+    const previous = sourceFamily ? await c.env.DB.prepare('SELECT captured_at FROM video_snapshots WHERE source LIKE ? AND captured_at>=? AND captured_at<=? GROUP BY captured_at ORDER BY captured_at DESC LIMIT 1').bind(sourceFamily,start,end).first<{captured_at:string}>() : null;
+    const priorAccount = await c.env.DB.prepare('SELECT followers FROM account_trends WHERE day=? AND followers IS NOT NULL').bind(period.day).first<{followers:number}>();
+    const priorSnapshot = priorAccount ? null : await c.env.DB.prepare('SELECT followers FROM account_snapshots WHERE captured_at>=? AND captured_at<=? AND followers IS NOT NULL ORDER BY captured_at DESC LIMIT 1').bind(start,end).first<{followers:number}>();
+    const values = { ...(previous ? await loadSummaryAt(c.env.DB,previous.captured_at) : {}), account_followers: priorAccount?.followers ?? priorSnapshot?.followers ?? null };
+    const candidate = buildSummaryComparison(summary,values);
+    for (const key of Object.keys(comparison)) if (!comparison[key] && candidate[key]) { comparison[key] = candidate[key]; comparisonLabels[key] = period.label; }
+    if (!previousAt && previous) previousAt = previous.captured_at;
+  }
   const lastRun = await c.env.DB.prepare('SELECT status,coverage,coverage_json,started_at,finished_at,error_code,safe_error_detail FROM acquisition_runs ORDER BY started_at DESC LIMIT 1').first<any>();
-  return c.json({ ok: true, configured: Boolean(currentAt), summary, comparison, comparisonPeriod, comparisonCapturedAt: previousAt ?? null, freshnessMinutes: currentAt ? Math.floor((Date.now() - Date.parse(currentAt)) / 60000) : null, acquisition: lastRun ? { ...lastRun, details: JSON.parse(lastRun.coverage_json || '{}'), coverage_json: undefined } : null });
+  return c.json({ ok: true, configured: Boolean(currentAt), summary, comparison, comparisonLabels, comparisonPeriod, comparisonCapturedAt: previousAt ?? null, freshnessMinutes: currentAt ? Math.floor((Date.now() - Date.parse(currentAt)) / 60000) : null, acquisition: lastRun ? { ...lastRun, details: JSON.parse(lastRun.coverage_json || '{}'), coverage_json: undefined } : null });
+});
+app.get('/api/account/history', async (c) => {
+  const points = (await c.env.DB.prepare('SELECT day,followers,follows,unfollows,views FROM account_trends ORDER BY day').all()).results;
+  const snapshot = await c.env.DB.prepare('SELECT captured_at,followers FROM account_snapshots WHERE followers IS NOT NULL ORDER BY captured_at DESC LIMIT 1').first<any>();
+  return c.json({ ok: true, points, latest: snapshot ? { ...points.at(-1), ...snapshot } : points.at(-1) ?? null });
+});
+app.get('/api/videos/:id/history', async (c) => {
+  const rows = (await c.env.DB.prepare('SELECT type,window,source_json,captured_at FROM video_trend_points WHERE video_id=? ORDER BY captured_at,date_key').bind(c.req.param('id')).all<{type:string;window:string;source_json:string;captured_at:string}>()).results;
+  const series = Object.fromEntries(['play','fan'].map(type => {
+    const selected = rows.filter(row=>row.type===type);
+    const lifetime = new Map<number, any>();
+    for (const row of selected) if (['tendency','last_30_day_tendency'].includes(row.window)) { const point=JSON.parse(row.source_json); lifetime.set(point.date_key,point); }
+    return [type,{ ...Object.fromEntries(Object.entries(trendWindows).map(([key,window]) => {const points=selected.filter(row=>row.window===window).map(row=>JSON.parse(row.source_json)).sort((a,b)=>a.date_key-b.date_key);return [key,key==='recent30'?recentWindow(points):key==='hourRealtime'?recentWindow(points,3):points];})), lifetime:[...lifetime.values()].sort((a,b)=>a.date_key-b.date_key) }];
+  }));
+  return c.json({ ok: true, series, sourceWindows: trendWindows });
 });
 app.get('/api/videos', async (c) => {
   const capturedAt = c.req.query('capturedAt');
@@ -132,7 +165,8 @@ app.get('/api/acquisition/runs', async (c) => {
 });
 app.get('/api/dashboard/history', async (c) => {
   const rows = (await c.env.DB.prepare("SELECT captured_at,SUM(views) views,SUM(followers_gained) followers,SUM(avg_watch_seconds*views)/NULLIF(SUM(CASE WHEN avg_watch_seconds IS NOT NULL THEN views END),0) avg_watch_seconds,AVG(avg_watch_percent) avg_watch_percent,COUNT(*) videos FROM video_snapshots WHERE source LIKE 'web-data-v%' GROUP BY captured_at ORDER BY captured_at DESC LIMIT 30").all()).results;
-  return c.json({ok:true,points:rows.reverse()});
+  const points = await Promise.all(rows.reverse().map(async (row:any) => ({...row,...await loadSummaryAt(c.env.DB,row.captured_at)})));
+  return c.json({ok:true,points});
 });
 
 app.post('/api/imports/preview', async (c) => {
@@ -229,6 +263,8 @@ async function collect(env: Bindings, trigger: string) {
       statements.push(env.DB.prepare(`INSERT OR IGNORE INTO video_snapshots(video_id,captured_at,source,views,impressions,cover_ctr,avg_watch_seconds,avg_watch_percent,followers_gained,metrics_json,dimensions_json) VALUES(?,?,?,?,?,?,?,?,?,?,?)`).bind(snapshot.videoId, snapshot.capturedAt, source.version, snapshot.views, snapshot.impressions, snapshot.coverCtr, snapshot.avgWatchSeconds, snapshot.avgWatchPercent, snapshot.followersGained, JSON.stringify(snapshot.metrics), JSON.stringify(snapshot.dimensions)));
     }
     if (statements.length) await env.DB.batch(statements);
+    const history = historyStatements(env.DB,result);
+    for (let offset=0;offset<history.length;offset+=80) await env.DB.batch(history.slice(offset,offset+80));
     const dbMs = Math.round(performance.now() - dbStarted);
     const storageStarted = performance.now();
     if (env.BUCKET) await env.BUCKET.put(`raw/${started.slice(0, 10)}/${id}.json`, JSON.stringify(result.raw), { httpMetadata: { contentType: 'application/json' } });

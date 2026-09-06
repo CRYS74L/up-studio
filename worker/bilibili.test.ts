@@ -25,6 +25,20 @@ describe('collection failure semantics', () => {
     expect(result.snapshots[0].avgWatchSeconds).toBeNull();
   });
 
+  it('keeps manuscript snapshots when account collection fails', async () => {
+    vi.stubGlobal('fetch', async (input: string) => {
+      const url = new URL(input);
+      if (url.pathname.includes('/fans/stat/')) return Response.json({code:-101,data:null});
+      const data = url.pathname.endsWith('/archive/index') ? {list:[{aid:1,bvid:'BV1',title:'one',pubtime:1700000000,stat:{play:42}}],pager:{total:1}}
+        : url.pathname.endsWith('/compare') ? {list:[]} : {};
+      return Response.json({code:0,data});
+    });
+    const result=await new BilibiliWebDataSource().collect('test-session');
+    expect(result.snapshots[0].views).toBe(42);
+    expect(result.account?.stat).toBeNull();
+    expect(result.coverageDetails.warnings.some(message=>message.includes('账号'))).toBe(true);
+  });
+
   it('preserves session expiry instead of turning the error envelope into a schema error', async () => {
     const fetcher = vi.fn(async () => Response.json({ code: -101, message: 'not logged in', data: null }));
     vi.stubGlobal('fetch', fetcher);
