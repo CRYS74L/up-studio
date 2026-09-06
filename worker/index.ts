@@ -126,6 +126,15 @@ app.get('/api/bilibili/status', async (c) => {
   return c.json({ ok: true, connected: Boolean(secret), connectedAt: secret?.updated_at ?? null, lastRun: lastRun ? { ...lastRun, details: JSON.parse(lastRun.coverage_json || '{}'), coverage_json: undefined } : null });
 });
 
+app.get('/api/acquisition/runs', async (c) => {
+  const rows = (await c.env.DB.prepare('SELECT id,status,started_at,finished_at,coverage,coverage_json,error_code,timings_json,request_count FROM acquisition_runs ORDER BY started_at DESC LIMIT 20').all()).results;
+  return c.json({ok:true,runs:rows.map((row:any)=>({...row,details:JSON.parse(row.coverage_json||'{}'),timings:JSON.parse(row.timings_json||'{}'),coverage_json:undefined,timings_json:undefined}))});
+});
+app.get('/api/dashboard/history', async (c) => {
+  const rows = (await c.env.DB.prepare("SELECT captured_at,SUM(views) views,SUM(followers_gained) followers,SUM(avg_watch_seconds*views)/NULLIF(SUM(CASE WHEN avg_watch_seconds IS NOT NULL THEN views END),0) avg_watch_seconds,AVG(avg_watch_percent) avg_watch_percent,COUNT(*) videos FROM video_snapshots WHERE source LIKE 'web-data-v%' GROUP BY captured_at ORDER BY captured_at DESC LIMIT 30").all()).results;
+  return c.json({ok:true,points:rows.reverse()});
+});
+
 app.post('/api/imports/preview', async (c) => {
   const body = await c.req.arrayBuffer();
   if (body.byteLength > 20 * 1024 * 1024) return jsonError(c, 413, 'file_too_large', '导入文件不得超过 20MB');
