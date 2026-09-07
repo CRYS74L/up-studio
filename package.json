@@ -28,6 +28,7 @@
     "qrcode": "1.5.4",
     "react": "19.2.8",
     "react-dom": "19.2.8",
+    "wordcloud": "1.2.3",
     "zod": "4.4.3"
   },
   "devDependencies": {

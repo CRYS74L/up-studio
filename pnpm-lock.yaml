@@ -38,6 +38,9 @@ importers:
       react-dom:
         specifier: 19.2.8
         version: 19.2.8(react@19.2.8)
+      wordcloud:
+        specifier: 1.2.3
+        version: 1.2.3
       zod:
         specifier: 4.4.3
         version: 4.4.3
@@ -1512,6 +1515,9 @@ packages:
     engines: {node: '>=8'}
     hasBin: true
 
+  wordcloud@1.2.3:
+    resolution: {integrity: sha512-9by77b7Sd9e1K75kSmVeAD+JnGpiLR1Z4EX1mYQL91jKrU1/4bHw4h4DExQ+dzfT+PvihDcH7OS7V4Y5UkbF2w==}
+
   workerd@1.20260804.1:
     resolution: {integrity: sha512-b0P38g5/ssemwWxd/mafNYggEZ0ere7PCiUH6RCHkgqjRhhXTP45nDiL2L3iIvi8uF2IjNrGpVgMXEunCaeY/w==}
     engines: {node: '>=16'}
@@ -2681,6 +2687,8 @@ snapshots:
     dependencies:
       siginfo: 2.0.0
       stackback: 0.0.2
+
+  wordcloud@1.2.3: {}
 
   workerd@1.20260804.1:
     optionalDependencies:

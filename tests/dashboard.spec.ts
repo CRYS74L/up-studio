@@ -39,7 +39,7 @@ test('overview follows the reference composition and does not invent CTR or mont
  await expect(page.getByRole('heading',{name:'最近发布的稿件'})).toBeVisible();
  await expect(page.getByRole('heading',{name:'平均播放时长与完播率'})).toHaveCount(0);
  await expect(page.locator('.s-overview-kpis article')).toHaveCount(4);
- await expect(page.locator('.s-comparison-note')).toContainText('其次上周、昨天');
+ await expect(page.locator('.s-comparison-note')).toHaveCount(0);
  await expect(page.locator('.s-recent-item')).toHaveCount(3);
 });
 
@@ -239,4 +239,20 @@ test('background snapshots preserve the active detail tab',async({page})=>{
  await page.clock.install();await page.goto('/#videos?video=1');await page.getByRole('button',{name:'观众',exact:true}).click();
  await page.route('**/api/dashboard/summary',r=>r.fulfill({json:{ok:true,...summary,summary:{...summary.summary,fresh:'2026-08-26T08:00:00Z'}}}));
  await page.clock.fastForward(61000);await expect(page.getByRole('button',{name:'观众',exact:true})).toHaveAttribute('aria-pressed','true');
+});
+
+test('explanatory subtitles are absent and library metrics stay on one line',async({page})=>{
+ await page.goto('/');await expect(page.locator('.s-header p')).toHaveCount(0);await expect(page.locator('.s-overview .s-note')).toHaveCount(0);
+ await page.goto('/#videos');await expect(page.locator('.s-cover-numbers svg').first()).toHaveAttribute('viewBox','0 0 24 24');
+ const labels=await page.locator('.s-media-stats .s-stat>span').evaluateAll(els=>els.map(e=>({height:e.getBoundingClientRect().height,line:parseFloat(getComputedStyle(e).lineHeight)})));expect(labels.every(v=>v.height<=v.line+1)).toBe(true);
+});
+
+test('overview changes are quantities and not percentages',async({page})=>{
+ const keys=['account_followers','views','avg_views','avg_interactions'];const deltas=[2,60,20,.25];
+ await page.route('**/api/dashboard/summary',r=>r.fulfill({json:{ok:true,...summary,comparison:Object.fromEntries(keys.map((k,i)=>[k,{delta:deltas[i],direction:'up',changePercent:9}])),comparisonLabels:Object.fromEntries(keys.map(k=>[k,'相比昨天']))}}));
+ await page.goto('/');await expect(page.locator('.s-kpi-change b')).toHaveText(['2','60','20','0.25']);await expect(page.locator('.s-delta-triangle')).toHaveCount(4);
+});
+
+test('unselected segment hover only changes text color',async({page})=>{
+ await page.emulateMedia({reducedMotion:'no-preference'});await page.goto('/#analysis');const target=page.getByRole('button',{name:'稿件分析',exact:true});await target.hover();await expect(target).toHaveCSS('background-color','rgba(0, 0, 0, 0)');await expect(target).toHaveCSS('transition-duration','0.15s');
 });

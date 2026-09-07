@@ -6,11 +6,11 @@ import {percent,compact} from '../format';
 import {Stat} from './ui';
 export const ageLabels:Record<string,string>={age_one:'＜16岁',age_two:'16–25岁',age_three:'25–40岁',age_four:'＞40岁'};
 const deviceLabels:Record<string,string>={new_mobile:'移动端',new_pc:'PC',new_ott:'TV',new_h5:'H5',new_others:'其他',android:'Android',ios:'iOS',h5:'H5',pc:'PC',tv:'TV',other:'其他',out:'站外'};
-const colors=['#65D9EB','#B3A0FF','#FF82B2','#FFD166','#A5DF94'];
+const colors=['#93CDD9','#B3A0FF','#FF82B2','#FFD57A','#A5DF94'];
 function Donut({title,data,labels}:{title:string;data:Record<string,unknown>;labels:Record<string,string>}){
  const rows=Object.entries(data).filter((e):e is[string,number]=>typeof e[1]==='number'&&e[1]>0),total=rows.reduce((a,[,v])=>a+v,0),base=chartBase();
  const option={...base,tooltip:{...base.tooltip,trigger:'item',formatter:(p:any)=>`${labels[p.name]??p.name}：${percent(p.percent)}`},series:[{type:'pie',radius:['62%','80%'],center:['50%','50%'],label:{show:false},itemStyle:{borderRadius:4},data:rows.map(([name,value],i)=>({name,value,itemStyle:{color:colors[i%colors.length]}}))}]};
- return <section className="s-panel"><h3>{title}</h3>{total?<div className="s-audience-donut"><Chart className="s-device-chart" option={option}/><div>{rows.map(([key,value],i)=><div className="s-data-row" key={key}><span><i style={{background:colors[i%colors.length]}}/>{labels[key]??key}</span><strong>{value/total*100<.1?'<0.1%':percent(value/total*100)}</strong></div>)}</div></div>:<p className="s-note">本轮暂无有效数据</p>}</section>;
+ return <section className="s-panel"><h3>{title}</h3>{total?<div className="s-audience-donut"><Chart className="s-device-chart" option={option}/><div>{rows.map(([key,value],i)=><div className="s-data-row" key={key}><span><i style={{background:colors[i%colors.length]}}/>{labels[key]??key}</span><strong>{value/total*100<.1?'<0.1%':percent(value/total*100)}</strong></div>)}</div></div>:null}</section>;
 }
 export function VideoAudience({video}:{video:Video}){
  const dims=video.dimensions??{},ages=Object.entries(dims.viewerAge??{}) as Array<[string,number]>,ageTotal=ages.reduce((a,[,v])=>a+(typeof v==='number'?v:0),0);
