@@ -1,3 +1,4 @@
+import {accountDatabase,rootDatabase,prepareAccount,fetchProfile} from './accounts';
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { secureHeaders } from 'hono/secure-headers';
@@ -34,6 +35,21 @@ app.post('/api/auth/login', zValidator('json', z.object({ password: z.string().m
   return c.json({ ok: true });
 });
 
+app.get('/api/account/profile',async(c)=>{
+ const db=rootDatabase(c.env.DB),secret=await db.prepare("SELECT ciphertext,iv FROM encrypted_secrets WHERE id='bilibili_session'").first<{ciphertext:string;iv:string}>();
+ if(!secret||!c.env.MASTER_ENCRYPTION_KEY_BASE64)return c.json({ok:true,profile:null,accounts:[]});
+ const active=await db.prepare("SELECT value_json FROM settings WHERE key='active_account'").first<{value_json:string}>();
+ const cached=active?await db.prepare('SELECT value_json,updated_at FROM settings WHERE key=?').bind('profile_'+JSON.parse(active.value_json)).first<{value_json:string;updated_at:string}>():null;
+ let profile=cached?JSON.parse(cached.value_json):null;
+ if(!cached||Date.now()-Date.parse(cached.updated_at)>300000){try{const {session}=await decryptJson<{session:string}>(secret.ciphertext,secret.iv,c.env.MASTER_ENCRYPTION_KEY_BASE64);profile=await fetchProfile(session);await prepareAccount(db,profile);await db.batch([db.prepare("INSERT OR REPLACE INTO settings(key,value_json,updated_at) VALUES('active_account',?,?)").bind(JSON.stringify(profile.uid),new Date().toISOString()),db.prepare("INSERT OR REPLACE INTO encrypted_secrets(id,ciphertext,iv,updated_at) VALUES(?,?,?,?)").bind('bilibili_session_'+profile.uid,secret.ciphertext,secret.iv,new Date().toISOString())]);}catch{if(!profile)return jsonError(c,502,'profile_unavailable','UP主资料暂时无法读取，请重新连接账号');}}
+ const accounts=(await db.prepare("SELECT value_json FROM settings WHERE key LIKE 'profile_%'").all<{value_json:string}>()).results.map(r=>JSON.parse(r.value_json));
+ return c.json({ok:true,profile,accounts});
+});
+app.post('/api/account/switch',zValidator('json',z.object({uid:z.string().regex(/^\d+$/)})),async(c)=>{
+ const db=rootDatabase(c.env.DB),uid=c.req.valid('json').uid,secret=await db.prepare('SELECT ciphertext,iv FROM encrypted_secrets WHERE id=?').bind('bilibili_session_'+uid).first<{ciphertext:string;iv:string}>();if(!secret)return jsonError(c,404,'account_missing','请先扫码连接该账号');
+ await db.batch([db.prepare("UPDATE encrypted_secrets SET ciphertext=?,iv=?,updated_at=? WHERE id='bilibili_session'").bind(secret.ciphertext,secret.iv,new Date().toISOString()),db.prepare("UPDATE settings SET value_json=?,updated_at=? WHERE key='active_account'").bind(JSON.stringify(uid),new Date().toISOString())]);return c.json({ok:true});
+});
+
 app.get('/api/devices', async (c) => c.json({ ok: true, devices: (await c.env.DB.prepare('SELECT id,label,created_at,last_seen_at,expires_at FROM devices WHERE revoked_at IS NULL ORDER BY last_seen_at DESC').all()).results }));
 app.delete('/api/devices/:id', async (c) => { await c.env.DB.prepare('UPDATE devices SET revoked_at=? WHERE id=?').bind(new Date().toISOString(), c.req.param('id')).run(); return c.json({ ok: true }); });
 app.post('/api/auth/logout', async (c) => { c.header('Set-Cookie', 'insights_session=; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=0'); return c.json({ ok: true }); });
@@ -48,8 +64,10 @@ app.get('/api/bilibili/qr/status/:key', async (c) => {
   try {
     const result = await source.pollQrLogin(c.req.param('key'));
     if (result.session && c.env.MASTER_ENCRYPTION_KEY_BASE64) {
+      const profile=await fetchProfile(result.session),root=rootDatabase(c.env.DB);await prepareAccount(root,profile);
       const encrypted = await encryptJson({ session: result.session }, c.env.MASTER_ENCRYPTION_KEY_BASE64);
-      await c.env.DB.prepare("INSERT INTO encrypted_secrets(id,ciphertext,iv,updated_at) VALUES('bilibili_session',?,?,?) ON CONFLICT(id) DO UPDATE SET ciphertext=excluded.ciphertext,iv=excluded.iv,updated_at=excluded.updated_at").bind(encrypted.ciphertext, encrypted.iv, new Date().toISOString()).run();
+      await root.batch([root.prepare("INSERT INTO settings(key,value_json,updated_at) VALUES('active_account',?,?) ON CONFLICT(key) DO UPDATE SET value_json=excluded.value_json,updated_at=excluded.updated_at").bind(JSON.stringify(profile.uid),new Date().toISOString()),root.prepare("INSERT INTO encrypted_secrets(id,ciphertext,iv,updated_at) VALUES(?,?,?,?) ON CONFLICT(id) DO UPDATE SET ciphertext=excluded.ciphertext,iv=excluded.iv,updated_at=excluded.updated_at").bind('bilibili_session_'+profile.uid,encrypted.ciphertext,encrypted.iv,new Date().toISOString()),root.prepare("INSERT INTO encrypted_secrets(id,ciphertext,iv,updated_at) VALUES('bilibili_session',?,?,?) ON CONFLICT(id) DO UPDATE SET ciphertext=excluded.ciphertext,iv=excluded.iv,updated_at=excluded.updated_at").bind(encrypted.ciphertext,encrypted.iv,new Date().toISOString())]);
+
     }
     return c.json({ ok: true, state: result.state });
   } catch { return jsonError(c, 502, 'bilibili_unavailable', '二维码状态查询失败'); }
@@ -152,7 +170,7 @@ app.post('/api/lab/query', zValidator('json', analysisQuerySchema), async (c) =>
   const rows = (await c.env.DB.prepare(`SELECT v.id video_id,v.bvid,v.title,${columns},s.captured_at FROM videos v JOIN video_snapshots s ON s.id=(SELECT id FROM video_snapshots WHERE video_id=v.id AND captured_at BETWEEN ? AND ? ORDER BY captured_at DESC LIMIT 1) ORDER BY v.published_at DESC`).bind(query.from, query.to).all()).results;
   return c.json({ ok: true, query, rows, definitions: requested.map((id) => ({ id, nullable: true, source: id === 'duration_seconds' || id === 'published_at' ? '稿件元数据' : 'B站快照' })) });
 });
-app.post('/api/bilibili/qr/disconnect', async (c) => { await c.env.DB.prepare("DELETE FROM encrypted_secrets WHERE id='bilibili_session'").run(); return c.json({ ok: true }); });
+app.post('/api/bilibili/qr/disconnect', async (c) => { await c.env.DB.prepare("DELETE FROM encrypted_secrets WHERE id='bilibili_session' OR id=?").bind('bilibili_session_'+((c.env.DB as any).accountUid??'')).run(); return c.json({ ok: true }); });
 app.get('/api/bilibili/status', async (c) => {
   const secret = await c.env.DB.prepare("SELECT updated_at FROM encrypted_secrets WHERE id='bilibili_session'").first<{ updated_at: string }>();
   const lastRun = await c.env.DB.prepare('SELECT id,status,started_at,finished_at,coverage,coverage_json,error_code,safe_error_detail,timings_json,request_count FROM acquisition_runs ORDER BY started_at DESC LIMIT 1').first<any>();
@@ -244,6 +262,7 @@ app.post('/api/backups/verify', async (c) => c.json({ ok: true, status: 'preflig
 app.post('/api/backups/restore/preflight', async (c) => c.json({ ok: true, status: 'requires_manifest', destructive: false }));
 
 async function collect(env: Bindings, trigger: string) {
+  env={...env,DB:await accountDatabase(env.DB)};
   const id = crypto.randomUUID(); const started = new Date().toISOString();
   const source = new BilibiliWebDataSource();
   const cutoff = new Date(Date.now() - 10 * 60_000).toISOString();
@@ -251,7 +270,8 @@ async function collect(env: Bindings, trigger: string) {
   if (!claimed.meta.changes) return { status: 'skipped', reason: 'already_running' };
   try {
     if (!env.MASTER_ENCRYPTION_KEY_BASE64) throw new Error('ENCRYPTION_KEY_MISSING');
-    const stored = await env.DB.prepare("SELECT ciphertext,iv FROM encrypted_secrets WHERE id='bilibili_session'").first<{ ciphertext: string; iv: string }>();
+    const sessionId=(env.DB as any).accountUid?'bilibili_session_'+(env.DB as any).accountUid:'bilibili_session';
+    const stored = await env.DB.prepare('SELECT ciphertext,iv FROM encrypted_secrets WHERE id=?').bind(sessionId).first<{ ciphertext: string; iv: string }>();
     if (!stored) throw new Error('SESSION_MISSING');
     const { session } = await decryptJson<{ session: string }>(stored.ciphertext, stored.iv, env.MASTER_ENCRYPTION_KEY_BASE64);
     const result = await source.collect(session);
@@ -292,7 +312,7 @@ app.post('/internal/collect', async (c) => {
 app.notFound(async (c) => c.env.ASSETS.fetch(c.req.raw));
 
 export default {
-  fetch: app.fetch,
+  async fetch(request:Request,env:Bindings,ctx:ExecutionContext){return app.fetch(request,{...env,DB:await accountDatabase(env.DB)},ctx);},
   async scheduled(event: ScheduledEvent, env: Bindings, ctx: ExecutionContext) {
     if (event.cron === '*/15 * * * *') ctx.waitUntil(collect(env, 'cron'));
     // Backup/retention cron routes are deliberately no-ops until OAuth is configured and verified.

@@ -19,7 +19,7 @@ test.beforeEach(async ({ page }) => {
   await page.route('**/api/**', async (route) => {
     const path = new URL(route.request().url()).pathname;
     if (path.startsWith('/api/covers/')) return route.fulfill({ contentType: 'image/svg+xml', body: '<svg xmlns="http://www.w3.org/2000/svg" width="160" height="90"><rect width="160" height="90" fill="#a8bcca"/></svg>' });
-    const body = path === '/api/dashboard/summary' ? summary : path === '/api/videos' ? { videos }
+    const body = path === '/api/account/profile' ? {profile:{uid:'123',name:'测试UP主',avatar:null},accounts:[]} : path === '/api/dashboard/summary' ? summary : path === '/api/videos' ? { videos }
       : path === '/api/account/history' ? {points:[{day:'2026-08-24',follows:12,unfollows:3},{day:'2026-08-25',follows:7,unfollows:2}]}
       : path.endsWith('/history') && path.startsWith('/api/videos/') ? {series:{play:{recent30:[{date_key:1785542400,total_inc:10},{date_key:1785628800,total_inc:20}],first48h:[{date_key:1785542400,total_inc:3}],first30d:[{date_key:1785542400,total_inc:30}],lifetime:[{date_key:1785542400,total_inc:10}]}}}
       : path.endsWith('/timeseries') ? { points: [] }
@@ -122,7 +122,7 @@ test('time and relationship tasks display distinct charts and controls',async({p
  await page.goto('/#analysis');
  await choose(page,'分析主题','时间趋势');
  await expect(page.getByRole('heading',{name:'每日新增播放'})).toBeVisible();
- await expect(page.locator('.s-analysis-chart canvas')).toBeVisible();
+ await expect(page.locator('.s-analysis-chart canvas').first()).toBeVisible();
  await page.getByRole('button',{name:'每日涨粉',exact:true}).click();
  await expect(page.getByRole('heading',{name:'每日归因涨粉'})).toBeVisible();
  await choose(page,'分析主题','指标关系');
@@ -189,14 +189,14 @@ test('all page layouts fit the viewport without runtime errors',async({page})=>{
 
 test('combined presets and watch slider use a single rendered chart',async({page})=>{
  await page.goto('/#analysis');
- await expect(page.locator('.s-combo-chart canvas')).toBeVisible();
+ await expect(page.locator('.s-combo-chart canvas').first()).toBeVisible();
  await expect(page.locator('.s-video-chip')).toHaveCount(0);
  await choose(page,'分析主题','平均播放时长与完播率');
  await expect(page.getByRole('heading',{name:'平均播放时长与完播率'})).toBeVisible();
  await page.getByRole('button',{name:'3秒跳出率',exact:true}).click();
  await expect(page.getByRole('button',{name:'3秒跳出率',exact:true})).toHaveAttribute('aria-pressed','true');
  await choose(page,'分析主题','粉丝量变化');
- await expect(page.locator('.s-analysis-chart canvas')).toBeVisible();
+ await expect(page.locator('.s-analysis-chart canvas').first()).toBeVisible();
  await choose(page,'分析主题','自定义叠加');
  await page.getByRole('button',{name:'添加图层',exact:true}).click();
  await expect(page.locator('.s-layer-editor>div')).toHaveCount(3);
@@ -218,18 +218,20 @@ test('detail shows labeled audiences and persistent historical windows',async({p
  expect(await page.evaluate(()=>document.documentElement.scrollWidth-document.documentElement.clientWidth)).toBeLessThanOrEqual(1);
 });
 
-async function choose(page:Page,name:string,label:string){await page.getByRole('combobox',{name,exact:true}).click();await page.getByRole('option',{name:label,exact:true}).click();}
-test('sidebar collapse and workspace actions have real destinations',async({page,isMobile})=>{
- await page.goto('/');
- if((page.viewportSize()?.width??1000)>=700){await page.getByRole('button',{name:'收起侧栏'}).click();await expect(page.locator('.studio')).toHaveClass(/nav-collapsed/);await page.getByRole('button',{name:'展开侧栏'}).click();}
- else await page.getByRole('button',{name:'打开导航'}).click();
- await page.getByRole('button',{name:'个人工作区',exact:true}).click();
- await expect(page.getByRole('dialog',{name:'个人工作区'})).toBeVisible();
- await page.getByRole('button',{name:/工作区设置/}).click();await expect(page).toHaveURL(/#settings/);
+async function choose(page:Page,name:string,label:string){if(name==='分析主题'){await page.getByRole('button',{name:['作品对比','时间趋势','指标关系','自定义叠加'].includes(label)?'稿件分析':'全局统计',exact:true}).click();return;}await page.getByRole('combobox',{name,exact:true}).click();await page.getByRole('option',{name:label,exact:true}).click();}
+
+test('expanded sidebar shows the real UP profile and account actions',async({page})=>{
+ await page.goto('/');await expect(page.getByRole('button',{name:'收起侧栏'})).toHaveCount(0);
+ if((page.viewportSize()?.width??1000)<700)await page.getByRole('button',{name:'打开导航'}).click();
+ await expect(page.getByText('测试UP主',{exact:true})).toBeVisible();await page.getByRole('button',{name:'UP主账号'}).click();
+ await expect(page.getByRole('dialog',{name:'测试UP主'})).toBeVisible();await expect(page.getByRole('button',{name:/切换 \/ 添加账号/})).toBeVisible();
 });
-test('all manuscripts remain in a fitted chart and menus support keyboard',async({page})=>{
- await page.goto('/#analysis');
- const width=await page.locator('.s-combo-chart').evaluate(e=>e.getBoundingClientRect().width);
- expect(width).toBeLessThan(await page.evaluate(()=>innerWidth));
- const select=page.getByRole('combobox',{name:'分析主题'});await select.focus();await page.keyboard.press('ArrowDown');await expect(page.getByRole('listbox')).toBeVisible();await page.keyboard.press('Escape');await expect(page.getByRole('listbox')).toHaveCount(0);
+test('analysis uses two categories and displays multiple charts together',async({page})=>{
+ await page.goto('/#analysis');await expect(page.getByRole('combobox',{name:'分析主题'})).toHaveCount(0);
+ await expect(page.locator('.s-analysis-grid>.s-combinations')).toHaveCount(4);await expect(page.getByRole('button',{name:'选择稿件',exact:true})).toHaveCount(0);
+ await page.getByRole('button',{name:'稿件分析',exact:true}).click();await expect(page.getByRole('button',{name:'选择稿件',exact:true})).toBeVisible();await expect(page.getByRole('heading',{name:'自定义组合图'})).toBeVisible();
+});
+test('video metrics are inert while cover and title navigate',async({page})=>{
+ await page.goto('/#videos');await page.locator('.s-media-stats').first().click();await expect(page).toHaveURL(/#videos$/);
+ await page.locator('.s-title-link').first().click();await expect(page).toHaveURL(/video=1/);
 });
