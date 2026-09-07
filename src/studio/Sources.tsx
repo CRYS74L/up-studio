@@ -7,7 +7,7 @@ import {useSync} from '../use-sync';
 import {useDashboardData} from '../use-dashboard-data';
 import {Empty,Stat,Sheet,AnimatePresence} from './ui';
 export type LocalStatus={ok:boolean;pid:number;version:string;uptime:number;autoCollect:boolean;intervalMinutes:number;collecting:boolean;lastCollection:string|null;runtime:string};
-const labels:Record<string,string>={views:'播放量',coverAttractionScore:'封标吸引力',avgWatchSeconds:'观看时长',avgWatchPercent:'观看进度',followersGained:'归因涨粉',likes:'点赞',comments:'评论',danmaku:'弹幕',favorites:'收藏',coins:'投币',shares:'分享',threeSecondBounceRate:'3秒跳出率',interactionRate:'互动率',playToFollowRate:'播转粉率',fanAudiencePercent:'粉丝观看率',guestAudiencePercent:'游客观看率'};
+const labels:Record<string,string>={views:'播放量',coverAttractionScore:'封标吸引力',avgWatchSeconds:'观看时长',avgWatchPercent:'观看进度',followersGained:'涨粉',likes:'点赞',comments:'评论',danmaku:'弹幕',favorites:'收藏',coins:'投币',shares:'分享',threeSecondBounceRate:'3秒跳出率',interactionRate:'互动率',playToFollowRate:'播转粉率',fanAudiencePercent:'粉丝观看率',guestAudiencePercent:'游客观看率'};
 const runNames:Record<string,string>={success:'采集完成',partial:'部分完成',failed:'采集失败',running:'正在采集'};
 export function Sources(){
   const client=useQueryClient(),sync=useSync();const {summary}=useDashboardData();

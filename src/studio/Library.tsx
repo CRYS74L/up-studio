@@ -1,9 +1,9 @@
 import {Select} from './Select';
 import {useState} from 'react';
-import {ArrowLeft,ArrowRight,Check,LayoutGrid,List,Search,SlidersHorizontal,X,ExternalLink} from 'lucide-react';
+import {ArrowLeft,ArrowRight,Check,LayoutGrid,List,Search,SlidersHorizontal,X,ExternalLink,Play,MessageSquare} from 'lucide-react';
 import {useQuery} from '@tanstack/react-query';
 import type {Video} from '../types';
-import {date,seconds,compact,percent,request,coverSrc} from '../format';
+import {date,seconds,watchTime,score,compact,percent,request,coverSrc} from '../format';
 import {useDashboardData} from '../use-dashboard-data';
 import {filterVideos,metrics,valueOf,formatMetric,metricById} from './model';
 import {Cover,Empty,Segments,Stat,motion,AnimatePresence,spring} from './ui';
@@ -26,7 +26,7 @@ export function Library({route}:{route:StudioRoute}){
     <div className="s-list-meta"><span>{shown.length} 篇稿件{length!=='全部'&&` · ${length==='短视频'?'5 分钟以内':'超过 5 分钟'}`}</span><label>排序 <Select aria-label="稿件排序" value={sort} onChange={e=>setSort(e.target.value)}>{['最新发布','播放量','涨粉量'].map(v=><option key={v}>{v}</option>)}</Select></label></div>
     {!shown.length?<Empty title="没有匹配的稿件" body={videos.length?'换个关键词，或者清除筛选条件。':'连接 B 站并同步后，作品会出现在这里。'} action={<button className="s-secondary" onClick={()=>{setSearch('');setLength('全部');if(!videos.length)navigate('sources');}}>{videos.length?'清除筛选':'连接数据源'}</button>}/>:
     <motion.div layout className={`s-library ${view==='列表'?'list':''}`}>{shown.map(v=><motion.article layout="position" key={v.id} className={`s-media ${selected.includes(v.id)?'selected':''}`} transition={spring}>
-      <div className="s-media-open"><button className="s-media-cover" aria-label={`查看 ${v.title}`} onClick={()=>navigate('videos',{video:v.id})}><Cover video={v}/><span className="s-duration">{seconds(v.duration_seconds)}</span></button><div className="s-media-copy"><h2><button className="s-title-link" onClick={()=>navigate('videos',{video:v.id})}>{v.title}</button></h2><p>{date(v.published_at).split(' ')[0]} · {v.bvid}</p><div className="s-media-stats"><Stat label="播放" value={compact(v.views)}/><Stat label="观看进度" value={percent(v.avg_watch_percent)} color="var(--teal-text)"/><Stat label="涨粉" value={compact(v.followers_gained)} color="var(--purple-text)"/></div></div></div>
+      <div className="s-media-open"><button className="s-media-cover" aria-label={`查看 ${v.title}`} onClick={()=>navigate('videos',{video:v.id})}><Cover video={v}/><span className="s-cover-numbers"><span><Play/>{compact(v.views)}</span><span><MessageSquare/>{compact(v.metrics.danmaku)}</span></span><span className="s-duration">{seconds(v.duration_seconds)}</span></button><div className="s-media-copy"><h2><button className="s-title-link" onClick={()=>navigate('videos',{video:v.id})}>{v.title}</button></h2><p>{date(v.published_at).split(' ')[0]} · {v.bvid}</p><div className="s-media-stats"><Stat label="点击率" value={score(v.cover_ctr)}/><Stat label="平均播放时长" value={watchTime(v.avg_watch_seconds)}/><Stat label="平均播放百分比" value={percent(v.avg_watch_percent)}/></div></div></div>
       <button className="s-select-cover" aria-label={`选择 ${v.title}`} aria-pressed={selected.includes(v.id)} onClick={()=>toggle(v.id)}>{selected.includes(v.id)&&<Check/>}</button>
     </motion.article>)}</motion.div>}
     <AnimatePresence>{selected.length>0&&<motion.div className="s-selection-dock" initial={{opacity:0,y:30}} animate={{opacity:1,y:0}} exit={{opacity:0,y:30}} transition={spring}><b>已选 {selected.length} 篇</b><div className="s-dock-covers">{videos.filter(v=>selected.includes(v.id)).slice(0,3).map(v=><Cover key={v.id} video={v}/>)}</div><button className="s-secondary" onClick={()=>setSelected([])}>取消</button><button className="s-primary" onClick={()=>navigate('analysis',{ids:selected.join(',')})}>去分析 <ArrowRight/></button></motion.div>}</AnimatePresence>

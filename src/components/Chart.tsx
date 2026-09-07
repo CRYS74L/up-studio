@@ -9,10 +9,11 @@ function themedOption(option: any, element: HTMLElement | null) {
   const map=(value:any,fn:(item:any)=>any)=>Array.isArray(value)?value.map(fn):value?fn(value):value;
   const label=(value:any)=>({...value,color:text});
   const axis=(value:any)=>({...value,nameTextStyle:label(value.nameTextStyle),axisLabel:{...value.axisLabel,color:muted},axisLine:{...value.axisLine,lineStyle:{...value.axisLine?.lineStyle,color:line}},splitLine:{...value.splitLine,lineStyle:{...value.splitLine?.lineStyle,color:line}}});
-  return {...option,textStyle:label(option.textStyle),xAxis:map(option.xAxis,axis),yAxis:map(option.yAxis,axis),
+  const radial=Array.isArray(option.series)&&option.series.every((s:any)=>['pie','map'].includes(s.type));
+  return {...option,grid:radial?undefined:option.grid,textStyle:label(option.textStyle),xAxis:radial?undefined:map(option.xAxis,axis),yAxis:radial?undefined:map(option.yAxis,axis),
     legend:map(option.legend,(v:any)=>({...v,textStyle:label(v.textStyle),inactiveColor:muted})),
     tooltip:map(option.tooltip,(v:any)=>({...v,backgroundColor:surface,borderColor:line,textStyle:label(v.textStyle)})),
-    series:map(option.series,(v:any)=>({...v,...(v.type==='line'?{smooth:.28,smoothMonotone:'x',connectNulls:false,areaStyle:{opacity:1,color:{type:'linear',x:0,y:0,x2:0,y2:1,colorStops:[{offset:0,color:(v.lineStyle?.color??v.itemStyle?.color??'#FF73AC')+'26'},{offset:1,color:(v.lineStyle?.color??v.itemStyle?.color??'#FF73AC')+'00'}]}}}:{}),label:label(v.label),endLabel:label(v.endLabel),emphasis:{...v.emphasis,label:label(v.emphasis?.label)},markLine:v.markLine?{...v.markLine,label:label(v.markLine.label)}:v.markLine}))};
+    series:map(option.series,(v:any)=>({...v,...(v.type==='pie'?{padAngle:1,minAngle:2.5,itemStyle:{...v.itemStyle,borderRadius:7},data:v.data?.map((d:any)=>({...d,itemStyle:{...d.itemStyle,borderRadius:7}}))}:{}),...(v.type==='line'?{smooth:.5,smoothMonotone:'x',connectNulls:false,areaStyle:{opacity:1,color:{type:'linear',x:0,y:0,x2:0,y2:1,colorStops:[{offset:0,color:(v.lineStyle?.color??v.itemStyle?.color??'#FF73AC')+'55'},{offset:1,color:(v.lineStyle?.color??v.itemStyle?.color??'#FF73AC')+'00'}]}}}:{}),label:label(v.label),endLabel:label(v.endLabel),emphasis:{...v.emphasis,label:label(v.emphasis?.label)},markLine:v.markLine?{...v.markLine,label:label(v.markLine.label)}:v.markLine}))};
 }
 
 export function Chart({ option, className, events }: { option: any; className: string; events?: Record<string, (p: any) => void> }) {

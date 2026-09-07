@@ -11,7 +11,7 @@ export async function request<T>(path: string, init?: RequestInit): Promise<T> {
   if (!body) throw new Error('服务返回了无法识别的数据，请重试');
   return body as T;
 }
-export const compact = (n: number | null | undefined) => n == null || !Number.isFinite(n) ? '—' : n >= 10000 ? `${(n / 10000).toFixed(1)}万` : n.toLocaleString('zh-CN',{useGrouping:false,maximumFractionDigits:2});
+export const compact = (n: number | null | undefined) => n == null || !Number.isFinite(n) ? '—' : n >= 10000 ? `${Number((n / 10000).toFixed(1))}万` : n.toLocaleString('zh-CN',{useGrouping:false,maximumFractionDigits:2});
 export const percent = (n: number | null | undefined, d = 1) => n == null || !Number.isFinite(n) ? '—' : `${n.toFixed(d)}%`;
 export const score = (n: number | null | undefined, d = 1) => n == null ? '—' : `${n.toFixed(d)} 星`;
 export const seconds = (n: number | null | undefined) => {
@@ -34,3 +34,5 @@ export function formatChange(delta: NonNullable<Summary['comparison']>[string] |
   if (delta.changePercent == null) return `新增 ${compact(delta.delta)}`;
   return Math.abs(delta.changePercent) < .1 ? `${arrow} <0.1%` : `${sign}${delta.changePercent.toFixed(1)}%`;
 }
+
+export const watchTime=(n:number|null|undefined)=>n==null||!Number.isFinite(n)?'—':n<60?`${Number(n.toFixed(1))} s`:`${Number((n/60).toFixed(1))} min`;

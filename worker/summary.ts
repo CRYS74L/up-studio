@@ -58,3 +58,5 @@ export function buildSummaryComparison(
   }
   return result;
 }
+
+export function hasSharedOverviewBaseline(candidate:Record<string,SummaryComparisonValue|null>){return ['account_followers','views','avg_views','avg_interactions'].every(key=>candidate[key]!=null);}

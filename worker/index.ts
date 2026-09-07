@@ -9,7 +9,7 @@ import { BilibiliWebDataSource } from './bilibili';
 import { buildManifest } from './backup';
 import { decryptJson, encryptJson, hmac, sha256 } from './crypto';
 import { historyStatements, trendWindows, recentWindow } from './history';
-import { buildSummaryComparison, monthAgoReference } from './summary';
+import { buildSummaryComparison, monthAgoReference, hasSharedOverviewBaseline } from './summary';
 
 type Bindings = {
   DB: D1Database; BUCKET: R2Bucket; ASSETS: Fetcher; APP_ORIGIN: string;
@@ -111,8 +111,10 @@ app.get('/api/dashboard/summary', async (c) => {
     const priorSnapshot = priorAccount ? null : await c.env.DB.prepare('SELECT followers FROM account_snapshots WHERE captured_at>=? AND captured_at<=? AND followers IS NOT NULL ORDER BY captured_at DESC LIMIT 1').bind(start,end).first<{followers:number}>();
     const values = { ...(previous ? await loadSummaryAt(c.env.DB,previous.captured_at) : {}), account_followers: priorAccount?.followers ?? priorSnapshot?.followers ?? null };
     const candidate = buildSummaryComparison(summary,values);
-    for (const key of Object.keys(comparison)) if (!comparison[key] && candidate[key]) { comparison[key] = candidate[key]; comparisonLabels[key] = period.label; }
-    if (!previousAt && previous) previousAt = previous.captured_at;
+    if (hasSharedOverviewBaseline(candidate)) {
+      for (const key of Object.keys(comparison)) { comparison[key]=candidate[key]; comparisonLabels[key]=candidate[key]?period.label:null; }
+      previousAt=previous?.captured_at??null;break;
+    }
   }
   const lastRun = await c.env.DB.prepare('SELECT status,coverage,coverage_json,started_at,finished_at,error_code,safe_error_detail FROM acquisition_runs ORDER BY started_at DESC LIMIT 1').first<any>();
   return c.json({ ok: true, configured: Boolean(currentAt), summary, comparison, comparisonLabels, comparisonPeriod, comparisonCapturedAt: previousAt ?? null, freshnessMinutes: currentAt ? Math.floor((Date.now() - Date.parse(currentAt)) / 60000) : null, acquisition: lastRun ? { ...lastRun, details: JSON.parse(lastRun.coverage_json || '{}'), coverage_json: undefined } : null });

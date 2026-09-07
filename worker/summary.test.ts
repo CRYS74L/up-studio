@@ -1,3 +1,4 @@
+import {hasSharedOverviewBaseline} from './summary';
 import { describe, expect, it } from 'vitest';
 import { buildSummaryComparison, monthAgoReference } from './summary';
 
@@ -51,3 +52,5 @@ describe('summary comparison', () => {
     expect(result.cover_ctr).toBeNull();
   });
 });
+
+it('requires a shared baseline for all four overview metrics',()=>{const now={account_followers:100,views:1000,avg_views:100,avg_interactions:30};expect(hasSharedOverviewBaseline(buildSummaryComparison(now,{account_followers:90}))).toBe(false);expect(hasSharedOverviewBaseline(buildSummaryComparison(now,{account_followers:90,views:900,avg_views:90,avg_interactions:25}))).toBe(true);});

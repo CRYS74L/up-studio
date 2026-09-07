@@ -124,7 +124,7 @@ test('time and relationship tasks display distinct charts and controls',async({p
  await expect(page.getByRole('heading',{name:'每日新增播放'})).toBeVisible();
  await expect(page.locator('.s-analysis-chart canvas').first()).toBeVisible();
  await page.getByRole('button',{name:'每日涨粉',exact:true}).click();
- await expect(page.getByRole('heading',{name:'每日归因涨粉'})).toBeVisible();
+ await expect(page.getByRole('heading',{name:'每日涨粉'})).toBeVisible();
  await choose(page,'分析主题','指标关系');
  await choose(page,'关系横轴','播放量');
  await expect(page.getByRole('heading',{name:'播放量 × 平均播放百分比'})).toBeVisible();
@@ -206,8 +206,7 @@ test('combined presets and watch slider use a single rendered chart',async({page
 test('detail shows labeled audiences and persistent historical windows',async({page})=>{
  await page.goto('/#videos?video=1');
  await page.getByRole('button',{name:'观众',exact:true}).click();
- await expect(page.getByText('＜16岁',{exact:true})).toBeVisible();
- await expect(page.getByText('16–25岁',{exact:true})).toBeVisible();
+ await expect(page.locator('.s-age-chart canvas')).toBeVisible();
  await expect(page.getByRole('heading',{name:'兴趣分布'})).toBeVisible();
  await page.getByRole('button',{name:'留存与趋势',exact:true}).click();
  for(const window of ['发稿后48小时','发稿后30天','近30天','全部已记录']){
@@ -234,4 +233,10 @@ test('analysis uses two categories and displays multiple charts together',async(
 test('video metrics are inert while cover and title navigate',async({page})=>{
  await page.goto('/#videos');await page.locator('.s-media-stats').first().click();await expect(page).toHaveURL(/#videos$/);
  await page.locator('.s-title-link').first().click();await expect(page).toHaveURL(/video=1/);
+});
+
+test('background snapshots preserve the active detail tab',async({page})=>{
+ await page.clock.install();await page.goto('/#videos?video=1');await page.getByRole('button',{name:'观众',exact:true}).click();
+ await page.route('**/api/dashboard/summary',r=>r.fulfill({json:{ok:true,...summary,summary:{...summary.summary,fresh:'2026-08-26T08:00:00Z'}}}));
+ await page.clock.fastForward(61000);await expect(page.getByRole('button',{name:'观众',exact:true})).toHaveAttribute('aria-pressed','true');
 });
