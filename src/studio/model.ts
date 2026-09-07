@@ -3,17 +3,17 @@ import { compact, percent, seconds } from '../format';
 export type MetricId = 'views'|'avg_watch_percent'|'avg_watch_seconds'|'cover_ctr'|'followers_gained'|'unfollows'|'interactions'|'likes'|'coins'|'favorites'|'comments'|'shares'|'danmaku'|'interactionRate'|'playToFollowRate'|'threeSecondBounceRate';
 export type Metric = { id: MetricId; label: string; unit: string; color: string; group: string };
 export const metrics: Metric[] = [
-  { id:'views', label:'播放量', unit:'次', color:'#FF7FAC', group:'流量与观看' },
-  { id:'avg_watch_percent', label:'平均播放百分比', unit:'%', color:'#48D7F2', group:'流量与观看' },
-  { id:'avg_watch_seconds', label:'平均播放时长', unit:'秒', color:'#7AA6FF', group:'流量与观看' },
-  { id:'cover_ctr', label:'封标点击率', unit:'星', color:'#FFD36A', group:'流量与观看' },
-  { id:'interactions', label:'互动量', unit:'次', color:'#8CDE93', group:'转化与互动' },
-  { id:'unfollows', label:'取消关注', unit:'人', color:'#FFD36A', group:'转化与互动' },
-  { id:'followers_gained', label:'归因涨粉', unit:'人', color:'#9E92FF', group:'转化与互动' },
-  { id:'interactionRate', label:'互动率', unit:'%', color:'#7AA6FF', group:'转化与互动' },
-  { id:'playToFollowRate', label:'播转粉率', unit:'%', color:'#9E92FF', group:'转化与互动' },
-  { id:'threeSecondBounceRate', label:'3秒跳出率', unit:'%', color:'#FFD36A', group:'流量与观看' },
-  ...(['likes','coins','favorites','comments','shares','danmaku'] as const).map((id,i)=>({id,label:['点赞','投币','收藏','评论','分享','弹幕'][i],unit:'次',color:['#FF7FAC','#FFD36A','#9E92FF','#7AA6FF','#48D7F2','#92BA88'][i],group:'转化与互动'})),
+  { id:'views', label:'播放量', unit:'次', color:'#FF82B2', group:'流量与观看' },
+  { id:'avg_watch_percent', label:'平均播放百分比', unit:'%', color:'#65D9EB', group:'流量与观看' },
+  { id:'avg_watch_seconds', label:'平均播放时长', unit:'秒', color:'#89B8FF', group:'流量与观看' },
+  { id:'cover_ctr', label:'封标点击率', unit:'星', color:'#FFD875', group:'流量与观看' },
+  { id:'interactions', label:'互动量', unit:'次', color:'#A5DF94', group:'转化与互动' },
+  { id:'unfollows', label:'取消关注', unit:'人', color:'#FFD875', group:'转化与互动' },
+  { id:'followers_gained', label:'归因涨粉', unit:'人', color:'#B3A0FF', group:'转化与互动' },
+  { id:'interactionRate', label:'互动率', unit:'%', color:'#89B8FF', group:'转化与互动' },
+  { id:'playToFollowRate', label:'播转粉率', unit:'%', color:'#B3A0FF', group:'转化与互动' },
+  { id:'threeSecondBounceRate', label:'3秒跳出率', unit:'%', color:'#FFD875', group:'流量与观看' },
+  ...(['likes','coins','favorites','comments','shares','danmaku'] as const).map((id,i)=>({id,label:['点赞','投币','收藏','评论','分享','弹幕'][i],unit:'次',color:['#FF82B2','#FFD875','#B3A0FF','#89B8FF','#65D9EB','#A5DF94'][i],group:'转化与互动'})),
 ];
 export const metricById = Object.fromEntries(metrics.map(m=>[m.id,m])) as Record<MetricId,Metric>;
 export function valueOf(v:Video,id:MetricId):number|null {

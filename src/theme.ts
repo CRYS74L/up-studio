@@ -4,7 +4,7 @@ export function getInitialTheme(): Theme {
   if (stored === 'light' || stored === 'dark') return stored;
   return matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 }
-export function applyTheme(theme: Theme) { document.documentElement.dataset.theme = theme; localStorage.setItem('insights-theme', theme); document.querySelector('meta[name="theme-color"]')?.setAttribute('content', theme === 'dark' ? '#181c29' : '#faf8ff'); }
+export function applyTheme(theme: Theme) { document.documentElement.dataset.theme = theme; localStorage.setItem('insights-theme', theme); document.querySelector('meta[name="theme-color"]')?.setAttribute('content', theme === 'dark' ? '#19191b' : '#f5f5f7'); }
 let active: { skipTransition: () => void } | undefined;
 let revision=0;
 export async function transitionTheme(theme: Theme, _origin?: { x: number; y: number }) {

@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
 
 // Deterministic test data only; the application never imports these fixtures.
 const videos = [0, 1, 2].map((i) => ({
@@ -81,13 +81,14 @@ test('multi-selection opens analysis with exactly the selected videos',async({pa
  await expect(page.locator('.s-selection-dock')).toContainText('已选 2 篇');
  await page.getByRole('button',{name:'去分析'}).click();
  await expect(page.locator('.s-video-chip')).toHaveCount(2);
- await page.getByRole('button',{name:'作品对比',exact:true}).click();
+ await choose(page,'分析主题','作品对比');
  await expect(page.locator('.s-small-multiples .s-panel')).toHaveCount(3);
  await expect(page.locator('.s-table tbody tr')).toHaveCount(2);
 });
 
 test('picker edits are applied explicitly and clearing selection remains empty',async({page})=>{
  await page.goto('/#analysis');
+ await choose(page,'分析主题','作品对比');
  await expect(page.locator('.s-video-chip')).toHaveCount(3);
  await page.getByRole('button',{name:'选择稿件',exact:true}).click();
  await expect(page.getByRole('dialog',{name:'选择稿件'})).toBeVisible();
@@ -98,13 +99,13 @@ test('picker edits are applied explicitly and clearing selection remains empty',
  await page.getByRole('button',{name:'选择稿件',exact:true}).click();
  await page.getByRole('button',{name:'清空选择',exact:true}).click();
  await page.getByRole('button',{name:'应用选择',exact:true}).click();
- await expect(page.getByRole('heading',{name:'请选择稿件与指标'})).toBeVisible();
+ await expect(page.getByRole('heading',{name:'选择要分析的作品'})).toBeVisible();
  await expect(page.locator('.s-video-chip')).toHaveCount(0);
 });
 
 test('metric picker limits layers and table view retains original values',async({page})=>{
  await page.goto('/#analysis');
- await page.getByRole('button',{name:'作品对比',exact:true}).click();
+ await choose(page,'分析主题','作品对比');
  await page.getByRole('button',{name:'选择指标',exact:true}).click();
  const sheet=page.getByRole('dialog',{name:'选择分析指标'});
  await sheet.getByRole('checkbox',{name:/点赞/}).check();
@@ -119,13 +120,13 @@ test('metric picker limits layers and table view retains original values',async(
 
 test('time and relationship tasks display distinct charts and controls',async({page})=>{
  await page.goto('/#analysis');
- await page.getByRole('button',{name:'时间趋势',exact:true}).click();
+ await choose(page,'分析主题','时间趋势');
  await expect(page.getByRole('heading',{name:'每日新增播放'})).toBeVisible();
  await expect(page.locator('.s-analysis-chart canvas')).toBeVisible();
  await page.getByRole('button',{name:'每日涨粉',exact:true}).click();
  await expect(page.getByRole('heading',{name:'每日归因涨粉'})).toBeVisible();
- await page.getByRole('button',{name:'指标关系',exact:true}).click();
- await page.getByRole('combobox',{name:'关系横轴'}).selectOption('views');
+ await choose(page,'分析主题','指标关系');
+ await choose(page,'关系横轴','播放量');
  await expect(page.getByRole('heading',{name:'播放量 × 平均播放百分比'})).toBeVisible();
 });
 
@@ -189,16 +190,17 @@ test('all page layouts fit the viewport without runtime errors',async({page})=>{
 test('combined presets and watch slider use a single rendered chart',async({page})=>{
  await page.goto('/#analysis');
  await expect(page.locator('.s-combo-chart canvas')).toBeVisible();
- await page.getByRole('button',{name:'平均播放时长与完播率',exact:true}).click();
+ await expect(page.locator('.s-video-chip')).toHaveCount(0);
+ await choose(page,'分析主题','平均播放时长与完播率');
  await expect(page.getByRole('heading',{name:'平均播放时长与完播率'})).toBeVisible();
  await page.getByRole('button',{name:'3秒跳出率',exact:true}).click();
  await expect(page.getByRole('button',{name:'3秒跳出率',exact:true})).toHaveAttribute('aria-pressed','true');
- await page.getByRole('button',{name:'粉丝量变化',exact:true}).click();
+ await choose(page,'分析主题','粉丝量变化');
  await expect(page.locator('.s-analysis-chart canvas')).toBeVisible();
- await page.getByRole('button',{name:'自定义叠加',exact:true}).click();
+ await choose(page,'分析主题','自定义叠加');
  await page.getByRole('button',{name:'添加图层',exact:true}).click();
  await expect(page.locator('.s-layer-editor>div')).toHaveCount(3);
- await page.getByRole('combobox',{name:'图层3图形'}).selectOption('line');
+ await choose(page,'图层3图形','折线图');
 });
 
 test('detail shows labeled audiences and persistent historical windows',async({page})=>{
@@ -214,4 +216,20 @@ test('detail shows labeled audiences and persistent historical windows',async({p
   await expect(page.locator('.s-video-history-chart canvas')).toBeVisible();
  }
  expect(await page.evaluate(()=>document.documentElement.scrollWidth-document.documentElement.clientWidth)).toBeLessThanOrEqual(1);
+});
+
+async function choose(page:Page,name:string,label:string){await page.getByRole('combobox',{name,exact:true}).click();await page.getByRole('option',{name:label,exact:true}).click();}
+test('sidebar collapse and workspace actions have real destinations',async({page,isMobile})=>{
+ await page.goto('/');
+ if((page.viewportSize()?.width??1000)>=700){await page.getByRole('button',{name:'收起侧栏'}).click();await expect(page.locator('.studio')).toHaveClass(/nav-collapsed/);await page.getByRole('button',{name:'展开侧栏'}).click();}
+ else await page.getByRole('button',{name:'打开导航'}).click();
+ await page.getByRole('button',{name:'个人工作区',exact:true}).click();
+ await expect(page.getByRole('dialog',{name:'个人工作区'})).toBeVisible();
+ await page.getByRole('button',{name:/工作区设置/}).click();await expect(page).toHaveURL(/#settings/);
+});
+test('all manuscripts remain in a fitted chart and menus support keyboard',async({page})=>{
+ await page.goto('/#analysis');
+ const width=await page.locator('.s-combo-chart').evaluate(e=>e.getBoundingClientRect().width);
+ expect(width).toBeLessThan(await page.evaluate(()=>innerWidth));
+ const select=page.getByRole('combobox',{name:'分析主题'});await select.focus();await page.keyboard.press('ArrowDown');await expect(page.getByRole('listbox')).toBeVisible();await page.keyboard.press('Escape');await expect(page.getByRole('listbox')).toHaveCount(0);
 });

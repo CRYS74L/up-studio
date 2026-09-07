@@ -12,7 +12,7 @@ function themedOption(option: any, element: HTMLElement | null) {
   return {...option,textStyle:label(option.textStyle),xAxis:map(option.xAxis,axis),yAxis:map(option.yAxis,axis),
     legend:map(option.legend,(v:any)=>({...v,textStyle:label(v.textStyle),inactiveColor:muted})),
     tooltip:map(option.tooltip,(v:any)=>({...v,backgroundColor:surface,borderColor:line,textStyle:label(v.textStyle)})),
-    series:map(option.series,(v:any)=>({...v,label:label(v.label),endLabel:label(v.endLabel),emphasis:{...v.emphasis,label:label(v.emphasis?.label)},markLine:v.markLine?{...v.markLine,label:label(v.markLine.label)}:v.markLine}))};
+    series:map(option.series,(v:any)=>({...v,...(v.type==='line'?{smooth:.28,smoothMonotone:'x',connectNulls:false,areaStyle:{opacity:1,color:{type:'linear',x:0,y:0,x2:0,y2:1,colorStops:[{offset:0,color:(v.lineStyle?.color??v.itemStyle?.color??'#FF73AC')+'26'},{offset:1,color:(v.lineStyle?.color??v.itemStyle?.color??'#FF73AC')+'00'}]}}}:{}),label:label(v.label),endLabel:label(v.endLabel),emphasis:{...v.emphasis,label:label(v.emphasis?.label)},markLine:v.markLine?{...v.markLine,label:label(v.markLine.label)}:v.markLine}))};
 }
 
 export function Chart({ option, className, events }: { option: any; className: string; events?: Record<string, (p: any) => void> }) {
