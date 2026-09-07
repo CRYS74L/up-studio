@@ -8,9 +8,6 @@ importers:
 
   .:
     dependencies:
-      '@animateicons/react':
-        specifier: 0.5.0
-        version: 0.5.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@hono/zod-validator':
         specifier: 0.9.0
         version: 0.9.0(hono@4.13.1)(zod@4.4.3)
@@ -23,6 +20,9 @@ importers:
       hono:
         specifier: 4.13.1
         version: 4.13.1
+      lucide-motion:
+        specifier: 1.0.0
+        version: 1.0.0(motion@13.2.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       lucide-react:
         specifier: 1.31.0
         version: 1.31.0(react@19.2.8)
@@ -89,13 +89,6 @@ importers:
         version: 4.121.0(@cloudflare/workers-types@5.20260812.1)
 
 packages:
-
-  '@animateicons/react@0.5.0':
-    resolution: {integrity: sha512-dM41NHJ/3plrR0y6gJoAj98br9yXq2DyDfr4QSDHP1tIH8XKGx6sTm+iJMnv7/E8ao1u9dqckCaxvr/LlgdU4A==}
-    engines: {node: '>=18.17.0'}
-    peerDependencies:
-      react: ^18.0.0 || ^19.0.0
-      react-dom: ^18.0.0 || ^19.0.0
 
   '@asamuzakjp/css-color@6.0.7':
     resolution: {integrity: sha512-vC/bk1Lz7Tn/EfU9/apOTBk80/8dyGyWMowPoV1tJ52muDGsDqt2HPT2klrFUiY60MQmQv9q8yIht15JnBgDGw==}
@@ -1165,6 +1158,14 @@ packages:
     resolution: {integrity: sha512-4pfM1Ff0x50o0tQwb5ucw/RzNyD0/YJME6IVcStalZuMWxdt3sR3huStTtxz4PUmvZfRguvDejasvQ2kifR11g==}
     engines: {node: 20 || >=22}
 
+  lucide-motion@1.0.0:
+    resolution: {integrity: sha512-ZVNcHLeUvU2DEKB9gKLDdQpVf8Kl1TVLx6xZCCJ+iOy+7YBNnyofsbK+oAHv/adZmRvvKPJj2aAVDpwLEShbkA==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      motion: '>=11'
+      react: '>=18'
+      react-dom: '>=18'
+
   lucide-react@1.31.0:
     resolution: {integrity: sha512-G8u2eEtoHUnUa9f8lbvqDhCiORMnYLdUEo06EEG9MQvHQrInKcX3Pa2TH39MM5qyzRcWETxB0+aOwAPI1g1kEg==}
     peerDependencies:
@@ -1580,11 +1581,6 @@ packages:
     resolution: {integrity: sha512-oEGMDB6pOP2S6OwRR4PdVv610zrjnA3Bh+JnSG12fYJlBKjtNAoEb5fSUoCOOINlH96I2fU38/A2UpRKs67xYQ==}
 
 snapshots:
-
-  '@animateicons/react@0.5.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)':
-    dependencies:
-      react: 19.2.8
-      react-dom: 19.2.8(react@19.2.8)
 
   '@asamuzakjp/css-color@6.0.7':
     dependencies:
@@ -2358,6 +2354,12 @@ snapshots:
       p-locate: 4.1.0
 
   lru-cache@11.5.2: {}
+
+  lucide-motion@1.0.0(motion@13.2.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8):
+    dependencies:
+      motion: 13.2.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      react: 19.2.8
+      react-dom: 19.2.8(react@19.2.8)
 
   lucide-react@1.31.0(react@19.2.8):
     dependencies:

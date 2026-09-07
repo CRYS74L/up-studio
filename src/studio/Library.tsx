@@ -1,3 +1,4 @@
+import {ReorderGrid} from './ReorderGrid';
 import {BiliPlay,BiliDanmaku} from './BiliIcons';
 import {Select} from './Select';
 import {useState} from 'react';
@@ -26,10 +27,10 @@ export function Library({route}:{route:StudioRoute}){
     <div className="s-library-toolbar"><label className="s-search"><Search/><input aria-label="搜索稿件" placeholder="搜索标题或 BV 号" value={search} onChange={e=>setSearch(e.target.value)}/>{search&&<button aria-label="清除搜索" onClick={()=>setSearch('')}><X/></button>}</label><Segments items={['全部','短视频','中长视频']} value={length} onChange={setLength} label="稿件时长"/><Segments items={['网格','列表']} value={view} onChange={setView} label="浏览方式"/></div>
     <div className="s-list-meta"><span>{shown.length} 篇稿件{length!=='全部'&&` · ${length==='短视频'?'5 分钟以内':'超过 5 分钟'}`}</span><label>排序 <Select aria-label="稿件排序" value={sort} onChange={e=>setSort(e.target.value)}>{['最新发布','播放量','涨粉量'].map(v=><option key={v}>{v}</option>)}</Select></label></div>
     {!shown.length?<Empty title="没有匹配的稿件" body={videos.length?'换个关键词，或者清除筛选条件。':'连接 B 站并同步后，作品会出现在这里。'} action={<button className="s-secondary" onClick={()=>{setSearch('');setLength('全部');if(!videos.length)navigate('sources');}}>{videos.length?'清除筛选':'连接数据源'}</button>}/>:
-    <motion.div key={view+length+sort} initial={{opacity:.6}} animate={{opacity:1}} transition={{duration:.15}} className={`s-library ${view==='列表'?'list':''}`}>{shown.map(v=><article key={v.id} className={`s-media ${selected.includes(v.id)?'selected':''}`}>
+    <ReorderGrid className={`s-library ${view==='列表'?'list':''}`}>{shown.map(v=><article data-reorder={v.id} key={v.id} className={`s-media ${selected.includes(v.id)?'selected':''}`}>
       <div className="s-media-open"><button className="s-media-cover" aria-label={`查看 ${v.title}`} onClick={()=>navigate('videos',{video:v.id})}><Cover video={v}/><span className="s-cover-numbers"><span><BiliPlay/>{compact(v.views)}</span><span><BiliDanmaku/>{compact(v.metrics.danmaku)}</span></span><span className="s-duration">{seconds(v.duration_seconds)}</span></button><div className="s-media-copy"><h2><button className="s-title-link" onClick={()=>navigate('videos',{video:v.id})}>{v.title}</button></h2><p>{date(v.published_at).split(' ')[0]} · {v.bvid}</p><div className="s-media-stats"><Stat label="点击率" value={score(v.cover_ctr)}/><Stat label="平均播放时长" value={watchTime(v.avg_watch_seconds)}/><Stat label="平均播放百分比" value={percent(v.avg_watch_percent)}/></div></div></div>
       <button className="s-select-cover" aria-label={`选择 ${v.title}`} aria-pressed={selected.includes(v.id)} onClick={()=>toggle(v.id)}>{selected.includes(v.id)&&<Check/>}</button>
-    </article>)}</motion.div>}
+    </article>)}</ReorderGrid>}
     <AnimatePresence>{selected.length>0&&<motion.div className="s-selection-dock" initial={{opacity:0,y:30}} animate={{opacity:1,y:0}} exit={{opacity:0,y:30}} transition={spring}><b>已选 {selected.length} 篇</b><div className="s-dock-covers">{videos.filter(v=>selected.includes(v.id)).slice(0,3).map(v=><Cover key={v.id} video={v}/>)}</div><button className="s-secondary" onClick={()=>setSelected([])}>取消</button><button className="s-primary" onClick={()=>navigate('analysis',{ids:selected.join(',')})}>去分析 <ArrowRight/></button></motion.div>}</AnimatePresence>
   </>;
 }

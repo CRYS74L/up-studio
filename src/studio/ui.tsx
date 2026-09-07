@@ -13,10 +13,10 @@ export function Segments({items,value,onChange,label}:{items:string[];value:stri
 export function Cover({video,className=''}:{video:Video;className?:string}){const [failed,setFailed]=useState(false);return failed?<span className={`s-cover-fallback ${className}`}><ImageOff/></span>:<img className={className} src={coverSrc(video)} alt="" loading="lazy" onError={()=>setFailed(true)}/>;}
 export function Empty({title,body,action}:{title:string;body:string;action?:ReactNode}){return <div className="s-empty"><span className="s-empty-symbol"><Search/></span><h2>{title}</h2><p>{body}</p>{action}</div>;}
 export function Stat({label,value,color}:{label:string;value:string;color?:string}){return <div className="s-stat"><span>{label}</span><strong style={{color}}>{value}</strong></div>;}
-export function Sheet({title,subtitle,children,close,footer}:{title:string;subtitle?:string;children:ReactNode;close:()=>void;footer?:ReactNode}){
+export function Sheet({title,subtitle,children,close,footer,wide=false}:{title:string;subtitle?:string;children:ReactNode;close:()=>void;footer?:ReactNode;wide?:boolean}){
   const ref=useRef<HTMLDialogElement>(null);const reduced=useReducedMotion();
   useEffect(()=>{const previous=document.activeElement;ref.current?.showModal();return()=>{ref.current?.close();if(previous instanceof HTMLElement&&previous.isConnected)previous.focus();};},[]);
-  return <motion.dialog ref={ref} className="s-sheet" aria-label={title} initial={{opacity:0,y:reduced?0:24,scale:reduced?1:.985}} animate={{opacity:1,y:0,scale:1}} exit={{opacity:0,y:reduced?0:24}} transition={spring} onCancel={e=>{e.preventDefault();close();}} onClick={e=>{if(e.target!==ref.current)return;const r=e.currentTarget.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)close();}}>
+  return <motion.dialog ref={ref} className={wide?"s-sheet s-sheet-wide":"s-sheet"} aria-label={title} initial={{opacity:0,y:reduced?0:24,scale:reduced?1:.985}} animate={{opacity:1,y:0,scale:1}} exit={{opacity:0,y:reduced?0:24}} transition={spring} onCancel={e=>{e.preventDefault();close();}} onClick={e=>{if(e.target!==ref.current)return;const r=e.currentTarget.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)close();}}>
     <header><div><h2>{title}</h2>{subtitle&&<p>{subtitle}</p>}</div><button className="s-icon" aria-label="关闭" onClick={close}><X/></button></header><div className="s-sheet-body">{children}</div>{footer&&<footer>{footer}</footer>}
   </motion.dialog>;
 }

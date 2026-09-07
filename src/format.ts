@@ -3,7 +3,7 @@ import type { Summary, Video } from './types';
 export async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(path, {
     ...init,
-    signal: init?.signal ?? AbortSignal.timeout(path.includes('collect-now') ? 240_000 : 20_000),
+    signal: init?.signal ?? AbortSignal.timeout(path.includes('collect-now') ? 240_000 : path.includes('/ai/') ? 150_000 : 20_000),
     headers: { ...(init?.body ? { 'content-type': 'application/json' } : {}), ...init?.headers },
   });
   const body = await response.json().catch(() => null);

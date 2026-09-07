@@ -25,9 +25,10 @@ const env = {...config, DB:db, ASSETS:{ async fetch(request) {
   if (!fs.existsSync(file) || !fs.statSync(file).isFile()) file=path.join(client,'index.html');
   return new Response(fs.readFileSync(file), {headers:{'Content-Type':mime[path.extname(file)]??'application/octet-stream','Cache-Control':'no-cache'}});
 }}};
+let intervalMinutes=[0,5,15,30,60,180].includes(config.COLLECT_INTERVAL_MINUTES)?config.COLLECT_INTERVAL_MINUTES:15;let timer;
 let collecting=false, lastCollection=null, stopping=false, retryCount=0, retryTimer;
 async function collect() {
-  if(collecting||stopping)return; collecting=true;
+  if(collecting||stopping||intervalMinutes===0)return; collecting=true;
   try {const jobs=[]; await worker.scheduled({cron:'*/15 * * * *'},env,{waitUntil(promise){jobs.push(promise);}}); await Promise.all(jobs); lastCollection=new Date().toISOString();
     const latest=await db.prepare('SELECT status,error_code FROM acquisition_runs ORDER BY started_at DESC LIMIT 1').first();
     log({event:'collection_finished',status:latest?.status,errorCode:latest?.error_code});
@@ -40,8 +41,14 @@ const server=http.createServer(async(req,res)=>{
     const allowedHosts=new Set(['localhost:5173','127.0.0.1:5173']);
     if(!allowedHosts.has(req.headers.host) || (req.headers.origin && !['http://localhost:5173','http://127.0.0.1:5173'].includes(req.headers.origin))) {res.writeHead(403);res.end('Local origin required');return;}
     const url=new URL(req.url,'http://localhost:5173');
-    if(url.pathname==='/api/local/status') {res.writeHead(200,{'Content-Type':'application/json','Cache-Control':'no-store'});res.end(JSON.stringify({ok:true,pid:process.pid,supervisorPid:Number(process.env.BILIBILI_SUPERVISOR_PID)||null,version:current.version,uptime:Math.floor((Date.now()-started)/1000),autoCollect:true,intervalMinutes:15,collecting,lastCollection,runtime:'standalone-node',release:current.id}));return;}
+    if(url.pathname==='/api/local/status') {res.writeHead(200,{'Content-Type':'application/json','Cache-Control':'no-store'});res.end(JSON.stringify({ok:true,pid:process.pid,supervisorPid:Number(process.env.BILIBILI_SUPERVISOR_PID)||null,version:current.version,uptime:Math.floor((Date.now()-started)/1000),autoCollect:intervalMinutes>0,intervalMinutes,collecting,lastCollection,runtime:'standalone-node',release:current.id}));return;}
     const chunks=[];let size=0;for await(const chunk of req){size+=chunk.length;if(size>5_000_000){res.writeHead(413);res.end();return;}chunks.push(chunk);}
+    if(url.pathname==='/api/local/schedule'&&req.method==='PUT'){
+      const value=JSON.parse(Buffer.concat(chunks).toString('utf8')).intervalMinutes;
+      if(![0,5,15,30,60,180].includes(value)){res.writeHead(400,{'Content-Type':'application/json'});res.end(JSON.stringify({ok:false,error:{message:'不支持的更新频率'}}));return;}
+      intervalMinutes=value;config.COLLECT_INTERVAL_MINUTES=value;const next=path.join(root,'config.next.json');fs.writeFileSync(next,JSON.stringify(config));fs.renameSync(next,path.join(root,'config.json'));clearInterval(timer);clearTimeout(initial);clearTimeout(retryTimer);if(value>0)timer=setInterval(collect,value*60000);
+      res.writeHead(200,{'Content-Type':'application/json'});res.end(JSON.stringify({ok:true,intervalMinutes:value}));return;
+    }
     const request=new Request(url,{method:req.method,headers:req.headers,...(!['GET','HEAD'].includes(req.method)?{body:Buffer.concat(chunks)}:{})});
     const response=await worker.fetch(request,env,{waitUntil(p){p.catch(()=>log({event:'background_failed'}));},passThroughOnException(){}});
     res.writeHead(response.status,Object.fromEntries(response.headers));res.end(Buffer.from(await response.arrayBuffer()));
@@ -49,7 +56,7 @@ const server=http.createServer(async(req,res)=>{
 });
 server.on('error',error=>{log({event:'listen_failed',code:error.code});db.database.close();process.exit(1);});
 server.listen(5173,'127.0.0.1',()=>{fs.writeFileSync(path.join(root,'service.json'),JSON.stringify({pid:process.pid,started,release:current.id}));log({event:'started',pid:process.pid,version:current.version});});
-const timer=setInterval(collect,15*60_000);
+if(intervalMinutes>0)timer=setInterval(collect,intervalMinutes*60_000);
 const initial=setTimeout(collect,60_000);
 const backups=setInterval(async()=>{try{
   const indexFile=path.join(root,'backups','owned.json');

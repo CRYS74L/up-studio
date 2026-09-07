@@ -1,3 +1,4 @@
+import {registerAi,aiModel,AI_MODELS} from './ai-analysis';
 import {accountDatabase,rootDatabase,prepareAccount,fetchProfile} from './accounts';
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
@@ -198,18 +199,6 @@ app.post('/api/imports/preview', async (c) => {
 });
 app.post('/api/imports/commit', async (c) => jsonError(c, 409, 'preview_required', '必须先完成字段映射预检；当前版本不会盲目写入未知表格'));
 
-app.post('/api/ai/insights', async (c) => {
-  if (!c.env.DEEPSEEK_API_KEY) return jsonError(c, 503, 'not_configured', '尚未配置 DeepSeek API 密钥');
-  const payload = await c.req.json<Record<string, unknown>>(); const snapshotKey = await sha256(JSON.stringify(payload));
-  const cached = await c.env.DB.prepare('SELECT response_json FROM ai_cache WHERE snapshot_key=?').bind(snapshotKey).first<{ response_json: string }>();
-  if (cached) return c.json({ ok: true, cached: true, insight: JSON.parse(cached.response_json) });
-  return jsonError(c, 501, 'probe_required', '需要先完成数据快照与费用计量探针，AI 不会在未校验前发送数据');
-});
-app.post('/api/ai/chat', async (c) => {
-  if (!c.env.DEEPSEEK_API_KEY) return jsonError(c, 503, 'not_configured', '尚未配置 DeepSeek API 密钥');
-  return jsonError(c, 501, 'snapshot_required', '请先连接真实数据快照；聊天不会发送演示数据');
-});
-
 async function readDeepSeekKey(env: Bindings) {
   if (env.MASTER_ENCRYPTION_KEY_BASE64) {
     const stored = await env.DB.prepare("SELECT ciphertext,iv FROM encrypted_secrets WHERE id='deepseek_api_key'").first<{ ciphertext:string; iv:string }>();
@@ -217,30 +206,29 @@ async function readDeepSeekKey(env: Bindings) {
   }
   return env.DEEPSEEK_API_KEY;
 }
+registerAi(app,readDeepSeekKey);
 app.get('/api/settings/deepseek/status', async (c) => {
   const setting = await c.env.DB.prepare("SELECT value_json,updated_at FROM settings WHERE key='deepseek_status'").first<{ value_json:string; updated_at:string }>();
   const value = setting ? JSON.parse(setting.value_json) : {};
-  return c.json({ ok:true, configured:Boolean(await readDeepSeekKey(c.env)), last4:value.last4 ?? null, lastTestAt:value.lastTestAt ?? null, model:c.env.DEEPSEEK_MODEL });
+  return c.json({ ok:true, configured:Boolean(await readDeepSeekKey(c.env)), last4:value.last4 ?? null, lastTestAt:value.lastTestAt ?? null, model:await aiModel(c.env),models:AI_MODELS,dailyBudget:Number(c.env.AI_DAILY_CNY_LIMIT)||1,monthlyBudget:Number(c.env.AI_MONTHLY_CNY_LIMIT)||5 });
 });
-app.put('/api/settings/deepseek', zValidator('json', z.object({ apiKey:z.string().min(8).max(256) })), async (c) => {
+app.put('/api/settings/deepseek', zValidator('json', z.object({ apiKey:z.string().min(8).max(256).optional(), model:z.enum(AI_MODELS).optional() })), async (c) => {
   if (!c.env.MASTER_ENCRYPTION_KEY_BASE64) return jsonError(c,503,'encryption_not_configured','请先配置本地主加密密钥');
-  const key = c.req.valid('json').apiKey.trim(); const encrypted = await encryptJson({ key }, c.env.MASTER_ENCRYPTION_KEY_BASE64); const now=new Date().toISOString();
-  await c.env.DB.batch([
-    c.env.DB.prepare("INSERT INTO encrypted_secrets(id,ciphertext,iv,updated_at) VALUES('deepseek_api_key',?,?,?) ON CONFLICT(id) DO UPDATE SET ciphertext=excluded.ciphertext,iv=excluded.iv,updated_at=excluded.updated_at").bind(encrypted.ciphertext,encrypted.iv,now),
-    c.env.DB.prepare("INSERT INTO settings(key,value_json,updated_at) VALUES('deepseek_status',?,?) ON CONFLICT(key) DO UPDATE SET value_json=excluded.value_json,updated_at=excluded.updated_at").bind(JSON.stringify({last4:key.slice(-4),lastTestAt:null}),now)
-  ]);
-  return c.json({ ok:true, configured:true, last4:key.slice(-4) });
+  const input=c.req.valid('json'),now=new Date().toISOString();
+  if(input.model)await c.env.DB.prepare("INSERT INTO settings(key,value_json,updated_at) VALUES('deepseek_model',?,?) ON CONFLICT(key) DO UPDATE SET value_json=excluded.value_json,updated_at=excluded.updated_at").bind(JSON.stringify(input.model),now).run();
+  if(input.apiKey){const key=input.apiKey.trim(),encrypted=await encryptJson({key},c.env.MASTER_ENCRYPTION_KEY_BASE64);await c.env.DB.batch([c.env.DB.prepare("INSERT INTO encrypted_secrets(id,ciphertext,iv,updated_at) VALUES('deepseek_api_key',?,?,?) ON CONFLICT(id) DO UPDATE SET ciphertext=excluded.ciphertext,iv=excluded.iv,updated_at=excluded.updated_at").bind(encrypted.ciphertext,encrypted.iv,now),c.env.DB.prepare("INSERT INTO settings(key,value_json,updated_at) VALUES('deepseek_status',?,?) ON CONFLICT(key) DO UPDATE SET value_json=excluded.value_json,updated_at=excluded.updated_at").bind(JSON.stringify({last4:key.slice(-4),lastTestAt:null}),now)]);}
+  return c.json({ok:true,configured:!!await readDeepSeekKey(c.env),model:await aiModel(c.env)});
 });
 app.delete('/api/settings/deepseek', async (c) => { await c.env.DB.batch([c.env.DB.prepare("DELETE FROM encrypted_secrets WHERE id='deepseek_api_key'"),c.env.DB.prepare("DELETE FROM settings WHERE key='deepseek_status'")]); return c.json({ok:true}); });
 app.post('/api/settings/deepseek/test', async (c) => {
   const key=await readDeepSeekKey(c.env); if(!key)return jsonError(c,503,'not_configured','尚未填写 DeepSeek API Key');
   const started=Date.now();
   try {
-    const response=await fetch('https://api.deepseek.com/chat/completions',{method:'POST',headers:{authorization:`Bearer ${key}`,'content-type':'application/json'},body:JSON.stringify({model:c.env.DEEPSEEK_MODEL,messages:[{role:'user',content:'只回复 OK'}],max_tokens:4,stream:false}),signal:AbortSignal.timeout(15000)});
+    const response=await fetch('https://api.deepseek.com/chat/completions',{method:'POST',headers:{authorization:`Bearer ${key}`,'content-type':'application/json'},body:JSON.stringify({model:await aiModel(c.env),messages:[{role:'user',content:'只回复 OK'}],max_tokens:4,stream:false}),signal:AbortSignal.timeout(15000)});
     if(!response.ok){ const safe=response.status===401?'API Key 无效':response.status===429?'请求过于频繁或额度不足':`DeepSeek 返回 HTTP ${response.status}`; return jsonError(c,502,'deepseek_rejected',safe); }
     const now=new Date().toISOString(); const old=await c.env.DB.prepare("SELECT value_json FROM settings WHERE key='deepseek_status'").first<{value_json:string}>(); const value=old?JSON.parse(old.value_json):{};
     await c.env.DB.prepare("INSERT INTO settings(key,value_json,updated_at) VALUES('deepseek_status',?,?) ON CONFLICT(key) DO UPDATE SET value_json=excluded.value_json,updated_at=excluded.updated_at").bind(JSON.stringify({...value,lastTestAt:now}),now).run();
-    return c.json({ok:true,model:c.env.DEEPSEEK_MODEL,latencyMs:Date.now()-started,testedAt:now});
+    return c.json({ok:true,model:await aiModel(c.env),latencyMs:Date.now()-started,testedAt:now});
   } catch { return jsonError(c,502,'deepseek_unreachable','DeepSeek 连接超时或网络不可达'); }
 });
 

@@ -133,7 +133,7 @@ test('time and relationship tasks display distinct charts and controls',async({p
 
 test('sources exposes independent runtime, metric coverage and expandable runs',async({page})=>{
  await page.goto('/#sources');
- await expect(page.getByRole('heading',{name:'本地服务'})).toBeVisible();
+ await expect(page.getByRole('heading',{name:'数据更新'})).toBeVisible();
  await expect(page.getByText('独立运行',{exact:true})).toBeVisible();
  await expect(page.locator('.s-coverage-grid>div')).toHaveCount(16);
  await page.locator('.s-run-list summary').click();
@@ -260,10 +260,31 @@ test('unselected segment hover only changes text color',async({page})=>{
 
 test('rapid library switches do not scale cards and metric hover is inert',async({page})=>{
  await page.emulateMedia({reducedMotion:'no-preference'});await page.goto('/#videos');
- for(const name of ['列表','网格','中长视频','全部','短视频','全部']){await page.getByRole('button',{name,exact:true}).click();expect(await page.locator('.s-media').evaluateAll(els=>els.every(e=>getComputedStyle(e).transform==='none'))).toBe(true);}
+ for(const name of ['列表','网格','中长视频','全部','短视频','全部']){await page.getByRole('button',{name,exact:true}).click();expect(await page.locator('.s-media').evaluateAll(els=>els.every(e=>{const m=new DOMMatrix(getComputedStyle(e).transform);return Math.abs(m.a-1)<.001&&Math.abs(m.d-1)<.001&&m.b===0&&m.c===0}))).toBe(true);}
  await page.locator('.s-media-stats').first().hover();await expect(page.locator('.s-media-cover img').first()).toHaveCSS('transform','none');
 });
 test('freshness is in the header and relation points have a visible manuscript key',async({page})=>{
  await page.goto('/');await expect(page.locator('.s-header-actions .s-header-freshness')).toBeVisible();await expect(page.getByRole('button',{name:'查看数据状态'})).toHaveCount(0);
  await page.goto('/#analysis');await page.getByRole('button',{name:'稿件分析',exact:true}).click();await expect(page.locator('.s-point-key button')).toHaveCount(2);await expect(page.locator('.s-point-key')).toContainText('海边日记');
+});
+
+test('sync toast disappears without a close button',async({page})=>{
+ await page.clock.install();await page.route('**/api/bilibili/collect-now',r=>r.fulfill({json:{ok:true,run:{status:'success'}}}));await page.goto('/#videos');await expect(page.locator('.s-header-freshness')).toBeVisible();await page.getByRole('button',{name:'同步',exact:true}).click();await expect(page.locator('.s-floating-toast')).toContainText('同步完成');await expect(page.getByRole('button',{name:'关闭同步提示'})).toHaveCount(0);await page.clock.fastForward(4000);await expect(page.locator('.s-floating-toast')).toHaveCount(0);
+});
+test('account panel contains model settings and export actions',async({page})=>{
+ await page.goto('/');if((page.viewportSize()?.width??1000)<700)await page.getByRole('button',{name:'打开导航'}).click();await page.getByRole('button',{name:'UP主账号'}).click();await page.getByRole('button',{name:'AI设置',exact:true}).click();await choose(page,'DeepSeek分析模型','V4 Pro · 复杂分析');await expect(page.getByRole('combobox',{name:'DeepSeek分析模型'})).toContainText('V4 Pro');await page.getByRole('button',{name:'数据导出',exact:true}).click();await expect(page.getByRole('button',{name:/导出 CSV/})).toBeVisible();
+});
+test('AI analysis displays evidence and experiments from the server response',async({page})=>{
+ await page.route('**/api/ai/status',r=>r.fulfill({json:{ok:true,configured:true,model:'deepseek-v4-flash'}}));await page.route('**/api/ai/insights',r=>r.fulfill({json:{ok:true,model:'deepseek-v4-flash',estimatedCostCny:.01,report:{summary:'优先测试开头',findings:[{title:'观看表现',observation:'对比后可安排实验',confidence:'medium',evidence:[{videoId:'1',metric:'views',title:'山间旅行',value:3000}]}],experiments:[{action:'测试前3秒',reason:'改善早期留存',measure:'对比跳出率'}],limitations:['测试数据']}}}));await page.goto('/#analysis');await page.getByRole('button',{name:'分析这 3 篇'}).click();await expect(page.locator('.s-ai-result')).toContainText('优先测试开头');await expect(page.locator('.s-ai-evidence')).toContainText('3000');await expect(page.locator('.s-ai-experiments')).toContainText('测试前3秒');
+});
+test('automatic update frequency can be changed',async({page})=>{
+ let interval=15;await page.route('**/api/local/status',r=>r.fulfill({json:{ok:true,version:'test',uptime:30,autoCollect:true,intervalMinutes:interval}}));await page.route('**/api/local/schedule',r=>{interval=r.request().postDataJSON().intervalMinutes;return r.fulfill({json:{ok:true,intervalMinutes:interval}})});await page.goto('/#sources');await choose(page,'自动更新频率','每30分钟');await expect(page.getByRole('combobox',{name:'自动更新频率'})).toContainText('每30分钟');
+});
+
+test('sync icon settles while the pointer remains on the button',async({page})=>{
+ await page.emulateMedia({reducedMotion:'no-preference'});await page.goto('/');const button=page.getByRole('button',{name:'同步',exact:true});await button.hover();const icon=button.locator('svg');await expect(icon).toHaveAttribute('data-motion-state','resting',{timeout:2500});await page.waitForTimeout(650);await expect(icon).toHaveAttribute('data-motion-state','resting');await expect(button.locator('.spin')).toHaveCount(0);
+});
+
+test('reordering has real positional animation without scaling',async({page})=>{
+ await page.emulateMedia({reducedMotion:'no-preference'});await page.goto('/#videos');await expect(page.locator('.s-media')).toHaveCount(3);await page.getByRole('button',{name:'列表',exact:true}).click();const moving=await page.locator('.s-media').evaluateAll(els=>els.some(e=>e.getAnimations().some(a=>a.playState==='running')));expect(moving).toBe(true);await expect.poll(()=>page.locator('.s-media').evaluateAll(els=>els.every(e=>e.getAnimations().every(a=>a.playState!=='running')))).toBe(true);
 });
