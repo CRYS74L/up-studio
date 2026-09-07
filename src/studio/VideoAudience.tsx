@@ -6,7 +6,7 @@ import {percent,compact} from '../format';
 import {Stat} from './ui';
 export const ageLabels:Record<string,string>={age_one:'＜16岁',age_two:'16–25岁',age_three:'25–40岁',age_four:'＞40岁'};
 const deviceLabels:Record<string,string>={new_mobile:'移动端',new_pc:'PC',new_ott:'TV',new_h5:'H5',new_others:'其他',android:'Android',ios:'iOS',h5:'H5',pc:'PC',tv:'TV',other:'其他',out:'站外'};
-const colors=['#93CDD9','#B3A0FF','#FF82B2','#FFD57A','#A5DF94'];
+const colors=['#93CDD9','#B3A0FF','#FF82B2','#FFCE73','#A5DF94'];
 function Donut({title,data,labels}:{title:string;data:Record<string,unknown>;labels:Record<string,string>}){
  const rows=Object.entries(data).filter((e):e is[string,number]=>typeof e[1]==='number'&&e[1]>0),total=rows.reduce((a,[,v])=>a+v,0),base=chartBase();
  const option={...base,tooltip:{...base.tooltip,trigger:'item',formatter:(p:any)=>`${labels[p.name]??p.name}：${percent(p.percent)}`},series:[{type:'pie',radius:['62%','80%'],center:['50%','50%'],label:{show:false},itemStyle:{borderRadius:4},data:rows.map(([name,value],i)=>({name,value,itemStyle:{color:colors[i%colors.length]}}))}]};
@@ -17,7 +17,7 @@ export function VideoAudience({video}:{video:Video}){
  const interests=(dims.viewerInterests??dims.overview?.viewer_ty??[]).slice().sort((a:any,b:any)=>b.count-a.count);
  const regions=(dims.viewerArea??[]).slice().sort((a:any,b:any)=>b.count-a.count),regionTotal=regions.reduce((a:number,r:any)=>a+(typeof r.count==='number'?r.count:0),0);
  return <div className="s-two-col s-audience-grid"><Donut title="播放量来源" data={dims.playbackTerminalSources??dims.playProportion??{}} labels={deviceLabels}/><Donut title="性别分布" data={dims.viewerGender??{}} labels={{male:'男性',female:'女性',unknown:'未知'}}/>
- <section className="s-panel"><h3>年龄分布</h3><AgeChart ages={ages}/><div className="s-inline-stats"><Stat label="粉丝观看率" value={percent(video.metrics.fanAudiencePercent)}/><Stat label="游客观看率" value={percent(video.metrics.guestAudiencePercent)}/></div></section>
- <Distribution title="兴趣分布" rows={interests.map((r:any)=>({name:r.tag_name,value:r.count}))}><InterestCloud rows={interests.map((r:any)=>({name:r.tag_name,value:r.count}))}/></Distribution>
+ <section className="s-panel"><h3>年龄分布</h3><AgeChart ages={ages}/></section>
+<section className="s-panel s-span s-audience-shares"><h3>粉丝与游客</h3><div className="s-inline-stats"><Stat label="粉丝观看率" value={percent(video.metrics.fanAudiencePercent)}/><Stat label="游客观看率" value={percent(video.metrics.guestAudiencePercent)}/></div></section> <Distribution title="兴趣分布" rows={interests.map((r:any)=>({name:r.tag_name,value:r.count}))}><InterestCloud rows={interests.map((r:any)=>({name:r.tag_name,value:r.count}))}/></Distribution>
  <Distribution title="地域分布" percentage rows={regions.map((r:any)=>({name:r.location,value:regionTotal?r.count/regionTotal*100:0}))}><RegionMap rows={regions.map((r:any)=>({name:r.location,value:regionTotal?r.count/regionTotal*100:0}))}/></Distribution></div>;
 }

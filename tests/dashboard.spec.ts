@@ -80,22 +80,23 @@ test('multi-selection opens analysis with exactly the selected videos',async({pa
  await page.getByRole('button',{name:'选择 海边日记',exact:true}).click();
  await expect(page.locator('.s-selection-dock')).toContainText('已选 2 篇');
  await page.getByRole('button',{name:'去分析'}).click();
- await expect(page.locator('.s-video-chip')).toHaveCount(2);
+ await expect(page.locator('.s-picked-summary')).toContainText('已选 2 篇');
  await choose(page,'分析主题','作品对比');
  await expect(page.locator('.s-small-multiples .s-panel')).toHaveCount(3);
+ await page.getByRole('button',{name:'数据表',exact:true}).click();
  await expect(page.locator('.s-table tbody tr')).toHaveCount(2);
 });
 
 test('picker edits are applied explicitly and clearing selection remains empty',async({page})=>{
  await page.goto('/#analysis');
  await choose(page,'分析主题','作品对比');
- await expect(page.locator('.s-video-chip')).toHaveCount(3);
+ await expect(page.locator('.s-picked-summary')).toContainText('已选 3 篇');
  await page.getByRole('button',{name:'选择稿件',exact:true}).click();
  await expect(page.getByRole('dialog',{name:'选择稿件'})).toBeVisible();
  await page.getByRole('button',{name:'清空选择',exact:true}).click();
  await page.keyboard.press('Escape');
  await expect(page.getByRole('dialog')).toHaveCount(0);
- await expect(page.locator('.s-video-chip')).toHaveCount(3);
+ await expect(page.locator('.s-picked-summary')).toContainText('已选 3 篇');
  await page.getByRole('button',{name:'选择稿件',exact:true}).click();
  await page.getByRole('button',{name:'清空选择',exact:true}).click();
  await page.getByRole('button',{name:'应用选择',exact:true}).click();
@@ -137,7 +138,7 @@ test('sources exposes independent runtime, metric coverage and expandable runs',
  await expect(page.locator('.s-coverage-grid>div')).toHaveCount(16);
  await page.locator('.s-run-list summary').click();
  await expect(page.locator('.s-run-detail')).toBeVisible();
- await expect(page.locator('.s-unavailable')).toContainText('绝对曝光量');
+ await expect(page.locator('.s-unavailable')).toHaveCount(0);
 });
 
 test('sources marks cached runtime status unavailable after connection loss',async({page})=>{
@@ -255,4 +256,14 @@ test('overview changes are quantities and not percentages',async({page})=>{
 
 test('unselected segment hover only changes text color',async({page})=>{
  await page.emulateMedia({reducedMotion:'no-preference'});await page.goto('/#analysis');const target=page.getByRole('button',{name:'稿件分析',exact:true});await target.hover();await expect(target).toHaveCSS('background-color','rgba(0, 0, 0, 0)');await expect(target).toHaveCSS('transition-duration','0.15s');
+});
+
+test('rapid library switches do not scale cards and metric hover is inert',async({page})=>{
+ await page.emulateMedia({reducedMotion:'no-preference'});await page.goto('/#videos');
+ for(const name of ['列表','网格','中长视频','全部','短视频','全部']){await page.getByRole('button',{name,exact:true}).click();expect(await page.locator('.s-media').evaluateAll(els=>els.every(e=>getComputedStyle(e).transform==='none'))).toBe(true);}
+ await page.locator('.s-media-stats').first().hover();await expect(page.locator('.s-media-cover img').first()).toHaveCSS('transform','none');
+});
+test('freshness is in the header and relation points have a visible manuscript key',async({page})=>{
+ await page.goto('/');await expect(page.locator('.s-header-actions .s-header-freshness')).toBeVisible();await expect(page.getByRole('button',{name:'查看数据状态'})).toHaveCount(0);
+ await page.goto('/#analysis');await page.getByRole('button',{name:'稿件分析',exact:true}).click();await expect(page.locator('.s-point-key button')).toHaveCount(2);await expect(page.locator('.s-point-key')).toContainText('海边日记');
 });

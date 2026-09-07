@@ -1,0 +1,10 @@
+import {useMemo,useState} from 'react';
+import type {Video} from '../types';
+import {Sheet,Cover,Segments} from './ui';
+import {Search,Check,ChevronLeft,ChevronRight} from 'lucide-react';
+export function ManuscriptPicker({videos,selected,onChange,close}:{videos:Video[];selected:string[];onChange:(ids:string[])=>void;close:()=>void}){
+ const [search,setSearch]=useState(''),[draft,setDraft]=useState(selected),[filter,setFilter]=useState('全部'),[page,setPage]=useState(0);
+ const found=useMemo(()=>videos.filter(v=>(v.title+' '+v.bvid).toLowerCase().includes(search.toLowerCase())&&(filter==='全部'||(filter==='已选'?draft.includes(v.id):!draft.includes(v.id)))),[videos,search,filter,draft]);
+ const pages=Math.max(1,Math.ceil(found.length/6)),current=Math.min(page,pages-1),shown=found.slice(current*6,current*6+6);
+ return <Sheet title="选择稿件" close={close} footer={<><span>已选 {draft.length} 篇</span><button className="s-primary" onClick={()=>{onChange(draft);close();}}>应用选择</button></>}><label className="s-search"><Search/><input aria-label="查找稿件" autoFocus placeholder="搜索标题或 BV 号" value={search} onChange={e=>{setSearch(e.target.value);setPage(0)}}/></label><div className="s-picker-presets"><button onClick={()=>setDraft(videos.slice(0,5).map(v=>v.id))}>最近5篇</button><button onClick={()=>setDraft(videos.map(v=>v.id))}>全部稿件</button><button onClick={()=>setDraft([])}>清空选择</button></div><Segments items={['全部','已选','未选']} value={filter} label="选稿筛选" onChange={v=>{setFilter(v);setPage(0)}}/><div className="s-picker-grid">{shown.map(v=><button key={v.id} role="checkbox" aria-checked={draft.includes(v.id)} onClick={()=>setDraft(ids=>ids.includes(v.id)?ids.filter(id=>id!==v.id):[...ids,v.id])}><div><Cover video={v}/><span>{draft.includes(v.id)&&<Check/>}</span></div><b>{v.title}</b></button>)}</div>{!found.length&&<p role="status">没有匹配的稿件</p>}<div className="s-picker-pagination"><button aria-label="选稿上一页" disabled={current===0} onClick={()=>setPage(current-1)}><ChevronLeft/></button><span>{current+1} / {pages}</span><button aria-label="选稿下一页" disabled={current+1>=pages} onClick={()=>setPage(current+1)}><ChevronRight/></button></div></Sheet>;
+}

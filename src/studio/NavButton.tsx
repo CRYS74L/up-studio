@@ -5,5 +5,5 @@ const icons:Record<string,any>={overview:LayoutDashboardIcon,videos:VideoIcon,an
 export function NavButton({id,label,active,onClick,children}:{id:string;label:string;active:boolean;onClick:()=>void;children?:ReactNode}){
  const ref=useRef<{startAnimation:()=>void;stopAnimation:()=>void}>(null),reduce=useReducedMotion(),Icon=icons[id];
  const start=()=>{if(!reduce)ref.current?.startAnimation();},stop=()=>ref.current?.stopAnimation();
- return <button aria-label={label} title={label} aria-current={active?'page':undefined} onClick={onClick}>{children}<span className="s-nav-icon"><Icon ref={ref} size={20} isAnimated={false} duration={.6}/></span><span>{label}</span></button>;
+ return <button aria-label={label} title={label} aria-current={active?'page':undefined} onMouseEnter={start} onMouseLeave={stop} onFocus={start} onBlur={stop} onClick={onClick}>{children}<span className="s-nav-icon"><Icon ref={ref} size={20} isAnimated={!reduce} duration={.45}/></span><span>{label}</span></button>;
 }
