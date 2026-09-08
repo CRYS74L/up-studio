@@ -8,7 +8,7 @@ function themedOption(option: any, element: HTMLElement | null) {
   const line=style.getPropertyValue('--line').trim()||'#e9ecf2',surface=style.getPropertyValue('--surface').trim()||'#fff';
   const map=(value:any,fn:(item:any)=>any)=>Array.isArray(value)?value.map(fn):value?fn(value):value;
   const label=(value:any)=>({...value,color:text});
-  const axis=(value:any)=>({...value,nameTextStyle:label(value.nameTextStyle),axisLabel:{...value.axisLabel,color:muted},axisLine:{...value.axisLine,lineStyle:{...value.axisLine?.lineStyle,color:line}},splitLine:{...value.splitLine,lineStyle:{...value.splitLine?.lineStyle,color:line}}});
+  const axis=(value:any)=>({...value,nameTextStyle:label(value.nameTextStyle),axisLabel:{...value.axisLabel,color:value.type==='category'?text:muted},axisLine:{...value.axisLine,lineStyle:{...value.axisLine?.lineStyle,color:line}},splitLine:{...value.splitLine,lineStyle:{...value.splitLine?.lineStyle,color:line}}});
   const radial=Array.isArray(option.series)&&option.series.every((s:any)=>['pie','map'].includes(s.type));
   return {...option,grid:radial?undefined:option.grid,textStyle:label(option.textStyle),xAxis:radial?undefined:map(option.xAxis,axis),yAxis:radial?undefined:map(option.yAxis,axis),
     legend:map(option.legend,(v:any)=>({...v,textStyle:label(v.textStyle),inactiveColor:muted})),
@@ -27,7 +27,9 @@ export function Chart({ option, className, events }: { option: any; className: s
     if (!chart) return;
     const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
     const current = latest.current;
-    chart.setOption({ ...themedOption(current.option,element.current), animation: !reduced && current.option.animation !== false, animationDurationUpdate: reduced ? 0 : 300 }, { notMerge: true });
+    const resolved=themedOption(current.option,element.current);
+    const x=resolved.xAxis;if(x?.type==='category'&&x.axisLabel?.interval===0&&x.data?.length){const width=(element.current?.clientWidth??800)-110;const tight=width/x.data.length<30;x.axisLabel={...x.axisLabel,hideOverlap:false,showMinLabel:true,showMaxLabel:true,rotate:tight?-90:x.axisLabel.rotate};}
+    chart.setOption({ ...resolved, animation: !reduced && current.option.animation !== false, animationDurationUpdate: reduced ? 0 : 300 }, { notMerge: true });
     for (const [name, callback] of Object.entries(bound.current)) chart.off(name, callback);
     bound.current = current.events ?? {};
     for (const [name, callback] of Object.entries(bound.current)) chart.on(name, callback);
@@ -38,7 +40,7 @@ export function Chart({ option, className, events }: { option: any; className: s
     const resize = () => {
       if (!live || !element.current?.clientWidth || !element.current.clientHeight) return;
       if (!instance.current) { instance.current = echarts.init(element.current); update(); }
-      else instance.current.resize();
+      else { instance.current.resize(); update(); }
     };
     const observer = new ResizeObserver(resize);
     observer.observe(element.current);
@@ -50,5 +52,6 @@ export function Chart({ option, className, events }: { option: any; className: s
     return () => { live = false; observer.disconnect(); themeObserver.disconnect(); reduced.removeEventListener('change', update); instance.current?.dispose(); instance.current = null; bound.current = {}; };
   }, []);
   useEffect(update, [option, events]);
-  return <div ref={element} className={className} role="img" aria-label={option.accessibleLabel ?? '交互数据图表，详细数值可在对应稿件中查看'} />;
+  const category=option.xAxis?.type==='category'&&option.xAxis?.axisLabel?.interval===0;const count=category?option.xAxis.data?.length??0:0;
+  return <div className="s-chart-viewport"><div ref={element} style={count>10?{minWidth:count*30}:undefined} className={className} role="img" aria-label={option.accessibleLabel ?? '交互数据图表，详细数值可在对应稿件中查看'} /></div>;
 }

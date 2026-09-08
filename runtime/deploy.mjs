@@ -22,7 +22,7 @@ for(const name of fs.readdirSync(path.join(project,'migrations')).filter(name=>/
 }
 migrationDb.close();
 const id=new Date().toISOString().replace(/[:.]/g,'-'); const release=path.join(root,'releases',id);fs.mkdirSync(release);
-fs.copyFileSync(path.join(project,'dist/bilibili_data_dashboard/index.js'),path.join(release,'worker.mjs'));
+fs.copyFileSync(path.join(project,'dist/up_studio/index.js'),path.join(release,'worker.mjs'));
 function copyTree(source,target){fs.mkdirSync(target,{recursive:true});for(const entry of fs.readdirSync(source,{withFileTypes:true})){const from=path.join(source,entry.name),to=path.join(target,entry.name);if(entry.isDirectory())copyTree(from,to);else if(entry.isFile())fs.copyFileSync(from,to);}}
 copyTree(path.join(project,'dist/client'),path.join(release,'client'));
 for(const file of ['server.mjs','d1.mjs','launch.ps1'])fs.copyFileSync(path.join(project,'runtime',file),path.join(root,file));

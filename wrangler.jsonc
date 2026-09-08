@@ -1,6 +1,6 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "bilibili-data-dashboard",
+  "name": "up-studio",
   "main": "worker/index.ts",
   "compatibility_date": "2026-08-04",
   "assets": { "not_found_handling": "single-page-application" },

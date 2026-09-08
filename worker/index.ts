@@ -1,4 +1,4 @@
-import {registerAi,aiModel,AI_MODELS} from './ai-analysis';
+import {registerAi,aiModel,aiEffort,AI_MODELS} from './ai-analysis';
 import {accountDatabase,rootDatabase,prepareAccount,fetchProfile} from './accounts';
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
@@ -118,7 +118,7 @@ app.get('/api/dashboard/summary', async (c) => {
     }
   }
   const lastRun = await c.env.DB.prepare('SELECT status,coverage,coverage_json,started_at,finished_at,error_code,safe_error_detail FROM acquisition_runs ORDER BY started_at DESC LIMIT 1').first<any>();
-  return c.json({ ok: true, configured: Boolean(currentAt), summary, comparison, comparisonLabels, comparisonPeriod, comparisonCapturedAt: previousAt ?? null, freshnessMinutes: currentAt ? Math.floor((Date.now() - Date.parse(currentAt)) / 60000) : null, acquisition: lastRun ? { ...lastRun, details: JSON.parse(lastRun.coverage_json || '{}'), coverage_json: undefined } : null });
+  return c.json({ ok: true, configured: Boolean(currentAt), summary, comparison, comparisonLabels, comparisonPeriod, comparisonCapturedAt: previousAt ?? null, miniTrends: currentAt ? {overview:await overviewHistory(c.env.DB),account:(await c.env.DB.prepare('SELECT followers FROM account_trends WHERE followers IS NOT NULL ORDER BY day').all()).results} : null, freshnessMinutes: currentAt ? Math.floor((Date.now() - Date.parse(currentAt)) / 60000) : null, acquisition: lastRun ? { ...lastRun, details: JSON.parse(lastRun.coverage_json || '{}'), coverage_json: undefined } : null });
 });
 app.get('/api/account/history', async (c) => {
   const points = (await c.env.DB.prepare('SELECT day,followers,follows,unfollows,views FROM account_trends ORDER BY day').all()).results;
@@ -184,11 +184,12 @@ app.get('/api/acquisition/runs', async (c) => {
   const rows = (await c.env.DB.prepare('SELECT id,status,started_at,finished_at,coverage,coverage_json,error_code,timings_json,request_count FROM acquisition_runs ORDER BY started_at DESC LIMIT 20').all()).results;
   return c.json({ok:true,runs:rows.map((row:any)=>({...row,details:JSON.parse(row.coverage_json||'{}'),timings:JSON.parse(row.timings_json||'{}'),coverage_json:undefined,timings_json:undefined}))});
 });
-app.get('/api/dashboard/history', async (c) => {
-  const rows = (await c.env.DB.prepare("SELECT captured_at,SUM(views) views,SUM(followers_gained) followers,SUM(avg_watch_seconds*views)/NULLIF(SUM(CASE WHEN avg_watch_seconds IS NOT NULL THEN views END),0) avg_watch_seconds,AVG(avg_watch_percent) avg_watch_percent,COUNT(*) videos FROM video_snapshots WHERE source LIKE 'web-data-v%' GROUP BY captured_at ORDER BY captured_at DESC LIMIT 30").all()).results;
-  const points = await Promise.all(rows.reverse().map(async (row:any) => ({...row,...await loadSummaryAt(c.env.DB,row.captured_at)})));
-  return c.json({ok:true,points});
-});
+async function overviewHistory(db:D1Database){
+ const rows=(await db.prepare("SELECT captured_at,views,followers_gained,avg_watch_seconds,avg_watch_percent,metrics_json FROM video_snapshots WHERE captured_at IN (SELECT captured_at FROM video_snapshots WHERE source LIKE 'web-data-v%' GROUP BY captured_at ORDER BY captured_at DESC LIMIT 30) ORDER BY captured_at").all()).results as any[];
+ const groups=new Map<string,any[]>();for(const row of rows){const list=groups.get(row.captured_at)??[];list.push(row);groups.set(row.captured_at,list)}
+ return [...groups].map(([captured_at,items])=>{const views=items.reduce((n,v)=>n+(v.views??0),0);const interactions=items.map(v=>{const m=JSON.parse(v.metrics_json||'{}'),xs=['likes','comments','danmaku','favorites','coins','shares'].map(k=>m[k]);return xs.every(x=>typeof x==='number'&&Number.isFinite(x))?xs.reduce((a,b)=>a+b,0):null});return {captured_at,views,avg_views:items.every(v=>v.views!=null)?views/items.length:null,avg_interactions:interactions.every(v=>v!=null)?interactions.reduce((a,b)=>a!+b!,0)!/items.length:null};});
+}
+app.get('/api/dashboard/history',async(c)=>c.json({ok:true,points:await overviewHistory(c.env.DB)}));
 
 app.post('/api/imports/preview', async (c) => {
   const body = await c.req.arrayBuffer();
@@ -210,11 +211,12 @@ registerAi(app,readDeepSeekKey);
 app.get('/api/settings/deepseek/status', async (c) => {
   const setting = await c.env.DB.prepare("SELECT value_json,updated_at FROM settings WHERE key='deepseek_status'").first<{ value_json:string; updated_at:string }>();
   const value = setting ? JSON.parse(setting.value_json) : {};
-  return c.json({ ok:true, configured:Boolean(await readDeepSeekKey(c.env)), last4:value.last4 ?? null, lastTestAt:value.lastTestAt ?? null, model:await aiModel(c.env),models:AI_MODELS,dailyBudget:Number(c.env.AI_DAILY_CNY_LIMIT)||1,monthlyBudget:Number(c.env.AI_MONTHLY_CNY_LIMIT)||5 });
+  return c.json({ ok:true, configured:Boolean(await readDeepSeekKey(c.env)), last4:value.last4 ?? null, lastTestAt:value.lastTestAt ?? null, model:await aiModel(c.env),models:AI_MODELS,effort:await aiEffort(c.env),dailyBudget:Number(c.env.AI_DAILY_CNY_LIMIT)||1,monthlyBudget:Number(c.env.AI_MONTHLY_CNY_LIMIT)||5 });
 });
-app.put('/api/settings/deepseek', zValidator('json', z.object({ apiKey:z.string().min(8).max(256).optional(), model:z.enum(AI_MODELS).optional() })), async (c) => {
+app.put('/api/settings/deepseek', zValidator('json', z.object({ apiKey:z.string().min(8).max(256).optional(), model:z.enum(AI_MODELS).optional(),effort:z.enum(['off','low','high','max']).optional() })), async (c) => {
   if (!c.env.MASTER_ENCRYPTION_KEY_BASE64) return jsonError(c,503,'encryption_not_configured','请先配置本地主加密密钥');
   const input=c.req.valid('json'),now=new Date().toISOString();
+  if(input.effort)await c.env.DB.prepare("INSERT INTO settings(key,value_json,updated_at) VALUES('deepseek_effort',?,?) ON CONFLICT(key) DO UPDATE SET value_json=excluded.value_json,updated_at=excluded.updated_at").bind(JSON.stringify(input.effort),now).run();
   if(input.model)await c.env.DB.prepare("INSERT INTO settings(key,value_json,updated_at) VALUES('deepseek_model',?,?) ON CONFLICT(key) DO UPDATE SET value_json=excluded.value_json,updated_at=excluded.updated_at").bind(JSON.stringify(input.model),now).run();
   if(input.apiKey){const key=input.apiKey.trim(),encrypted=await encryptJson({key},c.env.MASTER_ENCRYPTION_KEY_BASE64);await c.env.DB.batch([c.env.DB.prepare("INSERT INTO encrypted_secrets(id,ciphertext,iv,updated_at) VALUES('deepseek_api_key',?,?,?) ON CONFLICT(id) DO UPDATE SET ciphertext=excluded.ciphertext,iv=excluded.iv,updated_at=excluded.updated_at").bind(encrypted.ciphertext,encrypted.iv,now),c.env.DB.prepare("INSERT INTO settings(key,value_json,updated_at) VALUES('deepseek_status',?,?) ON CONFLICT(key) DO UPDATE SET value_json=excluded.value_json,updated_at=excluded.updated_at").bind(JSON.stringify({last4:key.slice(-4),lastTestAt:null}),now)]);}
   return c.json({ok:true,configured:!!await readDeepSeekKey(c.env),model:await aiModel(c.env)});
@@ -224,7 +226,7 @@ app.post('/api/settings/deepseek/test', async (c) => {
   const key=await readDeepSeekKey(c.env); if(!key)return jsonError(c,503,'not_configured','尚未填写 DeepSeek API Key');
   const started=Date.now();
   try {
-    const response=await fetch('https://api.deepseek.com/chat/completions',{method:'POST',headers:{authorization:`Bearer ${key}`,'content-type':'application/json'},body:JSON.stringify({model:await aiModel(c.env),messages:[{role:'user',content:'只回复 OK'}],max_tokens:4,stream:false}),signal:AbortSignal.timeout(15000)});
+    const response=await fetch('https://api.deepseek.com/chat/completions',{method:'POST',headers:{authorization:`Bearer ${key}`,'content-type':'application/json'},body:JSON.stringify({model:await aiModel(c.env),messages:[{role:'user',content:'只回复 OK'}],thinking:{type:'disabled'},max_tokens:16,stream:false}),signal:AbortSignal.timeout(15000)});
     if(!response.ok){ const safe=response.status===401?'API Key 无效':response.status===429?'请求过于频繁或额度不足':`DeepSeek 返回 HTTP ${response.status}`; return jsonError(c,502,'deepseek_rejected',safe); }
     const now=new Date().toISOString(); const old=await c.env.DB.prepare("SELECT value_json FROM settings WHERE key='deepseek_status'").first<{value_json:string}>(); const value=old?JSON.parse(old.value_json):{};
     await c.env.DB.prepare("INSERT INTO settings(key,value_json,updated_at) VALUES('deepseek_status',?,?) ON CONFLICT(key) DO UPDATE SET value_json=excluded.value_json,updated_at=excluded.updated_at").bind(JSON.stringify({...value,lastTestAt:now}),now).run();

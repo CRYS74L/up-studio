@@ -132,3 +132,30 @@ B站封面播放与弹幕图标的实际SVG路径保存在src/studio/BiliIcons.t
 相同模型、提示版本、数据与问题复用结果。请求前预留预算，返回后按usage核算保守估计；常见未计费4xx不占预算。价格参考2026-09-08官方定价（https://api-docs.deepseek.com/quick_start/pricing/），人民币预算采用保守上界估计，不是官方账单；沿用每天1元、每月5元上限。无自动后台AI调用。
 
 验证：28项数据/AI测试，90项跨设备交互测试，类型检查与生产构建。AI测试使用模拟提供方，覆盖证据校验、缓存、预算拦截和结果展示；真实本地数据预览包含17篇稿件与30天账号记录。当前未配置DeepSeek Key，因此真实提供方的生成质量和连通性尚未验证，须由用户在账号面板填Key后测试。
+
+
+## v0.1.0-dev.23 — UP Studio
+
+- 名称统一为 UP Studio；私有仓库迁至 https://github.com/CRYS74L/up-studio，保留既有历史与 Windows 启动任务。
+- 图标采用用户最终确认的 B1 原稿，SVG 视口提取后导出 PNG，未重绘配色与阴影。侧栏、favicon、Apple touch icon 与 README 共用定稿资源。
+- 概览摘要直接携带四项小趋势；历史汇总由每个时间点分别查库改为批量查询，避免封面请求占用浏览器连接后拖延趋势。真实概览摘要含30个稿件汇总点和92个账号历史点，实测381ms（单次本地测量）。
+- KPI 手机两列布局、箭头对齐、较小比较标题、明亮绿色下降值；最近稿件桌面四列两排、手机两列两排；封标标题使用正常前景色。
+- 稿件外显指标字号14px，按标签内容宽度等距，两端分布、各组居中；保留封面和标题的悬停区域。
+- 分析稿件选择改为横向可直接点选的封面列表，并保留搜索选择；关系图使用裁成圆形的真实封面和边缘高光、阴影。每个作品标签强制显示，窄屏空间不足时图表内部滚动，页面不横向溢出。
+- 图标使用 lucide-motion 的单次描画，通过按钮 pointerenter/focus 显式触发；悬停停留后回到 resting，不循环。保留可中断的位置重排、页面和详情切换动画。
+- 账号弹窗只管理账号，添加按钮直接生成二维码；AI设置和导出移到同级设置页；同步记录限制高度、支持内部滚动；更新选项加入10分钟、1小时。
+- AI改为胶囊入口，报告写入数据库并按账号读取历史；页面导航不删除报告。公开文档模型包含 Flash、Pro、Flash Vision 实验版，提供关闭/low/high/max 思考配置。视觉输入显式勾选后仅向视觉模型附带最多8张封面。
+- 预览和真实请求调用同一构造函数；请求包含单位说明、发布时间、指标、观众画像、账号和稿件趋势，JSON输出经证据ID/数值校验后展示。前端不发送B站登录凭据。
+
+### 验证
+
+- 29项后端/数据测试，99项跨设备浏览器测试，TypeScript与生产构建通过。
+- 真实17篇稿件的桌面1440px/手机390px、深浅色、图表、账号资料、记录滚动已截图检查，无页面脚本异常与页面横向溢出。
+- 实际 DeepSeek Flash 三篇稿件分析成功，估算费用0.036116元（非账单），真实页面离开再返回保留同一报告；当前3条历史报告可读取。
+- 视觉和思考模式的参数构造经过自动化验证；未额外调用视觉模型计费。账号二维码流程有自动化验证，完成新账号登录仍需用户扫码确认。
+- 原启动任务 BilibiliCreatorInsights-Local-25758 保留，运行程序与数据库仍位于项目 .local-runtime；未改其他启动项。
+
+### 官方依据
+
+- DeepSeek：首次调用 https://api-docs.deepseek.com/zh-cn/ ，思考模式 https://api-docs.deepseek.com/zh-cn/guides/thinking_mode/ ，图像理解 https://api-docs.deepseek.com/zh-cn/guides/vision/ ，JSON输出 https://api-docs.deepseek.com/zh-cn/guides/json_mode/ 。
+- Apple HIG：按钮 https://developer.apple.com/design/human-interface-guidelines/buttons ，动效 https://developer.apple.com/design/human-interface-guidelines/motion 。网页使用相应的圆角、反馈、响应式与减少动态效果原则；不是嵌入原生UIKit组件。

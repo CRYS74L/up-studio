@@ -80,7 +80,7 @@ test('multi-selection opens analysis with exactly the selected videos',async({pa
  await page.getByRole('button',{name:'选择 海边日记',exact:true}).click();
  await expect(page.locator('.s-selection-dock')).toContainText('已选 2 篇');
  await page.getByRole('button',{name:'去分析'}).click();
- await expect(page.locator('.s-picked-summary')).toContainText('已选 2 篇');
+ await expect(page.locator('.s-direct-actions')).toContainText('已选 2 篇');
  await choose(page,'分析主题','作品对比');
  await expect(page.locator('.s-small-multiples .s-panel')).toHaveCount(3);
  await page.getByRole('button',{name:'数据表',exact:true}).click();
@@ -90,13 +90,13 @@ test('multi-selection opens analysis with exactly the selected videos',async({pa
 test('picker edits are applied explicitly and clearing selection remains empty',async({page})=>{
  await page.goto('/#analysis');
  await choose(page,'分析主题','作品对比');
- await expect(page.locator('.s-picked-summary')).toContainText('已选 3 篇');
+ await expect(page.locator('.s-direct-actions')).toContainText('已选 3 篇');
  await page.getByRole('button',{name:'选择稿件',exact:true}).click();
  await expect(page.getByRole('dialog',{name:'选择稿件'})).toBeVisible();
  await page.getByRole('button',{name:'清空选择',exact:true}).click();
  await page.keyboard.press('Escape');
  await expect(page.getByRole('dialog')).toHaveCount(0);
- await expect(page.locator('.s-picked-summary')).toContainText('已选 3 篇');
+ await expect(page.locator('.s-direct-actions')).toContainText('已选 3 篇');
  await page.getByRole('button',{name:'选择稿件',exact:true}).click();
  await page.getByRole('button',{name:'清空选择',exact:true}).click();
  await page.getByRole('button',{name:'应用选择',exact:true}).click();
@@ -271,20 +271,42 @@ test('freshness is in the header and relation points have a visible manuscript k
 test('sync toast disappears without a close button',async({page})=>{
  await page.clock.install();await page.route('**/api/bilibili/collect-now',r=>r.fulfill({json:{ok:true,run:{status:'success'}}}));await page.goto('/#videos');await expect(page.locator('.s-header-freshness')).toBeVisible();await page.getByRole('button',{name:'同步',exact:true}).click();await expect(page.locator('.s-floating-toast')).toContainText('同步完成');await expect(page.getByRole('button',{name:'关闭同步提示'})).toHaveCount(0);await page.clock.fastForward(4000);await expect(page.locator('.s-floating-toast')).toHaveCount(0);
 });
-test('account panel contains model settings and export actions',async({page})=>{
- await page.goto('/');if((page.viewportSize()?.width??1000)<700)await page.getByRole('button',{name:'打开导航'}).click();await page.getByRole('button',{name:'UP主账号'}).click();await page.getByRole('button',{name:'AI设置',exact:true}).click();await choose(page,'DeepSeek分析模型','V4 Pro · 复杂分析');await expect(page.getByRole('combobox',{name:'DeepSeek分析模型'})).toContainText('V4 Pro');await page.getByRole('button',{name:'数据导出',exact:true}).click();await expect(page.getByRole('button',{name:/导出 CSV/})).toBeVisible();
+test('settings page contains model settings and export actions',async({page})=>{
+ await page.goto('/#settings');await page.getByRole('button',{name:'AI设置',exact:true}).click();await choose(page,'DeepSeek分析模型','V4 Pro · 复杂分析');await expect(page.getByRole('combobox',{name:'DeepSeek分析模型'})).toContainText('V4 Pro');await page.getByRole('button',{name:'数据导出',exact:true}).click();await expect(page.getByRole('button',{name:/导出 CSV/})).toBeVisible();
 });
 test('AI analysis displays evidence and experiments from the server response',async({page})=>{
- await page.route('**/api/ai/status',r=>r.fulfill({json:{ok:true,configured:true,model:'deepseek-v4-flash'}}));await page.route('**/api/ai/insights',r=>r.fulfill({json:{ok:true,model:'deepseek-v4-flash',estimatedCostCny:.01,report:{summary:'优先测试开头',findings:[{title:'观看表现',observation:'对比后可安排实验',confidence:'medium',evidence:[{videoId:'1',metric:'views',title:'山间旅行',value:3000}]}],experiments:[{action:'测试前3秒',reason:'改善早期留存',measure:'对比跳出率'}],limitations:['测试数据']}}}));await page.goto('/#analysis');await page.getByRole('button',{name:'分析这 3 篇'}).click();await expect(page.locator('.s-ai-result')).toContainText('优先测试开头');await expect(page.locator('.s-ai-evidence')).toContainText('3000');await expect(page.locator('.s-ai-experiments')).toContainText('测试前3秒');
+ await page.route('**/api/ai/status',r=>r.fulfill({json:{ok:true,configured:true,model:'deepseek-v4-flash'}}));await page.route('**/api/ai/insights',r=>r.fulfill({json:{ok:true,model:'deepseek-v4-flash',estimatedCostCny:.01,report:{summary:'优先测试开头',findings:[{title:'观看表现',observation:'对比后可安排实验',confidence:'medium',evidence:[{videoId:'1',metric:'views',title:'山间旅行',value:3000}]}],experiments:[{action:'测试前3秒',reason:'改善早期留存',measure:'对比跳出率'}],limitations:['测试数据']}}}));await page.goto('/#analysis');await page.getByRole('button',{name:'AI 分析',exact:true}).click();await page.getByRole('button',{name:'分析这 3 篇'}).click();await expect(page.locator('.s-ai-result')).toContainText('优先测试开头');await expect(page.locator('.s-ai-evidence')).toContainText('3000');await expect(page.locator('.s-ai-experiments')).toContainText('测试前3秒');
 });
 test('automatic update frequency can be changed',async({page})=>{
- let interval=15;await page.route('**/api/local/status',r=>r.fulfill({json:{ok:true,version:'test',uptime:30,autoCollect:true,intervalMinutes:interval}}));await page.route('**/api/local/schedule',r=>{interval=r.request().postDataJSON().intervalMinutes;return r.fulfill({json:{ok:true,intervalMinutes:interval}})});await page.goto('/#sources');await choose(page,'自动更新频率','每30分钟');await expect(page.getByRole('combobox',{name:'自动更新频率'})).toContainText('每30分钟');
+ let interval=15;await page.route('**/api/local/status',r=>r.fulfill({json:{ok:true,version:'test',uptime:30,autoCollect:true,intervalMinutes:interval}}));await page.route('**/api/local/schedule',r=>{interval=r.request().postDataJSON().intervalMinutes;return r.fulfill({json:{ok:true,intervalMinutes:interval}})});await page.goto('/#sources');await choose(page,'自动更新频率','每10分钟');await expect(page.getByRole('combobox',{name:'自动更新频率'})).toContainText('每10分钟');await choose(page,'自动更新频率','每1小时');await expect(page.getByRole('combobox',{name:'自动更新频率'})).toContainText('每1小时');
 });
 
 test('sync icon settles while the pointer remains on the button',async({page})=>{
- await page.emulateMedia({reducedMotion:'no-preference'});await page.goto('/');const button=page.getByRole('button',{name:'同步',exact:true});await button.hover();const icon=button.locator('svg');await expect(icon).toHaveAttribute('data-motion-state','resting',{timeout:2500});await page.waitForTimeout(650);await expect(icon).toHaveAttribute('data-motion-state','resting');await expect(button.locator('.spin')).toHaveCount(0);
+ await page.emulateMedia({reducedMotion:'no-preference'});await page.goto('/');const button=page.getByRole('button',{name:'同步',exact:true});const icon=button.locator('svg');await button.hover();await expect(icon).toHaveAttribute('data-motion-state','drawing');await expect(icon).toHaveAttribute('data-motion-state','resting',{timeout:2500});await page.waitForTimeout(650);await expect(icon).toHaveAttribute('data-motion-state','resting');await expect(button.locator('.spin')).toHaveCount(0);
 });
 
 test('reordering has real positional animation without scaling',async({page})=>{
  await page.emulateMedia({reducedMotion:'no-preference'});await page.goto('/#videos');await expect(page.locator('.s-media')).toHaveCount(3);await page.getByRole('button',{name:'列表',exact:true}).click();const moving=await page.locator('.s-media').evaluateAll(els=>els.some(e=>e.getAnimations().some(a=>a.playState==='running')));expect(moving).toBe(true);await expect.poll(()=>page.locator('.s-media').evaluateAll(els=>els.every(e=>e.getAnimations().every(a=>a.playState!=='running')))).toBe(true);
+});
+
+test('saved AI reports survive navigation and account connection opens a QR code',async({page})=>{
+ const record={id:'saved',generatedAt:'2026-09-08T00:00:00Z',question:'之前的问题',model:'deepseek-v4-flash',estimatedCostCny:.01,report:{summary:'保留的分析结论',findings:[],experiments:[],limitations:[]}};
+ await page.route('**/api/ai/history',r=>r.fulfill({json:{ok:true,history:[record]}}));
+ await page.goto('/#analysis');await page.getByRole('button',{name:'AI 分析',exact:true}).click();await expect(page.locator('.s-ai-result')).toContainText('保留的分析结论');await page.getByRole('button',{name:'关闭',exact:true}).click();await page.goto('/#videos');await page.goto('/#analysis');await page.getByRole('button',{name:'AI 分析',exact:true}).click();await expect(page.locator('.s-ai-result')).toContainText('保留的分析结论');await page.getByRole('button',{name:'关闭',exact:true}).click();
+ await page.route('**/api/bilibili/qr/start',r=>r.fulfill({json:{ok:true,key:'test',url:'https://example.com/test-qr'}}));await page.route('**/api/bilibili/qr/status/test',r=>r.fulfill({json:{ok:true,state:'waiting'}}));
+ if((page.viewportSize()?.width??1000)<700)await page.getByRole('button',{name:'打开导航'}).click();await page.getByRole('button',{name:'UP主账号'}).click();await page.getByRole('button',{name:/切换 \/ 添加账号/}).click();await expect(page.getByRole('img',{name:'B站账号登录二维码'})).toBeVisible();await expect(page.getByRole('button',{name:'AI设置',exact:true})).toHaveCount(0);
+});
+test('direct manuscript selection avoids a modal and KPI content stays within each card',async({page})=>{
+ await page.goto('/');const outside=await page.locator('.s-overview-kpis article').evaluateAll(cards=>cards.some(card=>{const r=card.getBoundingClientRect();return [...card.querySelectorAll('strong,.s-kpi-change,.s-spark')].some(el=>{const b=el.getBoundingClientRect();return b.left<r.left-1||b.right>r.right+1})}));expect(outside).toBe(false);
+ await page.goto('/#analysis');await page.getByRole('button',{name:'稿件分析',exact:true}).click();await expect(page.locator('.s-direct-videos>button')).toHaveCount(3);await page.locator('.s-direct-videos>button').first().click();await expect(page.locator('.s-direct-actions')).toContainText('已选 2 篇');await expect(page.getByRole('dialog')).toHaveCount(0);
+});
+
+test('realistic manuscript count retains readable categories and two recent rows',async({page})=>{
+ const many=Array.from({length:17},(_,i)=>({...videos[i%3],id:String(i+1),title:'第'+(i+1)+'篇长标题稿件',published_at:new Date(2026,0,i+1).toISOString()}));
+ await page.route('**/api/videos*',r=>r.fulfill({json:{ok:true,videos:many}}));
+ await page.route('**/api/dashboard/summary',r=>r.fulfill({json:{ok:true,...summary,miniTrends:{overview:[{views:5000,avg_views:1900,avg_interactions:180},{views:6000,avg_views:2000,avg_interactions:190}],account:[{followers:3380},{followers:3382}]}}}));
+ await page.goto('/');await expect(page.locator('.s-overview-kpis .s-spark')).toHaveCount(4);await expect(page.locator('.s-spark-loading')).toHaveCount(0);
+ const recent=page.locator('.s-recent-item:visible');await expect(recent).toHaveCount((page.viewportSize()?.width??1000)<700?4:8);const rows=await recent.evaluateAll(els=>new Set(els.map(e=>Math.round(e.getBoundingClientRect().top))).size);expect(rows).toBe(2);
+ const clipped=await recent.evaluateAll(els=>els.some(e=>{const r=e.getBoundingClientRect();return [...e.querySelectorAll('h3,.s-stat')].some(child=>child.getBoundingClientRect().right>r.right+1)}));expect(clipped).toBe(false);
+ await page.goto('/#analysis');await expect(page.locator('.s-combo-chart')).toHaveCount(3);for(const chart of await page.locator('.s-combo-chart').all()){expect(await chart.evaluate(e=>e.clientWidth)).toBeGreaterThanOrEqual(17*30);}
 });

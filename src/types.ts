@@ -50,6 +50,7 @@ export type Acquisition = {
   safe_error_detail?: string | null;
 };
 export type Summary = {
+  miniTrends?:{overview:Array<Record<string,any>>;account:Array<{followers:number|null}>}|null;
   configured: boolean;
   freshnessMinutes: number | null;
   summary: {
