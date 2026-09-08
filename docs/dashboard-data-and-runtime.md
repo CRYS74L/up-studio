@@ -159,3 +159,25 @@ B站封面播放与弹幕图标的实际SVG路径保存在src/studio/BiliIcons.t
 
 - DeepSeek：首次调用 https://api-docs.deepseek.com/zh-cn/ ，思考模式 https://api-docs.deepseek.com/zh-cn/guides/thinking_mode/ ，图像理解 https://api-docs.deepseek.com/zh-cn/guides/vision/ ，JSON输出 https://api-docs.deepseek.com/zh-cn/guides/json_mode/ 。
 - Apple HIG：按钮 https://developer.apple.com/design/human-interface-guidelines/buttons ，动效 https://developer.apple.com/design/human-interface-guidelines/motion 。网页使用相应的圆角、反馈、响应式与减少动态效果原则；不是嵌入原生UIKit组件。
+
+## v0.1.0-dev.24 — 统一全局操作与稿件详情
+
+- 接入用户提供的 UP-mark-refined.svg 与 UP-refined.svg，网站侧栏、版本区、favicon 和 README 使用纯矢量；Apple touch icon 保留由矢量渲染的兼容 PNG。
+- 导航与同步 SVG 描画仅由点击触发，移除悬停/聚焦触发；主题按钮和图标按钮采用圆形，搜索和短按钮采用胶囊形态，弹出菜单按实际高度放置并统一淡入。
+- AI 分析入口固定在全局页头的主题按钮与同步按钮之间，使用当前稿件、当前分析选择或全部稿件作为范围；不再插入页面内容区。
+- 侧栏账号改为静态资料，设置中提供账号列表、切换和扫码添加；版本信息从数据源移到设置，创作中心卡片名称统一为“哔哩哔哩创作中心”。
+- 概览名称加粗，小趋势加入向下淡出的填充；手机仍保持变化数值与折线左右排列，最近稿件为两列两排；评分横轴显式数值类型且容器不横向滚动。
+- 稿件外显只保留日期，日期放大；三项指标名称/数值与标题同字号，数值加粗。详情封面加入播放、弹幕、时长；“游客播放与转粉”“观众选题偏好”归入观众，留存和趋势并入表现。
+- 主页面前进和返回都有退出/进入过渡；路由变化关闭手机导航遮罩。秒单位轴标注统一为 s。
+- 关系气泡使用256像素裁切封面并降低表面白色覆盖，删除图下序号标题列表，保留悬停详情。
+- API Key 状态只返回首4位、星号和末4位，已保存时直接显示；编辑与保存的新密钥值独立，不会把掩码提交为新密钥。
+
+### 兴趣分布依据与零值
+
+实际读取创作中心页面发布的 FansPortrayalInterest 实现（data-center-web.9913 对应当前资源清单；本地只读取证保存在被忽略的 .local-runtime/research24）。它使用 wordcloud2，并按排名赋权2.5/2/1.8/1.5，weightFactor 18，gridSize 27，rotateRatio 0，前三名加粗、前七名按固定七色，其余用前景色。已替换此前平方根数值缩放、gridSize 9和四色循环；窄屏按容器缩放，深色主题使用同色相的高明度配色。位置由该词云库的碰撞排布计算，随机排布不保证每次刷新都与某张截图逐像素相同。
+
+地区分布有有效数据时，未列出的省份按0显示为0.0%；整个分布缺失仍保持缺失语义，不补造分布。
+
+### 验证
+
+29项数据/后端测试、108项跨设备UI用例通过（含两项手机导航回归复测）；实际1440px与390px页面截图、词云十词排布、横轴无多余滚动和掩码状态已核查。网站服务仍在项目内独立运行，未改变其他开机启动项。

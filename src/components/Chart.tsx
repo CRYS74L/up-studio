@@ -53,5 +53,5 @@ export function Chart({ option, className, events }: { option: any; className: s
   }, []);
   useEffect(update, [option, events]);
   const category=option.xAxis?.type==='category'&&option.xAxis?.axisLabel?.interval===0;const count=category?option.xAxis.data?.length??0:0;
-  return <div className="s-chart-viewport"><div ref={element} style={count>10?{minWidth:count*30}:undefined} className={className} role="img" aria-label={option.accessibleLabel ?? '交互数据图表，详细数值可在对应稿件中查看'} /></div>;
+  return <div className={'s-chart-viewport'+(className==='s-rank-chart'?' s-chart-no-scroll':'')}><div ref={element} style={count>10?{minWidth:count*30}:undefined} className={className} role="img" aria-label={option.accessibleLabel ?? '交互数据图表，详细数值可在对应稿件中查看'} /></div>;
 }

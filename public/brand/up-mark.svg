@@ -1,0 +1,1781 @@
+<?xml version='1.0' encoding='utf-8'?>
+<svg xmlns="http://www.w3.org/2000/svg" width="980" height="760" viewBox="145 245 980 760" fill="none">
+  <title>UP icon — refined fold lighting</title>
+  <desc>Pure vector reconstruction with smooth two-dimensional lighting made from SVG gradients and masks. No raster images or external dependencies.</desc>
+  <defs>
+    <path id="pShape" d="M528.5 575 V548 C528.5 388.2 661.9 258.5 825.2 258.5 C988.4 258.5 1111.2 388.2 1111.2 548 C1111.2 697.6 985.6 831 826 831 H700 V628.5 H827.3 C868.6 628.5 902 596.4 902 557 C902 517.5 868.6 485.5 827.3 485.5 H632 C574.8 485.5 528.5 524.8 528.5 575 Z" />
+    <path id="uShape" d="M353 262.5 C269.15 262.5 157.8 349.42 157.8 479 V721 C157.8 868.69 285.39 989 409 989 C478 989 529 935.6 529 857 V715.5 C529 750.6 501 779 465.1 779 C429.8 779 401 754.7 401 718.8 V312.2 C401 283.4 382.8 262.5 353 262.5 Z" />
+    <path id="foldShape" d="M741 485.5 H632 C574.8 485.5 528.5 524.8 528.5 575 V857 C528.5 935.6 478 989 409 989 C426.5 990.6 446.9 990.5 465.8 990.5 C668.21 990.5 741 843.1 741 768 Z" />
+    <clipPath id="clipP">
+      <use href="#pShape" />
+    </clipPath>
+    <clipPath id="pinkSurfaceClip">
+      <use href="#uShape" />
+    </clipPath>
+    <linearGradient id="pinkLight0" x1="0" x2="0" y1="265" y2="989" gradientUnits="userSpaceOnUse">
+      <stop offset="0.000000" stop-color="rgb(99.0291%,47.5728%,64.0777%)" />
+      <stop offset="0.186464" stop-color="rgb(99.0291%,47.5728%,64.0777%)" />
+      <stop offset="0.488950" stop-color="rgb(99.3821%,47.6437%,64.8482%)" />
+      <stop offset="0.538674" stop-color="rgb(99.4309%,47.7227%,64.9568%)" />
+      <stop offset="0.596685" stop-color="rgb(99.4367%,48.2389%,65.0201%)" />
+      <stop offset="0.621547" stop-color="rgb(99.4253%,48.2759%,64.9425%)" />
+      <stop offset="0.629834" stop-color="rgb(99.4161%,48.0151%,64.7995%)" />
+      <stop offset="0.638122" stop-color="rgb(99.3981%,47.5358%,64.5557%)" />
+      <stop offset="0.649171" stop-color="rgb(99.3631%,47.1338%,64.3312%)" />
+      <stop offset="0.654696" stop-color="rgb(99.3400%,47.2963%,64.3766%)" />
+      <stop offset="0.662983" stop-color="rgb(99.2950%,47.8569%,64.5804%)" />
+      <stop offset="0.671271" stop-color="rgb(99.2372%,48.1112%,64.6510%)" />
+      <stop offset="0.690608" stop-color="rgb(99.0566%,47.1698%,64.1509%)" />
+      <stop offset="0.711326" stop-color="rgb(99.0566%,47.1698%,64.1509%)" />
+      <stop offset="0.729282" stop-color="rgb(98.9877%,46.0912%,63.1852%)" />
+      <stop offset="0.738950" stop-color="rgb(99.0476%,45.7143%,62.8571%)" />
+      <stop offset="0.745856" stop-color="rgb(99.2132%,45.7897%,62.9395%)" />
+      <stop offset="0.762431" stop-color="rgb(99.8038%,46.4733%,63.6011%)" />
+      <stop offset="0.773481" stop-color="rgb(100.0000%,46.6667%,63.8095%)" />
+      <stop offset="0.779006" stop-color="rgb(99.9484%,46.5207%,63.6980%)" />
+      <stop offset="0.803867" stop-color="rgb(99.1599%,45.0797%,62.4942%)" />
+      <stop offset="0.820442" stop-color="rgb(98.9965%,44.8315%,62.2684%)" />
+      <stop offset="0.849448" stop-color="rgb(99.0385%,45.1923%,62.5000%)" />
+      <stop offset="0.878453" stop-color="rgb(99.0591%,46.4530%,63.3610%)" />
+      <stop offset="0.890884" stop-color="rgb(99.0654%,46.7290%,63.5514%)" />
+      <stop offset="0.903315" stop-color="rgb(99.0608%,46.4348%,63.3396%)" />
+      <stop offset="0.928177" stop-color="rgb(99.0408%,45.2838%,62.5491%)" />
+      <stop offset="0.936464" stop-color="rgb(99.0303%,45.1567%,62.5069%)" />
+      <stop offset="0.944751" stop-color="rgb(98.9926%,45.2046%,62.6595%)" />
+      <stop offset="0.961326" stop-color="rgb(98.9740%,45.5307%,63.0744%)" />
+      <stop offset="0.966851" stop-color="rgb(99.0291%,45.6311%,63.1068%)" />
+      <stop offset="0.977901" stop-color="rgb(99.2787%,45.8164%,62.9336%)" />
+      <stop offset="1.000000" stop-color="rgb(100.0000%,46.2264%,62.2642%)" />
+    </linearGradient>
+    <linearGradient id="pinkLight1" x1="0" x2="0" y1="265" y2="989" gradientUnits="userSpaceOnUse">
+      <stop offset="0.000000" stop-color="rgb(99.0654%,47.6636%,64.4860%)" />
+      <stop offset="0.149171" stop-color="rgb(99.1805%,47.1295%,63.9875%)" />
+      <stop offset="0.265193" stop-color="rgb(99.3029%,47.0055%,63.8718%)" />
+      <stop offset="0.531768" stop-color="rgb(99.6078%,47.0588%,63.9216%)" />
+      <stop offset="0.638122" stop-color="rgb(99.6078%,47.0588%,63.8893%)" />
+      <stop offset="0.649171" stop-color="rgb(99.6078%,47.0588%,63.9216%)" />
+      <stop offset="0.669890" stop-color="rgb(99.6078%,47.0588%,64.3137%)" />
+      <stop offset="0.690608" stop-color="rgb(99.6078%,47.0588%,63.9216%)" />
+      <stop offset="0.711326" stop-color="rgb(99.6078%,47.4510%,64.3137%)" />
+      <stop offset="0.720994" stop-color="rgb(99.6078%,47.3405%,64.3469%)" />
+      <stop offset="0.738950" stop-color="rgb(99.6078%,47.0588%,64.3137%)" />
+      <stop offset="0.773481" stop-color="rgb(99.6078%,47.4510%,64.3137%)" />
+      <stop offset="0.803867" stop-color="rgb(99.2288%,47.0910%,63.9512%)" />
+      <stop offset="0.828729" stop-color="rgb(99.3873%,47.0076%,63.8703%)" />
+      <stop offset="0.853591" stop-color="rgb(99.6237%,47.0857%,63.9484%)" />
+      <stop offset="0.886740" stop-color="rgb(99.6096%,47.4418%,64.3045%)" />
+      <stop offset="0.903315" stop-color="rgb(99.6253%,47.4180%,64.3030%)" />
+      <stop offset="0.919890" stop-color="rgb(99.6486%,47.2642%,64.1788%)" />
+      <stop offset="0.932320" stop-color="rgb(99.6078%,47.0588%,63.9216%)" />
+      <stop offset="0.961326" stop-color="rgb(99.1064%,46.0339%,62.2528%)" />
+      <stop offset="0.966851" stop-color="rgb(99.0991%,45.9459%,62.1622%)" />
+      <stop offset="0.977901" stop-color="rgb(99.2944%,46.0343%,62.5282%)" />
+      <stop offset="1.000000" stop-color="rgb(100.0000%,46.6019%,64.0777%)" />
+    </linearGradient>
+    <linearGradient id="pinkBlend1" x1="160" x2="300" y1="0" y2="0" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#000" />
+      <stop offset="1" stop-color="#FFF" />
+    </linearGradient>
+    <mask id="pinkMask1" maskUnits="userSpaceOnUse" x="140" y="250" width="980" height="750" style="mask-type:luminance">
+      <rect x="140" y="250" width="980" height="750" fill="url(#pinkBlend1)" />
+    </mask>
+    <linearGradient id="pinkLight2" x1="0" x2="0" y1="265" y2="989" gradientUnits="userSpaceOnUse">
+      <stop offset="0.000000" stop-color="rgb(99.1304%,48.6957%,65.2174%)" />
+      <stop offset="0.149171" stop-color="rgb(99.4951%,46.8642%,63.2713%)" />
+      <stop offset="0.190608" stop-color="rgb(99.5465%,46.5519%,62.9969%)" />
+      <stop offset="0.265193" stop-color="rgb(99.5798%,46.2014%,62.8193%)" />
+      <stop offset="0.414365" stop-color="rgb(99.5638%,45.8104%,62.9045%)" />
+      <stop offset="0.522099" stop-color="rgb(99.5436%,45.6723%,63.0126%)" />
+      <stop offset="0.571823" stop-color="rgb(99.5402%,45.7044%,62.9291%)" />
+      <stop offset="0.621547" stop-color="rgb(99.5434%,46.1187%,63.0137%)" />
+      <stop offset="0.629834" stop-color="rgb(99.5649%,46.3851%,63.2233%)" />
+      <stop offset="0.646409" stop-color="rgb(99.5959%,47.1991%,63.9371%)" />
+      <stop offset="0.654696" stop-color="rgb(99.5061%,47.3489%,64.1179%)" />
+      <stop offset="0.671271" stop-color="rgb(99.2012%,47.2349%,64.1678%)" />
+      <stop offset="0.690608" stop-color="rgb(99.2157%,47.0588%,63.9216%)" />
+      <stop offset="0.711326" stop-color="rgb(99.6078%,47.4510%,63.9216%)" />
+      <stop offset="0.737569" stop-color="rgb(99.2264%,47.8256%,63.9137%)" />
+      <stop offset="0.770718" stop-color="rgb(99.2144%,48.2307%,64.2946%)" />
+      <stop offset="0.808011" stop-color="rgb(99.2157%,47.8431%,64.3137%)" />
+      <stop offset="0.845304" stop-color="rgb(99.5988%,48.2084%,64.6809%)" />
+      <stop offset="0.870166" stop-color="rgb(99.4118%,48.2843%,64.7549%)" />
+      <stop offset="0.890884" stop-color="rgb(99.2157%,48.2353%,64.7059%)" />
+      <stop offset="0.919890" stop-color="rgb(99.5231%,48.0098%,64.4490%)" />
+      <stop offset="0.936464" stop-color="rgb(99.5897%,47.7732%,64.2664%)" />
+      <stop offset="0.966851" stop-color="rgb(99.2157%,47.0588%,63.9216%)" />
+      <stop offset="0.977901" stop-color="rgb(99.3894%,46.7687%,63.9398%)" />
+      <stop offset="1.000000" stop-color="rgb(100.0000%,46.1538%,64.1026%)" />
+    </linearGradient>
+    <linearGradient id="pinkBlend2" x1="300" x2="395" y1="0" y2="0" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#000" />
+      <stop offset="1" stop-color="#FFF" />
+    </linearGradient>
+    <mask id="pinkMask2" maskUnits="userSpaceOnUse" x="140" y="250" width="980" height="750" style="mask-type:luminance">
+      <rect x="140" y="250" width="980" height="750" fill="url(#pinkBlend2)" />
+    </mask>
+    <linearGradient id="pinkLight3" x1="0" x2="0" y1="265" y2="989" gradientUnits="userSpaceOnUse">
+      <stop offset="0.000000" stop-color="rgb(100.0000%,48.1132%,65.0943%)" />
+      <stop offset="0.124309" stop-color="rgb(99.3535%,46.4081%,62.6303%)" />
+      <stop offset="0.182320" stop-color="rgb(99.1597%,45.7951%,61.8916%)" />
+      <stop offset="0.240331" stop-color="rgb(99.0934%,45.3462%,61.6111%)" />
+      <stop offset="0.306630" stop-color="rgb(99.0789%,44.8486%,61.4763%)" />
+      <stop offset="0.397790" stop-color="rgb(99.1161%,44.2965%,61.5279%)" />
+      <stop offset="0.472376" stop-color="rgb(99.1506%,44.0581%,61.6968%)" />
+      <stop offset="0.531768" stop-color="rgb(99.1525%,44.0678%,61.8644%)" />
+      <stop offset="0.546961" stop-color="rgb(99.1247%,44.2166%,61.9537%)" />
+      <stop offset="0.571823" stop-color="rgb(99.0258%,44.8553%,62.2567%)" />
+      <stop offset="0.621547" stop-color="rgb(99.0291%,46.6019%,63.1068%)" />
+      <stop offset="0.629834" stop-color="rgb(99.2332%,46.9079%,63.3006%)" />
+      <stop offset="0.646409" stop-color="rgb(99.9297%,47.5510%,63.7614%)" />
+      <stop offset="0.654696" stop-color="rgb(100.0000%,47.7054%,63.8459%)" />
+      <stop offset="0.669890" stop-color="rgb(100.0000%,47.6190%,63.8095%)" />
+      <stop offset="0.687845" stop-color="rgb(99.4650%,46.7916%,64.0948%)" />
+      <stop offset="0.696133" stop-color="rgb(99.3166%,46.6322%,63.8806%)" />
+      <stop offset="0.704420" stop-color="rgb(99.2465%,46.6443%,63.4140%)" />
+      <stop offset="0.712707" stop-color="rgb(99.2109%,46.6661%,63.1136%)" />
+      <stop offset="0.738950" stop-color="rgb(99.2157%,46.6667%,63.1373%)" />
+      <stop offset="0.773481" stop-color="rgb(99.2157%,46.2745%,62.7451%)" />
+      <stop offset="0.808011" stop-color="rgb(99.2157%,46.2745%,63.1373%)" />
+      <stop offset="0.845304" stop-color="rgb(99.1998%,46.6258%,63.5064%)" />
+      <stop offset="0.890884" stop-color="rgb(99.6078%,47.0588%,63.5294%)" />
+      <stop offset="0.932320" stop-color="rgb(99.2157%,46.6667%,63.5294%)" />
+      <stop offset="0.966851" stop-color="rgb(99.2157%,46.2745%,63.1373%)" />
+      <stop offset="0.977901" stop-color="rgb(99.1676%,46.3304%,63.3512%)" />
+      <stop offset="1.000000" stop-color="rgb(99.0291%,46.6019%,64.0777%)" />
+    </linearGradient>
+    <linearGradient id="pinkBlend3" x1="395" x2="420" y1="0" y2="0" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#000" />
+      <stop offset="1" stop-color="#FFF" />
+    </linearGradient>
+    <mask id="pinkMask3" maskUnits="userSpaceOnUse" x="140" y="250" width="980" height="750" style="mask-type:luminance">
+      <rect x="140" y="250" width="980" height="750" fill="url(#pinkBlend3)" />
+    </mask>
+    <linearGradient id="pinkLight4" x1="0" x2="0" y1="265" y2="989" gradientUnits="userSpaceOnUse">
+      <stop offset="0.000000" stop-color="rgb(99.0291%,47.5728%,64.0777%)" />
+      <stop offset="0.124309" stop-color="rgb(99.1233%,46.2800%,62.3892%)" />
+      <stop offset="0.182320" stop-color="rgb(99.1515%,45.7906%,61.8831%)" />
+      <stop offset="0.314917" stop-color="rgb(99.1728%,44.8418%,61.5679%)" />
+      <stop offset="0.397790" stop-color="rgb(99.1742%,44.3288%,61.5887%)" />
+      <stop offset="0.472376" stop-color="rgb(99.1661%,44.0667%,61.7129%)" />
+      <stop offset="0.531768" stop-color="rgb(99.1525%,44.0678%,61.8644%)" />
+      <stop offset="0.546961" stop-color="rgb(99.1247%,44.2166%,61.9537%)" />
+      <stop offset="0.571823" stop-color="rgb(99.0258%,44.8553%,62.2567%)" />
+      <stop offset="0.621547" stop-color="rgb(99.0291%,46.6019%,63.1068%)" />
+      <stop offset="0.629834" stop-color="rgb(99.2678%,46.9260%,63.3131%)" />
+      <stop offset="0.638122" stop-color="rgb(99.6766%,47.2990%,63.5769%)" />
+      <stop offset="0.649171" stop-color="rgb(100.0000%,47.6190%,63.8095%)" />
+      <stop offset="0.654696" stop-color="rgb(99.8570%,47.6005%,63.7794%)" />
+      <stop offset="0.669890" stop-color="rgb(99.0385%,47.1154%,63.4615%)" />
+      <stop offset="0.679558" stop-color="rgb(98.9458%,46.6474%,63.4774%)" />
+      <stop offset="0.690608" stop-color="rgb(99.0385%,46.1538%,63.4615%)" />
+      <stop offset="0.711326" stop-color="rgb(99.5349%,46.0465%,62.7907%)" />
+      <stop offset="0.737569" stop-color="rgb(99.6145%,44.3585%,61.5994%)" />
+      <stop offset="0.745856" stop-color="rgb(99.5444%,44.1905%,61.4817%)" />
+      <stop offset="0.773481" stop-color="rgb(99.2157%,44.3137%,61.5686%)" />
+      <stop offset="0.808011" stop-color="rgb(99.6078%,44.3137%,61.5686%)" />
+      <stop offset="0.837017" stop-color="rgb(99.6501%,44.9268%,61.8607%)" />
+      <stop offset="0.853591" stop-color="rgb(99.5827%,45.1082%,61.9784%)" />
+      <stop offset="0.870166" stop-color="rgb(99.4118%,45.0000%,62.0098%)" />
+      <stop offset="0.895028" stop-color="rgb(99.1998%,44.6401%,61.9358%)" />
+      <stop offset="0.928177" stop-color="rgb(99.2139%,43.9729%,61.5952%)" />
+      <stop offset="0.953039" stop-color="rgb(99.2267%,43.7497%,61.4745%)" />
+      <stop offset="0.969613" stop-color="rgb(99.2085%,44.0107%,61.6185%)" />
+      <stop offset="0.977901" stop-color="rgb(99.1770%,44.4043%,61.8388%)" />
+      <stop offset="1.000000" stop-color="rgb(99.0654%,45.7944%,62.6168%)" />
+    </linearGradient>
+    <linearGradient id="pinkBlend4" x1="420" x2="440" y1="0" y2="0" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#000" />
+      <stop offset="1" stop-color="#FFF" />
+    </linearGradient>
+    <mask id="pinkMask4" maskUnits="userSpaceOnUse" x="140" y="250" width="980" height="750" style="mask-type:luminance">
+      <rect x="140" y="250" width="980" height="750" fill="url(#pinkBlend4)" />
+    </mask>
+    <linearGradient id="pinkLight5" x1="0" x2="0" y1="265" y2="989" gradientUnits="userSpaceOnUse">
+      <stop offset="0.000000" stop-color="rgb(99.0291%,47.5728%,64.0777%)" />
+      <stop offset="0.124309" stop-color="rgb(99.1233%,46.2800%,62.3892%)" />
+      <stop offset="0.182320" stop-color="rgb(99.1515%,45.7906%,61.8831%)" />
+      <stop offset="0.323204" stop-color="rgb(99.1734%,44.7840%,61.5634%)" />
+      <stop offset="0.406077" stop-color="rgb(99.1737%,44.2882%,61.5981%)" />
+      <stop offset="0.480663" stop-color="rgb(99.1646%,44.0542%,61.7317%)" />
+      <stop offset="0.538674" stop-color="rgb(99.1493%,44.1356%,61.9091%)" />
+      <stop offset="0.555249" stop-color="rgb(99.1328%,44.6490%,62.1760%)" />
+      <stop offset="0.596685" stop-color="rgb(99.0645%,46.5006%,63.0729%)" />
+      <stop offset="0.613260" stop-color="rgb(99.0391%,46.7339%,63.1761%)" />
+      <stop offset="0.621547" stop-color="rgb(99.0291%,46.6019%,63.1068%)" />
+      <stop offset="0.629834" stop-color="rgb(99.0249%,45.4396%,62.5248%)" />
+      <stop offset="0.638122" stop-color="rgb(99.0263%,43.2322%,61.4214%)" />
+      <stop offset="0.646409" stop-color="rgb(99.0289%,41.2025%,60.4070%)" />
+      <stop offset="0.649171" stop-color="rgb(99.0291%,40.7767%,60.1942%)" />
+      <stop offset="0.654696" stop-color="rgb(99.0291%,40.4187%,60.0152%)" />
+      <stop offset="0.669890" stop-color="rgb(99.0291%,40.7767%,60.1942%)" />
+      <stop offset="0.687845" stop-color="rgb(99.0120%,40.7715%,60.2165%)" />
+      <stop offset="0.712707" stop-color="rgb(99.3749%,40.8797%,59.7324%)" />
+      <stop offset="0.737569" stop-color="rgb(99.2202%,40.7791%,59.6109%)" />
+      <stop offset="0.762431" stop-color="rgb(99.1807%,41.0351%,59.5444%)" />
+      <stop offset="0.779006" stop-color="rgb(99.2647%,41.2438%,59.7021%)" />
+      <stop offset="0.808011" stop-color="rgb(99.6078%,41.5686%,60.3922%)" />
+      <stop offset="0.849448" stop-color="rgb(99.2157%,41.5686%,60.0000%)" />
+      <stop offset="0.886740" stop-color="rgb(99.5969%,41.9992%,60.4129%)" />
+      <stop offset="0.903315" stop-color="rgb(99.5375%,41.6279%,60.1523%)" />
+      <stop offset="0.932320" stop-color="rgb(99.2157%,40.3922%,59.2157%)" />
+      <stop offset="0.953039" stop-color="rgb(99.1940%,39.4784%,58.4307%)" />
+      <stop offset="0.961326" stop-color="rgb(99.1982%,39.2669%,58.2636%)" />
+      <stop offset="0.969613" stop-color="rgb(99.1822%,39.3316%,58.3766%)" />
+      <stop offset="0.977901" stop-color="rgb(99.1493%,39.7247%,58.8201%)" />
+      <stop offset="1.000000" stop-color="rgb(99.0385%,41.3462%,60.5769%)" />
+    </linearGradient>
+    <linearGradient id="pinkBlend5" x1="440" x2="460" y1="0" y2="0" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#000" />
+      <stop offset="1" stop-color="#FFF" />
+    </linearGradient>
+    <mask id="pinkMask5" maskUnits="userSpaceOnUse" x="140" y="250" width="980" height="750" style="mask-type:luminance">
+      <rect x="140" y="250" width="980" height="750" fill="url(#pinkBlend5)" />
+    </mask>
+    <linearGradient id="pinkLight6" x1="0" x2="0" y1="265" y2="989" gradientUnits="userSpaceOnUse">
+      <stop offset="0.000000" stop-color="rgb(99.0385%,47.1154%,63.4615%)" />
+      <stop offset="0.124309" stop-color="rgb(99.1255%,46.1715%,62.2431%)" />
+      <stop offset="0.190608" stop-color="rgb(99.1547%,45.7422%,61.8542%)" />
+      <stop offset="0.223757" stop-color="rgb(99.2561%,45.7872%,61.9173%)" />
+      <stop offset="0.265193" stop-color="rgb(99.5376%,46.1549%,62.2566%)" />
+      <stop offset="0.488950" stop-color="rgb(99.5447%,46.1549%,62.2566%)" />
+      <stop offset="0.497238" stop-color="rgb(99.5447%,46.0407%,62.2566%)" />
+      <stop offset="0.505525" stop-color="rgb(99.5447%,45.6418%,62.2566%)" />
+      <stop offset="0.522099" stop-color="rgb(99.3998%,44.7049%,62.2248%)" />
+      <stop offset="0.531768" stop-color="rgb(99.1525%,44.0678%,61.8644%)" />
+      <stop offset="0.538674" stop-color="rgb(98.8273%,43.2670%,61.3975%)" />
+      <stop offset="0.546961" stop-color="rgb(98.1119%,41.5502%,60.3802%)" />
+      <stop offset="0.555249" stop-color="rgb(97.1096%,39.1631%,58.9567%)" />
+      <stop offset="0.563536" stop-color="rgb(95.8922%,36.2689%,57.2245%)" />
+      <stop offset="0.571823" stop-color="rgb(94.5316%,33.0311%,55.2813%)" />
+      <stop offset="0.588398" stop-color="rgb(91.6675%,26.1779%,51.1526%)" />
+      <stop offset="0.596685" stop-color="rgb(90.3077%,22.8891%,49.1624%)" />
+      <stop offset="0.604972" stop-color="rgb(89.0918%,19.9100%,47.3518%)" />
+      <stop offset="0.613260" stop-color="rgb(88.0915%,17.4038%,45.8185%)" />
+      <stop offset="0.621547" stop-color="rgb(87.3786%,15.5340%,44.6602%)" />
+      <stop offset="0.629834" stop-color="rgb(87.6986%,15.7747%,44.6530%)" />
+      <stop offset="0.638122" stop-color="rgb(89.1709%,18.4118%,45.9979%)" />
+      <stop offset="0.646409" stop-color="rgb(90.9289%,21.8262%,47.9295%)" />
+      <stop offset="0.649171" stop-color="rgb(91.4286%,22.8571%,48.5714%)" />
+      <stop offset="0.654696" stop-color="rgb(92.4615%,25.2306%,50.2321%)" />
+      <stop offset="0.662983" stop-color="rgb(94.1769%,29.5047%,53.4259%)" />
+      <stop offset="0.669890" stop-color="rgb(95.3704%,32.4074%,55.5556%)" />
+      <stop offset="0.671271" stop-color="rgb(95.5557%,32.8199%,55.8378%)" />
+      <stop offset="0.679558" stop-color="rgb(96.4398%,34.5782%,56.9428%)" />
+      <stop offset="0.687845" stop-color="rgb(97.0219%,35.5746%,57.4292%)" />
+      <stop offset="0.696133" stop-color="rgb(97.3604%,36.2635%,57.6591%)" />
+      <stop offset="0.704420" stop-color="rgb(97.4334%,36.5058%,57.5191%)" />
+      <stop offset="0.712707" stop-color="rgb(97.4754%,36.5508%,57.3393%)" />
+      <stop offset="0.738950" stop-color="rgb(97.6471%,36.0784%,56.8627%)" />
+      <stop offset="0.773481" stop-color="rgb(97.6471%,36.4706%,57.2549%)" />
+      <stop offset="0.808011" stop-color="rgb(98.0392%,36.8627%,57.6471%)" />
+      <stop offset="0.845304" stop-color="rgb(98.3925%,37.5991%,57.6490%)" />
+      <stop offset="0.878453" stop-color="rgb(98.7635%,37.8159%,57.7624%)" />
+      <stop offset="0.895028" stop-color="rgb(98.8204%,37.5248%,57.5453%)" />
+      <stop offset="0.919890" stop-color="rgb(98.6445%,36.2454%,56.4613%)" />
+      <stop offset="0.932320" stop-color="rgb(98.4314%,35.6863%,56.0784%)" />
+      <stop offset="0.944751" stop-color="rgb(98.0236%,35.3221%,56.0685%)" />
+      <stop offset="0.961326" stop-color="rgb(97.3669%,35.1260%,56.3731%)" />
+      <stop offset="0.969613" stop-color="rgb(97.1743%,35.2493%,56.5334%)" />
+      <stop offset="0.977901" stop-color="rgb(97.0997%,35.5891%,56.7169%)" />
+      <stop offset="1.000000" stop-color="rgb(97.0874%,36.8932%,57.2816%)" />
+    </linearGradient>
+    <linearGradient id="pinkBlend6" x1="460" x2="480" y1="0" y2="0" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#000" />
+      <stop offset="1" stop-color="#FFF" />
+    </linearGradient>
+    <mask id="pinkMask6" maskUnits="userSpaceOnUse" x="140" y="250" width="980" height="750" style="mask-type:luminance">
+      <rect x="140" y="250" width="980" height="750" fill="url(#pinkBlend6)" />
+    </mask>
+    <linearGradient id="pinkLight7" x1="0" x2="0" y1="265" y2="989" gradientUnits="userSpaceOnUse">
+      <stop offset="0.000000" stop-color="rgb(99.0385%,47.1154%,63.4615%)" />
+      <stop offset="0.033149" stop-color="rgb(99.1658%,47.1129%,63.2978%)" />
+      <stop offset="0.082873" stop-color="rgb(99.5411%,47.5075%,63.2593%)" />
+      <stop offset="0.132597" stop-color="rgb(99.5447%,47.4912%,63.0016%)" />
+      <stop offset="0.157459" stop-color="rgb(99.5447%,46.9889%,62.6260%)" />
+      <stop offset="0.174033" stop-color="rgb(99.3841%,46.3847%,62.2395%)" />
+      <stop offset="0.186464" stop-color="rgb(99.1525%,45.7627%,61.8644%)" />
+      <stop offset="0.207182" stop-color="rgb(98.6699%,44.5123%,61.1303%)" />
+      <stop offset="0.232044" stop-color="rgb(97.9996%,42.8120%,60.1464%)" />
+      <stop offset="0.281768" stop-color="rgb(96.4188%,38.8836%,57.9075%)" />
+      <stop offset="0.323204" stop-color="rgb(94.9290%,35.2286%,55.8475%)" />
+      <stop offset="0.430939" stop-color="rgb(90.8471%,25.2436%,50.2615%)" />
+      <stop offset="0.488950" stop-color="rgb(88.8522%,20.2891%,47.4881%)" />
+      <stop offset="0.531768" stop-color="rgb(87.6190%,17.1429%,45.7143%)" />
+      <stop offset="0.546961" stop-color="rgb(87.3952%,16.4373%,45.3175%)" />
+      <stop offset="0.555249" stop-color="rgb(87.3897%,16.2745%,45.2279%)" />
+      <stop offset="0.571823" stop-color="rgb(87.5384%,16.2745%,45.2293%)" />
+      <stop offset="0.604972" stop-color="rgb(87.9694%,16.7075%,45.4459%)" />
+      <stop offset="0.621547" stop-color="rgb(87.9630%,16.6667%,45.3704%)" />
+      <stop offset="0.629834" stop-color="rgb(87.5773%,16.2417%,45.0371%)" />
+      <stop offset="0.638122" stop-color="rgb(86.9227%,15.5967%,44.5167%)" />
+      <stop offset="0.646409" stop-color="rgb(86.5239%,15.3046%,44.2136%)" />
+      <stop offset="0.649171" stop-color="rgb(86.5385%,15.3846%,44.2308%)" />
+      <stop offset="0.654696" stop-color="rgb(86.8751%,15.9025%,44.4790%)" />
+      <stop offset="0.662983" stop-color="rgb(87.9524%,17.4082%,45.3110%)" />
+      <stop offset="0.669890" stop-color="rgb(89.0909%,19.0909%,46.3636%)" />
+      <stop offset="0.671271" stop-color="rgb(89.3365%,19.4730%,46.6231%)" />
+      <stop offset="0.687845" stop-color="rgb(93.0343%,25.3953%,50.8995%)" />
+      <stop offset="0.690608" stop-color="rgb(93.4579%,26.1682%,51.4019%)" />
+      <stop offset="0.696133" stop-color="rgb(93.9660%,27.3463%,52.0098%)" />
+      <stop offset="0.704420" stop-color="rgb(94.2432%,28.5741%,52.3809%)" />
+      <stop offset="0.712707" stop-color="rgb(94.4172%,29.4504%,52.6760%)" />
+      <stop offset="0.720994" stop-color="rgb(94.6010%,30.0920%,53.0399%)" />
+      <stop offset="0.738950" stop-color="rgb(94.9020%,30.9804%,53.7255%)" />
+      <stop offset="0.762431" stop-color="rgb(95.4313%,31.8083%,54.6193%)" />
+      <stop offset="0.773481" stop-color="rgb(95.6863%,32.1569%,54.9020%)" />
+      <stop offset="0.808011" stop-color="rgb(96.4706%,33.3333%,54.9020%)" />
+      <stop offset="0.837017" stop-color="rgb(96.7608%,33.9868%,55.5150%)" />
+      <stop offset="0.853591" stop-color="rgb(96.9030%,34.1253%,55.6936%)" />
+      <stop offset="0.890884" stop-color="rgb(97.2549%,33.7255%,55.2941%)" />
+      <stop offset="0.911602" stop-color="rgb(97.3153%,33.5609%,55.2305%)" />
+      <stop offset="0.932320" stop-color="rgb(97.4227%,33.5052%,55.1546%)" />
+      <stop offset="0.944751" stop-color="rgb(97.6961%,33.5828%,54.9831%)" />
+      <stop offset="0.961326" stop-color="rgb(98.0903%,33.8334%,54.7366%)" />
+      <stop offset="0.969613" stop-color="rgb(98.0907%,34.0387%,54.7268%)" />
+      <stop offset="0.977901" stop-color="rgb(97.9132%,34.3243%,54.8195%)" />
+      <stop offset="1.000000" stop-color="rgb(97.1429%,35.2381%,55.2381%)" />
+    </linearGradient>
+    <linearGradient id="pinkBlend7" x1="480" x2="497" y1="0" y2="0" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#000" />
+      <stop offset="1" stop-color="#FFF" />
+    </linearGradient>
+    <mask id="pinkMask7" maskUnits="userSpaceOnUse" x="140" y="250" width="980" height="750" style="mask-type:luminance">
+      <rect x="140" y="250" width="980" height="750" fill="url(#pinkBlend7)" />
+    </mask>
+    <linearGradient id="pinkLight8" x1="0" x2="0" y1="265" y2="989" gradientUnits="userSpaceOnUse">
+      <stop offset="0.000000" stop-color="rgb(99.0385%,47.1154%,63.4615%)" />
+      <stop offset="0.033149" stop-color="rgb(99.1658%,47.1129%,63.2978%)" />
+      <stop offset="0.082873" stop-color="rgb(99.5411%,47.5075%,63.2593%)" />
+      <stop offset="0.132597" stop-color="rgb(99.5447%,47.4912%,63.0016%)" />
+      <stop offset="0.157459" stop-color="rgb(99.5447%,46.9889%,62.6260%)" />
+      <stop offset="0.174033" stop-color="rgb(99.3841%,46.3847%,62.2395%)" />
+      <stop offset="0.186464" stop-color="rgb(99.1525%,45.7627%,61.8644%)" />
+      <stop offset="0.223757" stop-color="rgb(98.2361%,43.3972%,60.4830%)" />
+      <stop offset="0.265193" stop-color="rgb(96.9870%,40.2447%,58.6770%)" />
+      <stop offset="0.314917" stop-color="rgb(95.2595%,35.9463%,56.2456%)" />
+      <stop offset="0.414365" stop-color="rgb(91.5022%,26.6976%,51.0647%)" />
+      <stop offset="0.455801" stop-color="rgb(89.9933%,22.9945%,48.9959%)" />
+      <stop offset="0.505525" stop-color="rgb(88.3631%,18.9836%,46.7501%)" />
+      <stop offset="0.530387" stop-color="rgb(87.6558%,17.2340%,45.7657%)" />
+      <stop offset="0.538674" stop-color="rgb(87.4641%,16.7625%,45.5003%)" />
+      <stop offset="0.546961" stop-color="rgb(87.3454%,16.7507%,45.3442%)" />
+      <stop offset="0.563536" stop-color="rgb(87.2823%,16.7507%,45.3221%)" />
+      <stop offset="0.588398" stop-color="rgb(87.4414%,16.8157%,45.5461%)" />
+      <stop offset="0.604972" stop-color="rgb(87.5755%,17.1297%,45.7206%)" />
+      <stop offset="0.621547" stop-color="rgb(87.6190%,17.1429%,45.7143%)" />
+      <stop offset="0.629834" stop-color="rgb(87.5841%,16.7849%,45.4809%)" />
+      <stop offset="0.646409" stop-color="rgb(87.4174%,15.6337%,44.7270%)" />
+      <stop offset="0.654696" stop-color="rgb(87.2094%,15.4420%,44.6209%)" />
+      <stop offset="0.662983" stop-color="rgb(86.8861%,15.5378%,44.7189%)" />
+      <stop offset="0.671271" stop-color="rgb(86.9852%,15.9940%,44.8861%)" />
+      <stop offset="0.679558" stop-color="rgb(87.7769%,16.8991%,45.0292%)" />
+      <stop offset="0.690608" stop-color="rgb(89.0995%,18.4834%,45.4976%)" />
+      <stop offset="0.696133" stop-color="rgb(89.6438%,19.3635%,46.0092%)" />
+      <stop offset="0.711326" stop-color="rgb(90.9804%,21.9608%,47.8431%)" />
+      <stop offset="0.729282" stop-color="rgb(92.0836%,24.7275%,49.7887%)" />
+      <stop offset="0.738950" stop-color="rgb(92.5490%,25.8824%,50.5882%)" />
+      <stop offset="0.745856" stop-color="rgb(92.8289%,26.4544%,50.9581%)" />
+      <stop offset="0.754144" stop-color="rgb(93.1148%,26.9680%,51.2654%)" />
+      <stop offset="0.779006" stop-color="rgb(93.9237%,28.0741%,51.9177%)" />
+      <stop offset="0.808011" stop-color="rgb(94.9020%,29.0196%,52.5490%)" />
+      <stop offset="0.837017" stop-color="rgb(95.2001%,30.2655%,52.8351%)" />
+      <stop offset="0.845304" stop-color="rgb(95.2560%,30.5147%,52.9019%)" />
+      <stop offset="0.853591" stop-color="rgb(95.3379%,30.6063%,52.9798%)" />
+      <stop offset="0.878453" stop-color="rgb(95.6201%,30.0484%,53.1889%)" />
+      <stop offset="0.890884" stop-color="rgb(95.7627%,30.0847%,53.3898%)" />
+      <stop offset="0.903315" stop-color="rgb(95.8849%,30.7745%,53.7583%)" />
+      <stop offset="0.919890" stop-color="rgb(96.0472%,32.1755%,54.3726%)" />
+      <stop offset="0.932320" stop-color="rgb(96.2264%,33.0189%,54.7170%)" />
+      <stop offset="0.944751" stop-color="rgb(96.5421%,33.3782%,54.8350%)" />
+      <stop offset="0.966851" stop-color="rgb(97.1154%,33.6538%,54.8077%)" />
+      <stop offset="1.000000" stop-color="rgb(97.1154%,34.6154%,54.8077%)" />
+    </linearGradient>
+    <linearGradient id="pinkBlend8" x1="497" x2="510" y1="0" y2="0" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#000" />
+      <stop offset="1" stop-color="#FFF" />
+    </linearGradient>
+    <mask id="pinkMask8" maskUnits="userSpaceOnUse" x="140" y="250" width="980" height="750" style="mask-type:luminance">
+      <rect x="140" y="250" width="980" height="750" fill="url(#pinkBlend8)" />
+    </mask>
+    <linearGradient id="pinkLight9" x1="0" x2="0" y1="265" y2="989" gradientUnits="userSpaceOnUse">
+      <stop offset="0.000000" stop-color="rgb(99.0654%,46.7290%,63.5514%)" />
+      <stop offset="0.024862" stop-color="rgb(99.1402%,46.7451%,63.3968%)" />
+      <stop offset="0.066298" stop-color="rgb(99.4305%,47.1211%,63.3237%)" />
+      <stop offset="0.107735" stop-color="rgb(99.5447%,47.1211%,63.2205%)" />
+      <stop offset="0.149171" stop-color="rgb(99.5447%,47.1211%,62.7865%)" />
+      <stop offset="0.165746" stop-color="rgb(99.5029%,46.6960%,62.4528%)" />
+      <stop offset="0.182320" stop-color="rgb(99.2377%,45.9841%,61.9989%)" />
+      <stop offset="0.198895" stop-color="rgb(98.8716%,45.0398%,61.4316%)" />
+      <stop offset="0.223757" stop-color="rgb(98.2346%,43.4188%,60.4780%)" />
+      <stop offset="0.248619" stop-color="rgb(97.5096%,41.5929%,59.4217%)" />
+      <stop offset="0.273481" stop-color="rgb(96.7112%,39.5965%,58.2803%)" />
+      <stop offset="0.314917" stop-color="rgb(95.2569%,35.9832%,56.2371%)" />
+      <stop offset="0.414365" stop-color="rgb(91.5008%,26.7168%,51.0602%)" />
+      <stop offset="0.455801" stop-color="rgb(89.9927%,23.0039%,48.9937%)" />
+      <stop offset="0.497238" stop-color="rgb(88.6165%,19.6112%,47.1005%)" />
+      <stop offset="0.531768" stop-color="rgb(87.6190%,17.1429%,45.7143%)" />
+      <stop offset="0.538674" stop-color="rgb(87.4631%,16.7558%,45.4959%)" />
+      <stop offset="0.546961" stop-color="rgb(87.3411%,16.7507%,45.3250%)" />
+      <stop offset="0.563536" stop-color="rgb(87.2674%,16.7507%,45.3221%)" />
+      <stop offset="0.588398" stop-color="rgb(87.4144%,16.7507%,45.4277%)" />
+      <stop offset="0.638122" stop-color="rgb(87.7006%,17.3575%,45.8879%)" />
+      <stop offset="0.646409" stop-color="rgb(87.6649%,17.2636%,45.8119%)" />
+      <stop offset="0.649171" stop-color="rgb(87.6190%,17.1429%,45.7143%)" />
+      <stop offset="0.654696" stop-color="rgb(87.3752%,16.5502%,45.2489%)" />
+      <stop offset="0.662983" stop-color="rgb(86.8276%,15.1994%,44.1821%)" />
+      <stop offset="0.669890" stop-color="rgb(86.6279%,14.5349%,43.6047%)" />
+      <stop offset="0.671271" stop-color="rgb(86.6504%,14.5197%,43.5722%)" />
+      <stop offset="0.679558" stop-color="rgb(87.1223%,14.9814%,43.7541%)" />
+      <stop offset="0.690608" stop-color="rgb(87.9668%,16.1826%,44.3983%)" />
+      <stop offset="0.704420" stop-color="rgb(88.5444%,17.6770%,45.1857%)" />
+      <stop offset="0.712707" stop-color="rgb(88.9767%,18.6955%,45.7897%)" />
+      <stop offset="0.729282" stop-color="rgb(90.2589%,21.1019%,47.3797%)" />
+      <stop offset="0.737569" stop-color="rgb(90.8613%,22.0963%,48.0611%)" />
+      <stop offset="0.745856" stop-color="rgb(91.3416%,22.7080%,48.4938%)" />
+      <stop offset="0.773481" stop-color="rgb(92.5926%,23.8683%,49.3827%)" />
+      <stop offset="0.795580" stop-color="rgb(93.1917%,25.5181%,50.5467%)" />
+      <stop offset="0.808011" stop-color="rgb(93.4156%,26.3374%,51.0288%)" />
+      <stop offset="0.820442" stop-color="rgb(93.5727%,26.8511%,51.0980%)" />
+      <stop offset="0.837017" stop-color="rgb(93.7095%,27.3390%,50.9481%)" />
+      <stop offset="0.849448" stop-color="rgb(93.8326%,27.7533%,51.1013%)" />
+      <stop offset="0.861878" stop-color="rgb(93.9961%,28.2548%,51.7597%)" />
+      <stop offset="0.886740" stop-color="rgb(94.3750%,29.4045%,53.5139%)" />
+      <stop offset="0.895028" stop-color="rgb(94.5150%,29.8759%,53.8414%)" />
+      <stop offset="0.919890" stop-color="rgb(94.9709%,31.6355%,54.1373%)" />
+      <stop offset="0.936464" stop-color="rgb(95.3372%,32.5650%,54.3856%)" />
+      <stop offset="0.953039" stop-color="rgb(95.7895%,33.0435%,54.9381%)" />
+      <stop offset="0.966851" stop-color="rgb(96.1905%,33.3333%,55.2381%)" />
+      <stop offset="0.977901" stop-color="rgb(96.5120%,33.5645%,55.1729%)" />
+      <stop offset="1.000000" stop-color="rgb(97.1698%,33.9623%,54.7170%)" />
+    </linearGradient>
+    <linearGradient id="pinkBlend9" x1="510" x2="520" y1="0" y2="0" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#000" />
+      <stop offset="1" stop-color="#FFF" />
+    </linearGradient>
+    <mask id="pinkMask9" maskUnits="userSpaceOnUse" x="140" y="250" width="980" height="750" style="mask-type:luminance">
+      <rect x="140" y="250" width="980" height="750" fill="url(#pinkBlend9)" />
+    </mask>
+    <linearGradient id="pinkLight10" x1="0" x2="0" y1="265" y2="989" gradientUnits="userSpaceOnUse">
+      <stop offset="0.000000" stop-color="rgb(99.0654%,46.7290%,63.5514%)" />
+      <stop offset="0.024862" stop-color="rgb(99.1447%,46.7511%,63.3941%)" />
+      <stop offset="0.066298" stop-color="rgb(99.4541%,47.1211%,63.3091%)" />
+      <stop offset="0.116022" stop-color="rgb(99.5447%,47.1211%,63.1435%)" />
+      <stop offset="0.149171" stop-color="rgb(99.5447%,47.1211%,62.7635%)" />
+      <stop offset="0.165746" stop-color="rgb(99.5283%,46.7300%,62.4371%)" />
+      <stop offset="0.186464" stop-color="rgb(99.1525%,45.7627%,61.8644%)" />
+      <stop offset="0.223757" stop-color="rgb(98.1684%,43.3304%,60.5190%)" />
+      <stop offset="0.248619" stop-color="rgb(97.3914%,41.4348%,59.4949%)" />
+      <stop offset="0.273481" stop-color="rgb(96.5357%,39.3618%,58.3890%)" />
+      <stop offset="0.323204" stop-color="rgb(94.6507%,34.8258%,56.0000%)" />
+      <stop offset="0.414365" stop-color="rgb(90.9521%,25.9832%,51.4002%)" />
+      <stop offset="0.455801" stop-color="rgb(89.3360%,22.1260%,49.4005%)" />
+      <stop offset="0.505525" stop-color="rgb(87.5898%,17.9511%,47.2289%)" />
+      <stop offset="0.530387" stop-color="rgb(86.8318%,16.1325%,46.2762%)" />
+      <stop offset="0.538674" stop-color="rgb(86.6253%,15.6456%,46.0149%)" />
+      <stop offset="0.555249" stop-color="rgb(86.4287%,15.6456%,45.8343%)" />
+      <stop offset="0.580110" stop-color="rgb(86.4999%,15.6456%,45.8563%)" />
+      <stop offset="0.596685" stop-color="rgb(86.6510%,15.6976%,46.0475%)" />
+      <stop offset="0.613260" stop-color="rgb(86.7727%,15.9903%,46.2015%)" />
+      <stop offset="0.638122" stop-color="rgb(86.8363%,16.1640%,46.3870%)" />
+      <stop offset="0.646409" stop-color="rgb(86.8171%,16.1087%,46.3167%)" />
+      <stop offset="0.649171" stop-color="rgb(86.7925%,16.0377%,46.2264%)" />
+      <stop offset="0.654696" stop-color="rgb(86.6644%,15.6548%,45.7704%)" />
+      <stop offset="0.662983" stop-color="rgb(86.3757%,14.7972%,44.7367%)" />
+      <stop offset="0.669890" stop-color="rgb(86.2595%,14.5038%,44.2748%)" />
+      <stop offset="0.671271" stop-color="rgb(86.2664%,14.5470%,44.2861%)" />
+      <stop offset="0.679558" stop-color="rgb(86.4576%,15.3644%,44.9294%)" />
+      <stop offset="0.687845" stop-color="rgb(86.7659%,16.4956%,45.8148%)" />
+      <stop offset="0.690608" stop-color="rgb(86.8613%,16.7883%,45.9854%)" />
+      <stop offset="0.696133" stop-color="rgb(87.0196%,17.1987%,46.0428%)" />
+      <stop offset="0.704420" stop-color="rgb(87.2659%,17.6840%,45.8634%)" />
+      <stop offset="0.712707" stop-color="rgb(87.6786%,18.4010%,46.0772%)" />
+      <stop offset="0.720994" stop-color="rgb(88.3258%,19.5274%,46.8998%)" />
+      <stop offset="0.729282" stop-color="rgb(89.0570%,20.7662%,47.9275%)" />
+      <stop offset="0.738950" stop-color="rgb(89.7810%,21.8978%,48.9051%)" />
+      <stop offset="0.745856" stop-color="rgb(90.1457%,22.3429%,49.3217%)" />
+      <stop offset="0.773481" stop-color="rgb(91.2409%,23.3577%,50.3650%)" />
+      <stop offset="0.779006" stop-color="rgb(91.4802%,23.7591%,50.6164%)" />
+      <stop offset="0.795580" stop-color="rgb(92.2149%,25.2804%,51.4214%)" />
+      <stop offset="0.803867" stop-color="rgb(92.5506%,25.9900%,51.7266%)" />
+      <stop offset="0.812155" stop-color="rgb(92.8420%,26.5199%,51.8795%)" />
+      <stop offset="0.845304" stop-color="rgb(93.7781%,27.9001%,51.7203%)" />
+      <stop offset="0.861878" stop-color="rgb(94.0088%,28.5692%,51.9967%)" />
+      <stop offset="0.890884" stop-color="rgb(94.2308%,29.8077%,52.8846%)" />
+      <stop offset="0.932320" stop-color="rgb(95.2381%,32.3810%,54.2857%)" />
+      <stop offset="0.944751" stop-color="rgb(95.5691%,32.8717%,54.7465%)" />
+      <stop offset="0.961326" stop-color="rgb(96.0330%,33.2657%,55.2253%)" />
+      <stop offset="0.969613" stop-color="rgb(96.2698%,33.3510%,55.2010%)" />
+      <stop offset="0.977901" stop-color="rgb(96.5120%,33.3214%,54.9297%)" />
+      <stop offset="1.000000" stop-color="rgb(97.1698%,33.0189%,53.7736%)" />
+    </linearGradient>
+    <linearGradient id="pinkBlend10" x1="520" x2="528" y1="0" y2="0" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#000" />
+      <stop offset="1" stop-color="#FFF" />
+    </linearGradient>
+    <mask id="pinkMask10" maskUnits="userSpaceOnUse" x="140" y="250" width="980" height="750" style="mask-type:luminance">
+      <rect x="140" y="250" width="980" height="750" fill="url(#pinkBlend10)" />
+    </mask>
+    <clipPath id="purpleSurfaceClip">
+      <use href="#foldShape" />
+    </clipPath>
+    <linearGradient id="purpleLight0" x1="0" x2="0" y1="486" y2="990" gradientUnits="userSpaceOnUse">
+      <stop offset="0.000000" stop-color="rgb(66.0377%,39.6226%,84.9057%)" />
+      <stop offset="0.009921" stop-color="rgb(66.0377%,39.6226%,84.9057%)" />
+      <stop offset="0.023810" stop-color="rgb(67.8563%,39.7921%,85.3971%)" />
+      <stop offset="0.025794" stop-color="rgb(67.9612%,39.8058%,85.4369%)" />
+      <stop offset="0.035714" stop-color="rgb(67.6475%,39.7926%,85.4260%)" />
+      <stop offset="0.047619" stop-color="rgb(66.9903%,39.8058%,85.4369%)" />
+      <stop offset="0.059524" stop-color="rgb(66.9718%,40.0026%,85.8114%)" />
+      <stop offset="0.083333" stop-color="rgb(67.4896%,40.4775%,86.7580%)" />
+      <stop offset="0.095238" stop-color="rgb(67.9744%,40.6295%,87.1971%)" />
+      <stop offset="0.107143" stop-color="rgb(68.5714%,40.9524%,87.6190%)" />
+      <stop offset="0.119048" stop-color="rgb(69.2554%,41.5544%,87.9655%)" />
+      <stop offset="0.136905" stop-color="rgb(70.4762%,42.8571%,88.5714%)" />
+      <stop offset="0.154762" stop-color="rgb(71.8152%,44.4382%,89.5183%)" />
+      <stop offset="0.166667" stop-color="rgb(73.0435%,46.0870%,90.4348%)" />
+      <stop offset="0.178571" stop-color="rgb(75.0084%,48.9760%,91.8553%)" />
+      <stop offset="0.190476" stop-color="rgb(77.1645%,52.2123%,93.4391%)" />
+      <stop offset="0.196429" stop-color="rgb(77.9661%,53.3898%,94.0678%)" />
+      <stop offset="0.202381" stop-color="rgb(78.5468%,54.2075%,94.5759%)" />
+      <stop offset="0.214286" stop-color="rgb(79.4182%,55.3695%,95.4615%)" />
+      <stop offset="0.226190" stop-color="rgb(80.0464%,56.1656%,96.1665%)" />
+      <stop offset="0.238095" stop-color="rgb(80.6019%,56.9104%,96.6823%)" />
+      <stop offset="0.250000" stop-color="rgb(81.1266%,57.6487%,96.9978%)" />
+      <stop offset="0.273810" stop-color="rgb(81.9429%,58.8623%,97.2996%)" />
+      <stop offset="0.285714" stop-color="rgb(82.2034%,59.3220%,97.4576%)" />
+      <stop offset="0.297619" stop-color="rgb(82.3054%,59.6336%,97.6672%)" />
+      <stop offset="0.335317" stop-color="rgb(82.2034%,60.1695%,98.3051%)" />
+      <stop offset="0.380952" stop-color="rgb(82.7629%,61.3004%,98.9448%)" />
+      <stop offset="0.416667" stop-color="rgb(83.1531%,62.1003%,99.1940%)" />
+      <stop offset="0.476190" stop-color="rgb(83.5051%,63.1472%,99.0187%)" />
+      <stop offset="0.559524" stop-color="rgb(83.8643%,65.0622%,98.3289%)" />
+      <stop offset="0.583333" stop-color="rgb(83.9193%,65.3477%,98.3305%)" />
+      <stop offset="0.607143" stop-color="rgb(83.9679%,65.4684%,98.5132%)" />
+      <stop offset="0.672619" stop-color="rgb(83.8983%,65.2542%,99.1525%)" />
+      <stop offset="0.726190" stop-color="rgb(83.3793%,64.6290%,99.0731%)" />
+      <stop offset="0.773810" stop-color="rgb(82.8392%,63.7686%,99.0583%)" />
+      <stop offset="0.833333" stop-color="rgb(82.4439%,62.0583%,99.8925%)" />
+      <stop offset="0.857143" stop-color="rgb(82.1483%,61.6039%,99.9835%)" />
+      <stop offset="0.880952" stop-color="rgb(81.6168%,61.4861%,99.6798%)" />
+      <stop offset="0.920635" stop-color="rgb(80.7692%,61.5385%,99.0385%)" />
+      <stop offset="0.940476" stop-color="rgb(80.6808%,61.5298%,98.9808%)" />
+      <stop offset="1.000000" stop-color="rgb(80.7692%,61.5385%,99.0385%)" />
+    </linearGradient>
+    <linearGradient id="purpleLight1" x1="0" x2="0" y1="486" y2="990" gradientUnits="userSpaceOnUse">
+      <stop offset="0.000000" stop-color="rgb(65.3846%,37.5000%,84.6154%)" />
+      <stop offset="0.011905" stop-color="rgb(65.3845%,37.5711%,84.6577%)" />
+      <stop offset="0.023810" stop-color="rgb(65.3930%,38.2040%,85.0201%)" />
+      <stop offset="0.035714" stop-color="rgb(65.6172%,38.9767%,84.9899%)" />
+      <stop offset="0.047619" stop-color="rgb(66.0377%,39.6226%,84.9057%)" />
+      <stop offset="0.059524" stop-color="rgb(66.8649%,39.7742%,85.0467%)" />
+      <stop offset="0.071429" stop-color="rgb(67.7268%,39.7655%,85.2843%)" />
+      <stop offset="0.077381" stop-color="rgb(67.9612%,39.8058%,85.4369%)" />
+      <stop offset="0.083333" stop-color="rgb(67.9342%,39.8660%,85.6058%)" />
+      <stop offset="0.095238" stop-color="rgb(67.4176%,39.9978%,86.0034%)" />
+      <stop offset="0.107143" stop-color="rgb(67.3077%,40.3846%,86.5385%)" />
+      <stop offset="0.119048" stop-color="rgb(68.3288%,41.2009%,87.2927%)" />
+      <stop offset="0.136905" stop-color="rgb(70.4762%,42.8571%,88.5714%)" />
+      <stop offset="0.154762" stop-color="rgb(71.8758%,44.4654%,89.5702%)" />
+      <stop offset="0.166667" stop-color="rgb(73.0435%,46.0870%,90.4348%)" />
+      <stop offset="0.178571" stop-color="rgb(75.0084%,48.9760%,91.8553%)" />
+      <stop offset="0.190476" stop-color="rgb(77.1645%,52.2123%,93.4391%)" />
+      <stop offset="0.196429" stop-color="rgb(77.9661%,53.3898%,94.0678%)" />
+      <stop offset="0.202381" stop-color="rgb(78.5468%,54.2075%,94.5759%)" />
+      <stop offset="0.214286" stop-color="rgb(79.4182%,55.3695%,95.4615%)" />
+      <stop offset="0.226190" stop-color="rgb(80.0464%,56.1656%,96.1665%)" />
+      <stop offset="0.238095" stop-color="rgb(80.6019%,56.9104%,96.6823%)" />
+      <stop offset="0.250000" stop-color="rgb(81.1266%,57.6487%,96.9978%)" />
+      <stop offset="0.273810" stop-color="rgb(81.9429%,58.8623%,97.2996%)" />
+      <stop offset="0.285714" stop-color="rgb(82.2034%,59.3220%,97.4576%)" />
+      <stop offset="0.297619" stop-color="rgb(82.3054%,59.6336%,97.6672%)" />
+      <stop offset="0.335317" stop-color="rgb(82.2034%,60.1695%,98.3051%)" />
+      <stop offset="0.380952" stop-color="rgb(82.7629%,61.3004%,98.9448%)" />
+      <stop offset="0.416667" stop-color="rgb(83.1531%,62.1003%,99.1940%)" />
+      <stop offset="0.476190" stop-color="rgb(83.5051%,63.1472%,99.0187%)" />
+      <stop offset="0.535714" stop-color="rgb(83.7831%,64.5813%,98.4856%)" />
+      <stop offset="0.571429" stop-color="rgb(83.8942%,65.2319%,98.3046%)" />
+      <stop offset="0.607143" stop-color="rgb(83.9315%,65.3957%,98.5495%)" />
+      <stop offset="0.642857" stop-color="rgb(83.9175%,65.2881%,98.9888%)" />
+      <stop offset="0.672619" stop-color="rgb(83.8983%,65.2542%,99.1525%)" />
+      <stop offset="0.702381" stop-color="rgb(83.8757%,65.3380%,98.9457%)" />
+      <stop offset="0.771825" stop-color="rgb(83.8095%,65.7143%,98.0952%)" />
+      <stop offset="0.821429" stop-color="rgb(83.8678%,66.5426%,97.9788%)" />
+      <stop offset="0.845238" stop-color="rgb(83.8364%,66.7082%,98.0599%)" />
+      <stop offset="0.857143" stop-color="rgb(83.7702%,66.5797%,98.1419%)" />
+      <stop offset="0.869048" stop-color="rgb(83.6532%,66.2783%,98.2772%)" />
+      <stop offset="0.920635" stop-color="rgb(83.0189%,64.1509%,99.0566%)" />
+      <stop offset="0.952381" stop-color="rgb(83.0216%,63.0678%,99.4517%)" />
+      <stop offset="0.964286" stop-color="rgb(82.9750%,62.5229%,99.5023%)" />
+      <stop offset="0.976190" stop-color="rgb(82.7580%,61.7151%,99.3893%)" />
+      <stop offset="1.000000" stop-color="rgb(81.7518%,59.1241%,98.5401%)" />
+    </linearGradient>
+    <linearGradient id="purpleBlend1" x1="410" x2="470" y1="0" y2="0" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#000" />
+      <stop offset="1" stop-color="#FFF" />
+    </linearGradient>
+    <mask id="purpleMask1" maskUnits="userSpaceOnUse" x="140" y="250" width="980" height="750" style="mask-type:luminance">
+      <rect x="140" y="250" width="980" height="750" fill="url(#purpleBlend1)" />
+    </mask>
+    <linearGradient id="purpleLight2" x1="0" x2="0" y1="486" y2="990" gradientUnits="userSpaceOnUse">
+      <stop offset="0.000000" stop-color="rgb(63.4615%,34.6154%,81.7308%)" />
+      <stop offset="0.009921" stop-color="rgb(64.4231%,36.5385%,82.6923%)" />
+      <stop offset="0.011905" stop-color="rgb(64.4758%,36.6448%,82.7416%)" />
+      <stop offset="0.025794" stop-color="rgb(64.4231%,36.5385%,82.6923%)" />
+      <stop offset="0.047619" stop-color="rgb(65.0943%,37.7358%,83.9623%)" />
+      <stop offset="0.071429" stop-color="rgb(65.8018%,38.3536%,85.1339%)" />
+      <stop offset="0.083333" stop-color="rgb(66.3965%,38.7583%,85.3908%)" />
+      <stop offset="0.095238" stop-color="rgb(67.2466%,39.2826%,85.3015%)" />
+      <stop offset="0.107143" stop-color="rgb(67.9612%,39.8058%,85.4369%)" />
+      <stop offset="0.119048" stop-color="rgb(68.1132%,40.0822%,86.1306%)" />
+      <stop offset="0.130952" stop-color="rgb(68.2230%,40.4699%,87.1090%)" />
+      <stop offset="0.136905" stop-color="rgb(68.5714%,40.9524%,87.6190%)" />
+      <stop offset="0.142857" stop-color="rgb(69.2115%,41.6894%,88.1286%)" />
+      <stop offset="0.154762" stop-color="rgb(71.0369%,43.6856%,89.2192%)" />
+      <stop offset="0.166667" stop-color="rgb(73.0435%,46.0870%,90.4348%)" />
+      <stop offset="0.190476" stop-color="rgb(77.1950%,52.2428%,93.4544%)" />
+      <stop offset="0.196429" stop-color="rgb(77.9661%,53.3898%,94.0678%)" />
+      <stop offset="0.202381" stop-color="rgb(78.5468%,54.2075%,94.5759%)" />
+      <stop offset="0.214286" stop-color="rgb(79.4182%,55.3695%,95.4615%)" />
+      <stop offset="0.226190" stop-color="rgb(80.0464%,56.1656%,96.1665%)" />
+      <stop offset="0.238095" stop-color="rgb(80.6019%,56.9104%,96.6823%)" />
+      <stop offset="0.250000" stop-color="rgb(81.1266%,57.6487%,96.9978%)" />
+      <stop offset="0.273810" stop-color="rgb(81.9429%,58.8623%,97.2996%)" />
+      <stop offset="0.285714" stop-color="rgb(82.2034%,59.3220%,97.4576%)" />
+      <stop offset="0.297619" stop-color="rgb(82.3054%,59.6336%,97.6672%)" />
+      <stop offset="0.335317" stop-color="rgb(82.2034%,60.1695%,98.3051%)" />
+      <stop offset="0.380952" stop-color="rgb(82.7629%,61.3004%,98.9448%)" />
+      <stop offset="0.416667" stop-color="rgb(83.1531%,62.1003%,99.1940%)" />
+      <stop offset="0.476190" stop-color="rgb(83.5051%,63.1472%,99.0187%)" />
+      <stop offset="0.535714" stop-color="rgb(83.7831%,64.5813%,98.4856%)" />
+      <stop offset="0.571429" stop-color="rgb(83.8942%,65.2319%,98.3046%)" />
+      <stop offset="0.595238" stop-color="rgb(83.9299%,65.3773%,98.4045%)" />
+      <stop offset="0.654762" stop-color="rgb(83.9185%,65.2167%,99.0373%)" />
+      <stop offset="0.678571" stop-color="rgb(83.8897%,65.2925%,99.1710%)" />
+      <stop offset="0.761905" stop-color="rgb(83.6706%,66.2714%,99.0501%)" />
+      <stop offset="0.821429" stop-color="rgb(83.5763%,66.4568%,99.0209%)" />
+      <stop offset="0.857143" stop-color="rgb(83.7015%,66.3131%,99.0484%)" />
+      <stop offset="0.892857" stop-color="rgb(84.2670%,66.0459%,99.1728%)" />
+      <stop offset="0.916667" stop-color="rgb(84.5205%,65.5898%,99.2114%)" />
+      <stop offset="0.940476" stop-color="rgb(84.3806%,64.7416%,99.1254%)" />
+      <stop offset="0.952381" stop-color="rgb(84.1481%,64.1079%,99.0316%)" />
+      <stop offset="0.970238" stop-color="rgb(83.5294%,62.7451%,98.8235%)" />
+      <stop offset="0.976190" stop-color="rgb(83.1724%,62.0560%,98.7178%)" />
+      <stop offset="1.000000" stop-color="rgb(80.9524%,58.0952%,98.0952%)" />
+    </linearGradient>
+    <linearGradient id="purpleBlend2" x1="470" x2="510" y1="0" y2="0" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#000" />
+      <stop offset="1" stop-color="#FFF" />
+    </linearGradient>
+    <mask id="purpleMask2" maskUnits="userSpaceOnUse" x="140" y="250" width="980" height="750" style="mask-type:luminance">
+      <rect x="140" y="250" width="980" height="750" fill="url(#purpleBlend2)" />
+    </mask>
+    <linearGradient id="purpleLight3" x1="0" x2="0" y1="486" y2="990" gradientUnits="userSpaceOnUse">
+      <stop offset="0.000000" stop-color="rgb(62.1359%,33.0097%,80.5825%)" />
+      <stop offset="0.011905" stop-color="rgb(62.9522%,33.4645%,81.0434%)" />
+      <stop offset="0.047619" stop-color="rgb(64.4231%,36.5385%,82.6923%)" />
+      <stop offset="0.071429" stop-color="rgb(65.2168%,37.2559%,84.3270%)" />
+      <stop offset="0.077381" stop-color="rgb(65.3846%,37.5000%,84.6154%)" />
+      <stop offset="0.083333" stop-color="rgb(65.5118%,37.8668%,84.7676%)" />
+      <stop offset="0.095238" stop-color="rgb(65.6868%,38.7925%,84.8215%)" />
+      <stop offset="0.107143" stop-color="rgb(66.0377%,39.6226%,84.9057%)" />
+      <stop offset="0.119048" stop-color="rgb(66.6329%,39.9101%,85.0691%)" />
+      <stop offset="0.130952" stop-color="rgb(67.5084%,40.2123%,85.4245%)" />
+      <stop offset="0.136905" stop-color="rgb(68.1416%,40.7080%,85.8407%)" />
+      <stop offset="0.142857" stop-color="rgb(68.9655%,41.5346%,86.4980%)" />
+      <stop offset="0.154762" stop-color="rgb(71.0405%,43.8256%,88.3128%)" />
+      <stop offset="0.166667" stop-color="rgb(73.2026%,46.4052%,90.1961%)" />
+      <stop offset="0.190476" stop-color="rgb(77.4308%,52.1139%,93.5834%)" />
+      <stop offset="0.196429" stop-color="rgb(78.2051%,53.2051%,94.2308%)" />
+      <stop offset="0.202381" stop-color="rgb(78.7968%,54.0436%,94.7679%)" />
+      <stop offset="0.214286" stop-color="rgb(79.6937%,55.3515%,95.6758%)" />
+      <stop offset="0.226190" stop-color="rgb(80.3309%,56.3348%,96.3707%)" />
+      <stop offset="0.238095" stop-color="rgb(80.8525%,57.1921%,96.8620%)" />
+      <stop offset="0.250000" stop-color="rgb(81.2704%,57.9682%,97.1217%)" />
+      <stop offset="0.261905" stop-color="rgb(81.5799%,58.6289%,97.2231%)" />
+      <stop offset="0.285714" stop-color="rgb(82.0513%,59.6154%,97.4359%)" />
+      <stop offset="0.297619" stop-color="rgb(82.2542%,59.8838%,97.7319%)" />
+      <stop offset="0.321429" stop-color="rgb(82.5464%,60.0692%,98.4494%)" />
+      <stop offset="0.345238" stop-color="rgb(82.7986%,60.4972%,98.7977%)" />
+      <stop offset="0.404762" stop-color="rgb(83.3333%,62.1795%,98.7179%)" />
+      <stop offset="0.474206" stop-color="rgb(83.5714%,62.8571%,98.5714%)" />
+      <stop offset="0.547619" stop-color="rgb(84.5001%,64.4904%,98.5424%)" />
+      <stop offset="0.573413" stop-color="rgb(84.6715%,64.9635%,98.5401%)" />
+      <stop offset="0.595238" stop-color="rgb(84.6060%,65.2116%,98.5231%)" />
+      <stop offset="0.642857" stop-color="rgb(84.1113%,65.4999%,98.4809%)" />
+      <stop offset="0.672619" stop-color="rgb(83.9416%,65.6934%,98.5401%)" />
+      <stop offset="0.702381" stop-color="rgb(84.1030%,66.0455%,98.7602%)" />
+      <stop offset="0.738095" stop-color="rgb(84.4841%,66.5098%,99.1283%)" />
+      <stop offset="0.771825" stop-color="rgb(84.6667%,66.6667%,99.3333%)" />
+      <stop offset="0.797619" stop-color="rgb(84.4688%,66.3651%,99.2419%)" />
+      <stop offset="0.851190" stop-color="rgb(83.7945%,65.2174%,98.8142%)" />
+      <stop offset="0.916667" stop-color="rgb(83.9330%,64.4053%,98.8228%)" />
+      <stop offset="0.940476" stop-color="rgb(83.9007%,63.8072%,98.8549%)" />
+      <stop offset="0.952381" stop-color="rgb(83.8197%,63.3740%,98.8696%)" />
+      <stop offset="0.964286" stop-color="rgb(83.5613%,62.7308%,98.8454%)" />
+      <stop offset="0.970238" stop-color="rgb(83.3333%,62.3016%,98.8095%)" />
+      <stop offset="0.976190" stop-color="rgb(82.9480%,61.6931%,98.7374%)" />
+      <stop offset="1.000000" stop-color="rgb(80.3571%,58.0357%,98.2143%)" />
+    </linearGradient>
+    <linearGradient id="purpleBlend3" x1="510" x2="529" y1="0" y2="0" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#000" />
+      <stop offset="1" stop-color="#FFF" />
+    </linearGradient>
+    <mask id="purpleMask3" maskUnits="userSpaceOnUse" x="140" y="250" width="980" height="750" style="mask-type:luminance">
+      <rect x="140" y="250" width="980" height="750" fill="url(#purpleBlend3)" />
+    </mask>
+    <linearGradient id="purpleLight4" x1="0" x2="0" y1="486" y2="990" gradientUnits="userSpaceOnUse">
+      <stop offset="0.000000" stop-color="rgb(62.1359%,31.0680%,79.6117%)" />
+      <stop offset="0.009921" stop-color="rgb(62.1359%,33.0097%,80.5825%)" />
+      <stop offset="0.011905" stop-color="rgb(62.1654%,33.1804%,80.6521%)" />
+      <stop offset="0.025794" stop-color="rgb(62.5000%,33.6538%,80.7692%)" />
+      <stop offset="0.047619" stop-color="rgb(63.4615%,34.6154%,81.7308%)" />
+      <stop offset="0.077381" stop-color="rgb(65.1786%,36.6071%,83.0357%)" />
+      <stop offset="0.107143" stop-color="rgb(66.8342%,38.6935%,84.9246%)" />
+      <stop offset="0.119048" stop-color="rgb(67.6922%,39.3884%,85.4586%)" />
+      <stop offset="0.130952" stop-color="rgb(68.7741%,40.2725%,86.0611%)" />
+      <stop offset="0.136905" stop-color="rgb(69.5122%,41.0569%,86.5854%)" />
+      <stop offset="0.142857" stop-color="rgb(70.4758%,42.2150%,87.3520%)" />
+      <stop offset="0.154762" stop-color="rgb(72.8707%,45.2710%,89.3536%)" />
+      <stop offset="0.166667" stop-color="rgb(75.0988%,48.2213%,91.3043%)" />
+      <stop offset="0.178571" stop-color="rgb(76.7817%,50.5743%,92.9410%)" />
+      <stop offset="0.190476" stop-color="rgb(78.1289%,52.5668%,94.3422%)" />
+      <stop offset="0.202381" stop-color="rgb(79.0920%,54.0188%,95.2558%)" />
+      <stop offset="0.214286" stop-color="rgb(79.7705%,55.0761%,95.8163%)" />
+      <stop offset="0.226190" stop-color="rgb(80.2742%,55.9042%,96.1851%)" />
+      <stop offset="0.250000" stop-color="rgb(81.0585%,57.3212%,96.7405%)" />
+      <stop offset="0.273810" stop-color="rgb(81.5860%,58.4371%,97.0665%)" />
+      <stop offset="0.297619" stop-color="rgb(82.0411%,59.2543%,97.4215%)" />
+      <stop offset="0.335317" stop-color="rgb(82.6087%,60.0791%,98.0237%)" />
+      <stop offset="0.380952" stop-color="rgb(83.1477%,61.4183%,98.8886%)" />
+      <stop offset="0.404762" stop-color="rgb(83.3992%,62.0553%,99.2095%)" />
+      <stop offset="0.428571" stop-color="rgb(83.6539%,62.5568%,99.2953%)" />
+      <stop offset="0.464286" stop-color="rgb(83.9937%,63.1790%,99.2141%)" />
+      <stop offset="0.547619" stop-color="rgb(84.4266%,64.6445%,99.2314%)" />
+      <stop offset="0.573413" stop-color="rgb(84.4622%,64.9402%,99.2032%)" />
+      <stop offset="0.595238" stop-color="rgb(84.4116%,65.0293%,99.1271%)" />
+      <stop offset="0.672619" stop-color="rgb(84.0637%,64.9402%,98.8048%)" />
+      <stop offset="0.761905" stop-color="rgb(84.5176%,65.8263%,99.1943%)" />
+      <stop offset="0.797619" stop-color="rgb(84.3879%,65.8586%,99.1420%)" />
+      <stop offset="0.851190" stop-color="rgb(83.9216%,65.4902%,98.8235%)" />
+      <stop offset="0.892857" stop-color="rgb(83.9781%,65.2406%,98.5383%)" />
+      <stop offset="0.916667" stop-color="rgb(83.9502%,64.8213%,98.4352%)" />
+      <stop offset="0.928571" stop-color="rgb(83.8521%,64.4282%,98.4679%)" />
+      <stop offset="0.940476" stop-color="rgb(83.7152%,63.8879%,98.6169%)" />
+      <stop offset="0.952381" stop-color="rgb(83.4989%,63.1848%,98.7759%)" />
+      <stop offset="0.970238" stop-color="rgb(82.9268%,61.7886%,98.7805%)" />
+      <stop offset="0.976190" stop-color="rgb(82.5916%,61.1366%,98.6250%)" />
+      <stop offset="1.000000" stop-color="rgb(80.5310%,57.5221%,97.3451%)" />
+    </linearGradient>
+    <linearGradient id="purpleBlend4" x1="529" x2="539" y1="0" y2="0" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#000" />
+      <stop offset="1" stop-color="#FFF" />
+    </linearGradient>
+    <mask id="purpleMask4" maskUnits="userSpaceOnUse" x="140" y="250" width="980" height="750" style="mask-type:luminance">
+      <rect x="140" y="250" width="980" height="750" fill="url(#purpleBlend4)" />
+    </mask>
+    <linearGradient id="purpleLight5" x1="0" x2="0" y1="486" y2="990" gradientUnits="userSpaceOnUse">
+      <stop offset="0.000000" stop-color="rgb(60.5769%,29.8077%,78.8462%)" />
+      <stop offset="0.009921" stop-color="rgb(60.5769%,29.8077%,78.8462%)" />
+      <stop offset="0.025794" stop-color="rgb(62.1359%,31.0680%,79.6117%)" />
+      <stop offset="0.047619" stop-color="rgb(62.1359%,33.0097%,80.5825%)" />
+      <stop offset="0.059524" stop-color="rgb(63.5152%,34.3301%,81.3932%)" />
+      <stop offset="0.077381" stop-color="rgb(66.1088%,36.4017%,82.8452%)" />
+      <stop offset="0.095238" stop-color="rgb(68.0782%,38.1416%,84.5666%)" />
+      <stop offset="0.107143" stop-color="rgb(69.4118%,39.6078%,85.8824%)" />
+      <stop offset="0.119048" stop-color="rgb(70.9359%,41.8057%,87.4061%)" />
+      <stop offset="0.136905" stop-color="rgb(73.3333%,45.4902%,89.8039%)" />
+      <stop offset="0.154762" stop-color="rgb(75.8275%,48.6996%,92.0533%)" />
+      <stop offset="0.166667" stop-color="rgb(77.2549%,50.5882%,93.3333%)" />
+      <stop offset="0.178571" stop-color="rgb(78.2234%,52.2097%,94.2897%)" />
+      <stop offset="0.190476" stop-color="rgb(78.9123%,53.5659%,95.0059%)" />
+      <stop offset="0.202381" stop-color="rgb(79.5096%,54.5882%,95.5432%)" />
+      <stop offset="0.226190" stop-color="rgb(80.4867%,55.9909%,96.2482%)" />
+      <stop offset="0.250000" stop-color="rgb(81.0687%,57.0939%,96.7345%)" />
+      <stop offset="0.285714" stop-color="rgb(81.5686%,58.4314%,97.2549%)" />
+      <stop offset="0.333333" stop-color="rgb(82.7170%,59.9472%,98.0127%)" />
+      <stop offset="0.404762" stop-color="rgb(83.1373%,61.5686%,98.8235%)" />
+      <stop offset="0.464286" stop-color="rgb(83.8376%,63.6899%,98.8304%)" />
+      <stop offset="0.488095" stop-color="rgb(84.0108%,64.1446%,98.8202%)" />
+      <stop offset="0.511905" stop-color="rgb(84.1319%,64.3922%,98.8060%)" />
+      <stop offset="0.573413" stop-color="rgb(84.3137%,64.7059%,98.8235%)" />
+      <stop offset="0.619048" stop-color="rgb(84.3624%,64.9350%,99.0224%)" />
+      <stop offset="0.678571" stop-color="rgb(84.2993%,65.1077%,99.2124%)" />
+      <stop offset="0.771825" stop-color="rgb(83.9216%,65.0980%,98.8235%)" />
+      <stop offset="0.845238" stop-color="rgb(84.3074%,65.4848%,98.8226%)" />
+      <stop offset="0.880952" stop-color="rgb(84.2893%,65.6273%,98.8633%)" />
+      <stop offset="0.904762" stop-color="rgb(84.1420%,65.5278%,98.8751%)" />
+      <stop offset="0.916667" stop-color="rgb(83.9881%,65.2428%,98.8428%)" />
+      <stop offset="0.928571" stop-color="rgb(83.7480%,64.6665%,98.7586%)" />
+      <stop offset="0.940476" stop-color="rgb(83.3857%,63.6859%,98.6016%)" />
+      <stop offset="0.970238" stop-color="rgb(82.1918%,60.7306%,98.1735%)" />
+      <stop offset="1.000000" stop-color="rgb(80.5825%,58.2524%,98.0583%)" />
+    </linearGradient>
+    <linearGradient id="purpleBlend5" x1="539" x2="553" y1="0" y2="0" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#000" />
+      <stop offset="1" stop-color="#FFF" />
+    </linearGradient>
+    <mask id="purpleMask5" maskUnits="userSpaceOnUse" x="140" y="250" width="980" height="750" style="mask-type:luminance">
+      <rect x="140" y="250" width="980" height="750" fill="url(#purpleBlend5)" />
+    </mask>
+    <linearGradient id="purpleLight6" x1="0" x2="0" y1="486" y2="990" gradientUnits="userSpaceOnUse">
+      <stop offset="0.000000" stop-color="rgb(59.6154%,28.8462%,77.8846%)" />
+      <stop offset="0.009921" stop-color="rgb(60.0000%,28.5714%,78.0952%)" />
+      <stop offset="0.023810" stop-color="rgb(60.2513%,29.3349%,77.1474%)" />
+      <stop offset="0.025794" stop-color="rgb(60.4027%,29.5302%,77.1812%)" />
+      <stop offset="0.035714" stop-color="rgb(61.5999%,30.6792%,78.0304%)" />
+      <stop offset="0.047619" stop-color="rgb(63.4921%,32.5397%,79.7619%)" />
+      <stop offset="0.059524" stop-color="rgb(65.6812%,35.0915%,81.9865%)" />
+      <stop offset="0.071429" stop-color="rgb(67.9740%,37.8965%,84.4052%)" />
+      <stop offset="0.077381" stop-color="rgb(69.0196%,39.2157%,85.4902%)" />
+      <stop offset="0.095238" stop-color="rgb(71.7508%,42.8679%,88.2593%)" />
+      <stop offset="0.107143" stop-color="rgb(73.3333%,45.0980%,89.8039%)" />
+      <stop offset="0.119048" stop-color="rgb(74.7106%,47.1216%,91.0337%)" />
+      <stop offset="0.136905" stop-color="rgb(76.4706%,49.8039%,92.5490%)" />
+      <stop offset="0.154762" stop-color="rgb(78.0047%,52.0910%,94.0643%)" />
+      <stop offset="0.166667" stop-color="rgb(78.8235%,53.3333%,94.9020%)" />
+      <stop offset="0.178571" stop-color="rgb(79.4111%,54.2575%,95.5057%)" />
+      <stop offset="0.196429" stop-color="rgb(80.0000%,55.2941%,96.0784%)" />
+      <stop offset="0.226190" stop-color="rgb(80.5917%,56.8330%,96.3533%)" />
+      <stop offset="0.250000" stop-color="rgb(81.1232%,57.7510%,96.7779%)" />
+      <stop offset="0.285714" stop-color="rgb(81.9608%,58.8235%,97.6471%)" />
+      <stop offset="0.321429" stop-color="rgb(82.2273%,59.9909%,97.9373%)" />
+      <stop offset="0.345238" stop-color="rgb(82.5004%,60.6403%,98.1444%)" />
+      <stop offset="0.404762" stop-color="rgb(83.5294%,61.9608%,98.8235%)" />
+      <stop offset="0.440476" stop-color="rgb(83.7668%,63.0106%,99.0786%)" />
+      <stop offset="0.464286" stop-color="rgb(83.8627%,63.6913%,99.1873%)" />
+      <stop offset="0.500000" stop-color="rgb(84.1418%,64.4507%,99.2583%)" />
+      <stop offset="0.559524" stop-color="rgb(84.6554%,65.3807%,99.2399%)" />
+      <stop offset="0.595238" stop-color="rgb(84.6983%,65.5277%,99.1409%)" />
+      <stop offset="0.672619" stop-color="rgb(84.3137%,65.0980%,98.8235%)" />
+      <stop offset="0.761905" stop-color="rgb(83.9290%,65.1139%,99.1871%)" />
+      <stop offset="0.851190" stop-color="rgb(84.3137%,64.7059%,99.2157%)" />
+      <stop offset="0.880952" stop-color="rgb(84.3284%,65.0159%,99.1066%)" />
+      <stop offset="0.904762" stop-color="rgb(84.1927%,65.0980%,98.9601%)" />
+      <stop offset="0.916667" stop-color="rgb(84.0071%,64.8678%,98.8610%)" />
+      <stop offset="0.928571" stop-color="rgb(83.6692%,64.1479%,98.7264%)" />
+      <stop offset="0.940476" stop-color="rgb(83.1005%,62.7866%,98.5284%)" />
+      <stop offset="0.952381" stop-color="rgb(82.4314%,61.1753%,98.3115%)" />
+      <stop offset="0.964286" stop-color="rgb(81.8054%,59.7409%,98.1249%)" />
+      <stop offset="0.970238" stop-color="rgb(81.5534%,59.2233%,98.0583%)" />
+      <stop offset="0.976190" stop-color="rgb(81.3676%,58.9391%,98.0260%)" />
+      <stop offset="1.000000" stop-color="rgb(80.9524%,59.0476%,98.0952%)" />
+    </linearGradient>
+    <linearGradient id="purpleBlend6" x1="553" x2="575" y1="0" y2="0" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#000" />
+      <stop offset="1" stop-color="#FFF" />
+    </linearGradient>
+    <mask id="purpleMask6" maskUnits="userSpaceOnUse" x="140" y="250" width="980" height="750" style="mask-type:luminance">
+      <rect x="140" y="250" width="980" height="750" fill="url(#purpleBlend6)" />
+    </mask>
+    <linearGradient id="purpleLight7" x1="0" x2="0" y1="486" y2="990" gradientUnits="userSpaceOnUse">
+      <stop offset="0.000000" stop-color="rgb(59.6154%,29.8077%,76.9231%)" />
+      <stop offset="0.011905" stop-color="rgb(60.6431%,30.0338%,78.0958%)" />
+      <stop offset="0.023810" stop-color="rgb(61.8809%,30.8063%,78.6847%)" />
+      <stop offset="0.025794" stop-color="rgb(62.1514%,31.0757%,78.8845%)" />
+      <stop offset="0.035714" stop-color="rgb(63.7487%,32.9607%,80.2805%)" />
+      <stop offset="0.047619" stop-color="rgb(65.8824%,35.6863%,82.3529%)" />
+      <stop offset="0.071429" stop-color="rgb(70.3444%,41.4233%,87.1938%)" />
+      <stop offset="0.077381" stop-color="rgb(71.3725%,42.7451%,88.2353%)" />
+      <stop offset="0.083333" stop-color="rgb(72.3357%,43.9749%,89.1106%)" />
+      <stop offset="0.095238" stop-color="rgb(74.1302%,46.2557%,90.5506%)" />
+      <stop offset="0.107143" stop-color="rgb(75.6863%,48.2353%,91.7647%)" />
+      <stop offset="0.119048" stop-color="rgb(76.9914%,49.8447%,92.8471%)" />
+      <stop offset="0.130952" stop-color="rgb(78.0329%,51.1655%,93.7412%)" />
+      <stop offset="0.142857" stop-color="rgb(78.7137%,52.3231%,94.4408%)" />
+      <stop offset="0.166667" stop-color="rgb(79.2157%,54.1176%,95.2941%)" />
+      <stop offset="0.196429" stop-color="rgb(80.0000%,55.6863%,95.6863%)" />
+      <stop offset="0.226190" stop-color="rgb(80.9226%,57.2391%,96.2815%)" />
+      <stop offset="0.238095" stop-color="rgb(81.2194%,57.7147%,96.5052%)" />
+      <stop offset="0.285714" stop-color="rgb(81.9608%,58.8235%,97.2549%)" />
+      <stop offset="0.335317" stop-color="rgb(82.3529%,60.3922%,98.0392%)" />
+      <stop offset="0.380952" stop-color="rgb(83.1639%,61.4141%,98.6228%)" />
+      <stop offset="0.416667" stop-color="rgb(83.6445%,62.2901%,98.8697%)" />
+      <stop offset="0.452381" stop-color="rgb(83.8351%,63.3909%,98.8501%)" />
+      <stop offset="0.474206" stop-color="rgb(83.9216%,63.9216%,98.8235%)" />
+      <stop offset="0.511905" stop-color="rgb(84.0807%,64.5015%,98.8060%)" />
+      <stop offset="0.559524" stop-color="rgb(84.2600%,64.9852%,98.8032%)" />
+      <stop offset="0.607143" stop-color="rgb(84.4770%,65.3194%,98.9577%)" />
+      <stop offset="0.654762" stop-color="rgb(84.6828%,65.4775%,99.1874%)" />
+      <stop offset="0.702381" stop-color="rgb(84.6349%,65.4329%,99.1447%)" />
+      <stop offset="0.761905" stop-color="rgb(84.3424%,65.1443%,98.8522%)" />
+      <stop offset="0.809524" stop-color="rgb(84.2987%,64.9384%,98.7763%)" />
+      <stop offset="0.857143" stop-color="rgb(84.3209%,64.6762%,98.8474%)" />
+      <stop offset="0.892857" stop-color="rgb(84.5256%,64.6488%,99.1536%)" />
+      <stop offset="0.904762" stop-color="rgb(84.4851%,64.5051%,99.2247%)" />
+      <stop offset="0.920635" stop-color="rgb(84.1897%,64.0316%,99.2095%)" />
+      <stop offset="0.928571" stop-color="rgb(83.8294%,63.5636%,99.1114%)" />
+      <stop offset="0.940476" stop-color="rgb(82.9565%,62.5041%,98.8318%)" />
+      <stop offset="0.964286" stop-color="rgb(81.0640%,60.0859%,98.1817%)" />
+      <stop offset="0.970238" stop-color="rgb(80.7692%,59.6154%,98.0769%)" />
+      <stop offset="0.976190" stop-color="rgb(80.6486%,59.2684%,98.0269%)" />
+      <stop offset="1.000000" stop-color="rgb(81.1321%,58.4906%,98.1132%)" />
+    </linearGradient>
+    <linearGradient id="purpleBlend7" x1="575" x2="600" y1="0" y2="0" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#000" />
+      <stop offset="1" stop-color="#FFF" />
+    </linearGradient>
+    <mask id="purpleMask7" maskUnits="userSpaceOnUse" x="140" y="250" width="980" height="750" style="mask-type:luminance">
+      <rect x="140" y="250" width="980" height="750" fill="url(#purpleBlend7)" />
+    </mask>
+    <linearGradient id="purpleLight8" x1="0" x2="0" y1="486" y2="990" gradientUnits="userSpaceOnUse">
+      <stop offset="0.000000" stop-color="rgb(61.1842%,31.5789%,79.6053%)" />
+      <stop offset="0.009921" stop-color="rgb(62.5551%,31.7181%,79.7357%)" />
+      <stop offset="0.011905" stop-color="rgb(62.8177%,31.9253%,79.8947%)" />
+      <stop offset="0.023810" stop-color="rgb(64.3826%,33.7180%,81.2587%)" />
+      <stop offset="0.035714" stop-color="rgb(66.6268%,36.5462%,83.5021%)" />
+      <stop offset="0.047619" stop-color="rgb(69.0196%,39.6078%,85.8824%)" />
+      <stop offset="0.059524" stop-color="rgb(71.2195%,42.3044%,87.7975%)" />
+      <stop offset="0.071429" stop-color="rgb(73.2592%,44.7944%,89.4801%)" />
+      <stop offset="0.077381" stop-color="rgb(74.1176%,45.8824%,90.1961%)" />
+      <stop offset="0.083333" stop-color="rgb(74.8361%,46.8298%,90.7984%)" />
+      <stop offset="0.095238" stop-color="rgb(75.9624%,48.4047%,91.7302%)" />
+      <stop offset="0.107143" stop-color="rgb(76.8627%,49.8039%,92.5490%)" />
+      <stop offset="0.119048" stop-color="rgb(77.5937%,51.1718%,93.4180%)" />
+      <stop offset="0.130952" stop-color="rgb(78.1616%,52.4016%,94.1992%)" />
+      <stop offset="0.142857" stop-color="rgb(78.6980%,53.4212%,94.7482%)" />
+      <stop offset="0.166667" stop-color="rgb(79.6078%,54.9020%,95.2941%)" />
+      <stop offset="0.196429" stop-color="rgb(80.3922%,56.0784%,95.6863%)" />
+      <stop offset="0.226190" stop-color="rgb(80.9979%,57.3039%,96.6229%)" />
+      <stop offset="0.238095" stop-color="rgb(81.2111%,57.7067%,96.8955%)" />
+      <stop offset="0.285714" stop-color="rgb(81.9608%,58.8235%,97.2549%)" />
+      <stop offset="0.333333" stop-color="rgb(82.7185%,60.3327%,98.3970%)" />
+      <stop offset="0.357143" stop-color="rgb(83.0242%,61.0229%,98.7708%)" />
+      <stop offset="0.404762" stop-color="rgb(83.5294%,62.3529%,99.2157%)" />
+      <stop offset="0.452381" stop-color="rgb(83.8218%,63.7963%,98.9525%)" />
+      <stop offset="0.474206" stop-color="rgb(83.9216%,64.3137%,98.8235%)" />
+      <stop offset="0.511905" stop-color="rgb(84.0983%,64.9112%,98.7723%)" />
+      <stop offset="0.583333" stop-color="rgb(84.3296%,65.5378%,98.8504%)" />
+      <stop offset="0.666667" stop-color="rgb(84.3144%,65.4922%,99.2123%)" />
+      <stop offset="0.761905" stop-color="rgb(84.3137%,65.5431%,98.8345%)" />
+      <stop offset="0.809524" stop-color="rgb(84.4881%,65.2735%,98.9919%)" />
+      <stop offset="0.833333" stop-color="rgb(84.5127%,64.8968%,99.1502%)" />
+      <stop offset="0.845238" stop-color="rgb(84.4082%,64.5443%,99.2024%)" />
+      <stop offset="0.857143" stop-color="rgb(84.1772%,64.0228%,99.2231%)" />
+      <stop offset="0.869048" stop-color="rgb(83.7736%,63.2402%,99.2307%)" />
+      <stop offset="0.904762" stop-color="rgb(82.1349%,60.2751%,99.1467%)" />
+      <stop offset="0.916667" stop-color="rgb(81.6750%,59.4465%,99.0644%)" />
+      <stop offset="0.928571" stop-color="rgb(81.3517%,58.8610%,98.9251%)" />
+      <stop offset="0.952381" stop-color="rgb(80.9975%,58.2661%,98.4202%)" />
+      <stop offset="0.970238" stop-color="rgb(80.9524%,58.0952%,98.0952%)" />
+      <stop offset="0.976190" stop-color="rgb(81.0169%,58.1081%,98.0482%)" />
+      <stop offset="1.000000" stop-color="rgb(81.7308%,58.6538%,98.0769%)" />
+    </linearGradient>
+    <linearGradient id="purpleBlend8" x1="600" x2="630" y1="0" y2="0" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#000" />
+      <stop offset="1" stop-color="#FFF" />
+    </linearGradient>
+    <mask id="purpleMask8" maskUnits="userSpaceOnUse" x="140" y="250" width="980" height="750" style="mask-type:luminance">
+      <rect x="140" y="250" width="980" height="750" fill="url(#purpleBlend8)" />
+    </mask>
+    <linearGradient id="purpleLight9" x1="0" x2="0" y1="486" y2="990" gradientUnits="userSpaceOnUse">
+      <stop offset="0.000000" stop-color="rgb(61.5385%,32.0513%,80.7692%)" />
+      <stop offset="0.009921" stop-color="rgb(62.8821%,32.7511%,80.3493%)" />
+      <stop offset="0.011905" stop-color="rgb(63.2225%,33.0405%,80.4901%)" />
+      <stop offset="0.023810" stop-color="rgb(65.4795%,35.2354%,82.0098%)" />
+      <stop offset="0.047619" stop-color="rgb(70.5882%,41.5686%,87.0588%)" />
+      <stop offset="0.059524" stop-color="rgb(72.5172%,44.1460%,88.8548%)" />
+      <stop offset="0.071429" stop-color="rgb(74.1681%,46.4290%,90.3303%)" />
+      <stop offset="0.083333" stop-color="rgb(75.5827%,48.3984%,91.5765%)" />
+      <stop offset="0.095238" stop-color="rgb(76.7655%,50.0675%,92.5804%)" />
+      <stop offset="0.107143" stop-color="rgb(77.6471%,51.3725%,93.3333%)" />
+      <stop offset="0.119048" stop-color="rgb(78.0831%,52.1694%,93.7412%)" />
+      <stop offset="0.136905" stop-color="rgb(78.4314%,52.9412%,94.1176%)" />
+      <stop offset="0.166667" stop-color="rgb(79.6078%,54.5098%,95.2941%)" />
+      <stop offset="0.196429" stop-color="rgb(80.3922%,56.0784%,95.6863%)" />
+      <stop offset="0.214286" stop-color="rgb(80.7701%,56.8342%,96.2115%)" />
+      <stop offset="0.238095" stop-color="rgb(81.2111%,57.7162%,96.9054%)" />
+      <stop offset="0.321429" stop-color="rgb(82.5445%,60.3593%,98.2545%)" />
+      <stop offset="0.345238" stop-color="rgb(82.8743%,61.0781%,98.5183%)" />
+      <stop offset="0.392857" stop-color="rgb(83.4212%,62.4344%,98.7635%)" />
+      <stop offset="0.464286" stop-color="rgb(83.8593%,64.1391%,99.2008%)" />
+      <stop offset="0.523810" stop-color="rgb(84.3757%,65.0548%,99.0196%)" />
+      <stop offset="0.559524" stop-color="rgb(84.6554%,65.4141%,98.8444%)" />
+      <stop offset="0.595238" stop-color="rgb(84.6983%,65.5089%,98.8721%)" />
+      <stop offset="0.666667" stop-color="rgb(84.3392%,65.1242%,99.2116%)" />
+      <stop offset="0.738095" stop-color="rgb(84.1067%,65.0606%,98.9692%)" />
+      <stop offset="0.761905" stop-color="rgb(83.9891%,64.8661%,98.8567%)" />
+      <stop offset="0.785714" stop-color="rgb(83.8016%,64.3586%,98.7992%)" />
+      <stop offset="0.809524" stop-color="rgb(83.5352%,63.4764%,98.7946%)" />
+      <stop offset="0.851190" stop-color="rgb(82.9787%,61.7021%,98.7234%)" />
+      <stop offset="0.892857" stop-color="rgb(82.3476%,59.9190%,98.2557%)" />
+      <stop offset="0.916667" stop-color="rgb(81.9667%,59.1317%,98.0902%)" />
+      <stop offset="0.928571" stop-color="rgb(81.7696%,58.9651%,98.1643%)" />
+      <stop offset="0.970238" stop-color="rgb(81.1321%,59.4340%,99.0566%)" />
+      <stop offset="1.000000" stop-color="rgb(81.5534%,59.2233%,99.0291%)" />
+    </linearGradient>
+    <linearGradient id="purpleBlend9" x1="630" x2="660" y1="0" y2="0" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#000" />
+      <stop offset="1" stop-color="#FFF" />
+    </linearGradient>
+    <mask id="purpleMask9" maskUnits="userSpaceOnUse" x="140" y="250" width="980" height="750" style="mask-type:luminance">
+      <rect x="140" y="250" width="980" height="750" fill="url(#purpleBlend9)" />
+    </mask>
+    <linearGradient id="purpleLight10" x1="0" x2="0" y1="486" y2="990" gradientUnits="userSpaceOnUse">
+      <stop offset="0.000000" stop-color="rgb(61.5385%,32.6923%,80.7692%)" />
+      <stop offset="0.009921" stop-color="rgb(62.8821%,33.1878%,80.7860%)" />
+      <stop offset="0.011905" stop-color="rgb(63.2602%,33.4586%,80.9882%)" />
+      <stop offset="0.023810" stop-color="rgb(65.8423%,35.6134%,82.7876%)" />
+      <stop offset="0.025794" stop-color="rgb(66.2745%,36.0784%,83.1373%)" />
+      <stop offset="0.035714" stop-color="rgb(68.5115%,38.9270%,85.1300%)" />
+      <stop offset="0.047619" stop-color="rgb(70.9804%,42.3529%,87.4510%)" />
+      <stop offset="0.059524" stop-color="rgb(72.9281%,45.0005%,89.2144%)" />
+      <stop offset="0.071429" stop-color="rgb(74.5853%,47.2707%,90.7152%)" />
+      <stop offset="0.083333" stop-color="rgb(75.9153%,49.0573%,91.9686%)" />
+      <stop offset="0.095238" stop-color="rgb(76.9129%,50.3341%,92.9725%)" />
+      <stop offset="0.107143" stop-color="rgb(77.6471%,51.3725%,93.7255%)" />
+      <stop offset="0.119048" stop-color="rgb(78.0549%,52.2792%,94.1522%)" />
+      <stop offset="0.130952" stop-color="rgb(78.2745%,53.0102%,94.3780%)" />
+      <stop offset="0.142857" stop-color="rgb(78.6478%,53.6063%,94.6667%)" />
+      <stop offset="0.166667" stop-color="rgb(79.6078%,54.5098%,95.2941%)" />
+      <stop offset="0.196429" stop-color="rgb(80.3922%,56.4706%,96.0784%)" />
+      <stop offset="0.226190" stop-color="rgb(81.3148%,58.0095%,96.6842%)" />
+      <stop offset="0.250000" stop-color="rgb(81.8325%,58.9275%,97.0839%)" />
+      <stop offset="0.285714" stop-color="rgb(82.3529%,60.0000%,97.6471%)" />
+      <stop offset="0.321429" stop-color="rgb(82.9603%,61.1674%,98.5827%)" />
+      <stop offset="0.335317" stop-color="rgb(83.1373%,61.5686%,98.8235%)" />
+      <stop offset="0.357143" stop-color="rgb(83.3040%,62.1003%,98.9117%)" />
+      <stop offset="0.404762" stop-color="rgb(83.5294%,63.1373%,98.8235%)" />
+      <stop offset="0.474206" stop-color="rgb(83.9216%,64.7059%,99.2157%)" />
+      <stop offset="0.547619" stop-color="rgb(84.2711%,65.7380%,99.2551%)" />
+      <stop offset="0.595238" stop-color="rgb(84.2737%,65.8660%,99.1483%)" />
+      <stop offset="0.630952" stop-color="rgb(84.1032%,65.6211%,98.9809%)" />
+      <stop offset="0.666667" stop-color="rgb(83.9377%,65.1834%,98.8374%)" />
+      <stop offset="0.714286" stop-color="rgb(84.0669%,64.4981%,98.8331%)" />
+      <stop offset="0.750000" stop-color="rgb(84.1213%,63.7305%,98.8635%)" />
+      <stop offset="0.771825" stop-color="rgb(83.8583%,62.9921%,98.8189%)" />
+      <stop offset="0.785714" stop-color="rgb(83.4187%,62.2676%,98.7366%)" />
+      <stop offset="0.833333" stop-color="rgb(80.9279%,58.8125%,98.2624%)" />
+      <stop offset="0.845238" stop-color="rgb(80.5004%,58.1705%,98.1663%)" />
+      <stop offset="0.857143" stop-color="rgb(80.3160%,57.7891%,98.1041%)" />
+      <stop offset="0.869048" stop-color="rgb(80.3762%,57.6604%,98.0701%)" />
+      <stop offset="0.880952" stop-color="rgb(80.6045%,57.7124%,98.0559%)" />
+      <stop offset="0.920635" stop-color="rgb(81.5534%,58.2524%,98.0583%)" />
+      <stop offset="0.970238" stop-color="rgb(81.7308%,58.6538%,98.0769%)" />
+      <stop offset="1.000000" stop-color="rgb(81.9048%,59.0476%,98.0952%)" />
+    </linearGradient>
+    <linearGradient id="purpleBlend10" x1="660" x2="690" y1="0" y2="0" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#000" />
+      <stop offset="1" stop-color="#FFF" />
+    </linearGradient>
+    <mask id="purpleMask10" maskUnits="userSpaceOnUse" x="140" y="250" width="980" height="750" style="mask-type:luminance">
+      <rect x="140" y="250" width="980" height="750" fill="url(#purpleBlend10)" />
+    </mask>
+    <linearGradient id="purpleLight11" x1="0" x2="0" y1="486" y2="990" gradientUnits="userSpaceOnUse">
+      <stop offset="0.000000" stop-color="rgb(60.6897%,31.0345%,80.0000%)" />
+      <stop offset="0.009921" stop-color="rgb(61.8834%,31.8386%,80.2691%)" />
+      <stop offset="0.011905" stop-color="rgb(62.2733%,32.1819%,80.4980%)" />
+      <stop offset="0.025794" stop-color="rgb(65.4902%,35.2941%,82.7451%)" />
+      <stop offset="0.035714" stop-color="rgb(67.7440%,38.2243%,84.7476%)" />
+      <stop offset="0.047619" stop-color="rgb(70.1961%,41.5686%,87.0588%)" />
+      <stop offset="0.059524" stop-color="rgb(72.1438%,43.8938%,88.8222%)" />
+      <stop offset="0.071429" stop-color="rgb(73.8010%,45.7943%,90.3230%)" />
+      <stop offset="0.083333" stop-color="rgb(75.1122%,47.4855%,91.5702%)" />
+      <stop offset="0.095238" stop-color="rgb(76.0439%,48.9161%,92.5522%)" />
+      <stop offset="0.107143" stop-color="rgb(76.8627%,50.1961%,93.3333%)" />
+      <stop offset="0.119048" stop-color="rgb(77.7318%,51.4071%,93.9075%)" />
+      <stop offset="0.130952" stop-color="rgb(78.5129%,52.4800%,94.3184%)" />
+      <stop offset="0.142857" stop-color="rgb(79.0557%,53.3302%,94.6918%)" />
+      <stop offset="0.190476" stop-color="rgb(80.2281%,55.7719%,95.9144%)" />
+      <stop offset="0.236111" stop-color="rgb(81.5686%,58.0392%,97.2549%)" />
+      <stop offset="0.273810" stop-color="rgb(82.1509%,59.8837%,97.8643%)" />
+      <stop offset="0.297619" stop-color="rgb(82.6310%,60.8273%,98.2475%)" />
+      <stop offset="0.333333" stop-color="rgb(83.5013%,61.9023%,98.8090%)" />
+      <stop offset="0.380952" stop-color="rgb(83.8275%,63.3440%,98.8589%)" />
+      <stop offset="0.416667" stop-color="rgb(83.9983%,64.1286%,98.8235%)" />
+      <stop offset="0.474206" stop-color="rgb(84.3137%,64.7059%,98.8235%)" />
+      <stop offset="0.535714" stop-color="rgb(84.0484%,65.3478%,98.8235%)" />
+      <stop offset="0.573413" stop-color="rgb(83.9216%,65.4902%,98.8235%)" />
+      <stop offset="0.619048" stop-color="rgb(84.2295%,65.3596%,98.8673%)" />
+      <stop offset="0.654762" stop-color="rgb(84.4235%,64.8471%,98.8698%)" />
+      <stop offset="0.678571" stop-color="rgb(84.2269%,64.0689%,98.7949%)" />
+      <stop offset="0.702381" stop-color="rgb(83.6277%,62.6568%,98.5941%)" />
+      <stop offset="0.750000" stop-color="rgb(82.0298%,59.2584%,98.1220%)" />
+      <stop offset="0.761905" stop-color="rgb(81.7284%,58.6265%,98.0662%)" />
+      <stop offset="0.773810" stop-color="rgb(81.5290%,58.1984%,98.0624%)" />
+      <stop offset="0.785714" stop-color="rgb(81.4703%,58.0423%,98.1494%)" />
+      <stop offset="0.797619" stop-color="rgb(81.5269%,58.1150%,98.3158%)" />
+      <stop offset="0.833333" stop-color="rgb(81.9024%,58.8754%,98.9186%)" />
+      <stop offset="0.851190" stop-color="rgb(81.9048%,59.0476%,99.0476%)" />
+      <stop offset="0.869048" stop-color="rgb(81.5851%,58.8686%,98.9301%)" />
+      <stop offset="0.904762" stop-color="rgb(80.5829%,58.1478%,98.3325%)" />
+      <stop offset="0.916667" stop-color="rgb(80.3970%,57.9774%,98.1689%)" />
+      <stop offset="0.928571" stop-color="rgb(80.4354%,57.9235%,98.0803%)" />
+      <stop offset="0.952381" stop-color="rgb(81.1735%,58.1054%,98.0522%)" />
+      <stop offset="0.970238" stop-color="rgb(81.5534%,58.2524%,98.0583%)" />
+      <stop offset="0.976190" stop-color="rgb(81.4935%,58.2672%,98.0548%)" />
+      <stop offset="1.000000" stop-color="rgb(80.5825%,58.2524%,98.0583%)" />
+    </linearGradient>
+    <linearGradient id="purpleBlend11" x1="690" x2="715" y1="0" y2="0" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#000" />
+      <stop offset="1" stop-color="#FFF" />
+    </linearGradient>
+    <mask id="purpleMask11" maskUnits="userSpaceOnUse" x="140" y="250" width="980" height="750" style="mask-type:luminance">
+      <rect x="140" y="250" width="980" height="750" fill="url(#purpleBlend11)" />
+    </mask>
+    <linearGradient id="purpleLight12" x1="0" x2="0" y1="486" y2="990" gradientUnits="userSpaceOnUse">
+      <stop offset="0.000000" stop-color="rgb(59.2308%,29.2308%,79.2308%)" />
+      <stop offset="0.009921" stop-color="rgb(60.8491%,30.6604%,79.2453%)" />
+      <stop offset="0.011905" stop-color="rgb(61.3388%,31.1134%,79.5283%)" />
+      <stop offset="0.025794" stop-color="rgb(65.2000%,34.8000%,82.4000%)" />
+      <stop offset="0.035714" stop-color="rgb(67.2580%,37.1901%,84.1673%)" />
+      <stop offset="0.047619" stop-color="rgb(69.3227%,39.8406%,86.0558%)" />
+      <stop offset="0.059524" stop-color="rgb(71.0735%,42.2463%,87.6135%)" />
+      <stop offset="0.071429" stop-color="rgb(72.6086%,44.4478%,88.9942%)" />
+      <stop offset="0.077381" stop-color="rgb(73.3068%,45.4183%,89.6414%)" />
+      <stop offset="0.083333" stop-color="rgb(73.9602%,46.2757%,90.2757%)" />
+      <stop offset="0.095238" stop-color="rgb(75.1235%,47.7227%,91.4677%)" />
+      <stop offset="0.107143" stop-color="rgb(76.0956%,49.0040%,92.4303%)" />
+      <stop offset="0.119048" stop-color="rgb(76.8382%,50.2151%,93.0231%)" />
+      <stop offset="0.136905" stop-color="rgb(77.6892%,51.7928%,93.6255%)" />
+      <stop offset="0.154762" stop-color="rgb(78.4542%,53.0837%,94.3713%)" />
+      <stop offset="0.166667" stop-color="rgb(78.8845%,53.7849%,94.8207%)" />
+      <stop offset="0.196429" stop-color="rgb(79.6813%,54.9801%,95.6175%)" />
+      <stop offset="0.236111" stop-color="rgb(81.2749%,57.7689%,97.2112%)" />
+      <stop offset="0.261905" stop-color="rgb(81.9388%,59.3338%,97.9010%)" />
+      <stop offset="0.285714" stop-color="rgb(82.4701%,60.5578%,98.4064%)" />
+      <stop offset="0.321429" stop-color="rgb(83.4319%,61.8016%,99.0829%)" />
+      <stop offset="0.345238" stop-color="rgb(83.7350%,62.3674%,99.2055%)" />
+      <stop offset="0.404762" stop-color="rgb(83.6653%,63.3466%,98.8048%)" />
+      <stop offset="0.464286" stop-color="rgb(84.0363%,64.4286%,99.1817%)" />
+      <stop offset="0.523810" stop-color="rgb(84.1190%,65.1469%,99.0717%)" />
+      <stop offset="0.547619" stop-color="rgb(84.0649%,65.2448%,98.9457%)" />
+      <stop offset="0.571429" stop-color="rgb(83.8922%,64.9655%,98.8025%)" />
+      <stop offset="0.583333" stop-color="rgb(83.7383%,64.6107%,98.7215%)" />
+      <stop offset="0.607143" stop-color="rgb(83.2728%,63.4379%,98.5098%)" />
+      <stop offset="0.642857" stop-color="rgb(82.4290%,61.2133%,98.1703%)" />
+      <stop offset="0.666667" stop-color="rgb(81.9641%,59.9621%,98.0103%)" />
+      <stop offset="0.690476" stop-color="rgb(81.6749%,59.1666%,97.9433%)" />
+      <stop offset="0.726190" stop-color="rgb(81.4113%,58.3832%,97.9506%)" />
+      <stop offset="0.761905" stop-color="rgb(81.3117%,57.9934%,98.0761%)" />
+      <stop offset="0.785714" stop-color="rgb(81.3605%,57.9899%,98.2616%)" />
+      <stop offset="0.833333" stop-color="rgb(81.8409%,58.8538%,98.9490%)" />
+      <stop offset="0.851190" stop-color="rgb(81.9048%,59.0476%,99.0476%)" />
+      <stop offset="0.869048" stop-color="rgb(81.7882%,59.0082%,98.9196%)" />
+      <stop offset="0.916667" stop-color="rgb(81.1620%,58.5131%,98.1497%)" />
+      <stop offset="0.940476" stop-color="rgb(81.0604%,58.4714%,98.0604%)" />
+      <stop offset="0.970238" stop-color="rgb(81.1321%,58.4906%,98.1132%)" />
+      <stop offset="1.000000" stop-color="rgb(81.5534%,58.2524%,98.0583%)" />
+    </linearGradient>
+    <linearGradient id="purpleBlend12" x1="715" x2="730" y1="0" y2="0" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#000" />
+      <stop offset="1" stop-color="#FFF" />
+    </linearGradient>
+    <mask id="purpleMask12" maskUnits="userSpaceOnUse" x="140" y="250" width="980" height="750" style="mask-type:luminance">
+      <rect x="140" y="250" width="980" height="750" fill="url(#purpleBlend12)" />
+    </mask>
+    <linearGradient id="purpleLight13" x1="0" x2="0" y1="486" y2="990" gradientUnits="userSpaceOnUse">
+      <stop offset="0.000000" stop-color="rgb(60.3774%,30.1887%,79.2453%)" />
+      <stop offset="0.009921" stop-color="rgb(61.1111%,31.4815%,79.6296%)" />
+      <stop offset="0.011905" stop-color="rgb(61.4066%,31.7589%,79.8215%)" />
+      <stop offset="0.025794" stop-color="rgb(63.9706%,33.8235%,81.6176%)" />
+      <stop offset="0.035714" stop-color="rgb(65.8305%,35.6751%,83.3846%)" />
+      <stop offset="0.047619" stop-color="rgb(67.8832%,37.9562%,85.4015%)" />
+      <stop offset="0.059524" stop-color="rgb(69.4808%,40.0671%,86.7058%)" />
+      <stop offset="0.077381" stop-color="rgb(71.5328%,43.0657%,88.3212%)" />
+      <stop offset="0.095238" stop-color="rgb(73.3723%,45.8861%,90.1781%)" />
+      <stop offset="0.107143" stop-color="rgb(74.4526%,47.4453%,91.2409%)" />
+      <stop offset="0.119048" stop-color="rgb(75.4511%,48.4788%,91.9299%)" />
+      <stop offset="0.136905" stop-color="rgb(76.6423%,49.6350%,92.7007%)" />
+      <stop offset="0.154762" stop-color="rgb(77.1504%,51.0540%,93.6292%)" />
+      <stop offset="0.166667" stop-color="rgb(77.3723%,51.8248%,94.1606%)" />
+      <stop offset="0.190476" stop-color="rgb(77.8895%,52.2853%,94.6895%)" />
+      <stop offset="0.196429" stop-color="rgb(78.1022%,52.5547%,94.8905%)" />
+      <stop offset="0.202381" stop-color="rgb(78.3912%,52.9918%,95.1733%)" />
+      <stop offset="0.226190" stop-color="rgb(79.8455%,55.3408%,96.5882%)" />
+      <stop offset="0.236111" stop-color="rgb(80.2920%,56.2044%,97.0803%)" />
+      <stop offset="0.261905" stop-color="rgb(80.8258%,57.9522%,98.0022%)" />
+      <stop offset="0.285714" stop-color="rgb(81.0219%,59.1241%,98.5401%)" />
+      <stop offset="0.297619" stop-color="rgb(81.0725%,59.4564%,98.6413%)" />
+      <stop offset="0.309524" stop-color="rgb(81.0693%,59.6311%,98.6349%)" />
+      <stop offset="0.404762" stop-color="rgb(81.0219%,60.5839%,98.5401%)" />
+      <stop offset="0.464286" stop-color="rgb(81.0165%,61.9436%,98.5479%)" />
+      <stop offset="0.500000" stop-color="rgb(81.0314%,62.0981%,98.5062%)" />
+      <stop offset="0.535714" stop-color="rgb(81.0490%,61.9250%,98.4418%)" />
+      <stop offset="0.583333" stop-color="rgb(81.2054%,61.3013%,98.3364%)" />
+      <stop offset="0.642857" stop-color="rgb(81.7834%,59.7261%,98.1581%)" />
+      <stop offset="0.666667" stop-color="rgb(81.9036%,59.1573%,98.1043%)" />
+      <stop offset="0.690476" stop-color="rgb(81.8090%,58.7559%,98.0789%)" />
+      <stop offset="0.738095" stop-color="rgb(81.1863%,58.1899%,98.0836%)" />
+      <stop offset="0.761905" stop-color="rgb(80.9705%,58.0893%,98.0932%)" />
+      <stop offset="0.785714" stop-color="rgb(81.0445%,58.2091%,98.0981%)" />
+      <stop offset="0.833333" stop-color="rgb(81.8901%,59.1866%,98.1139%)" />
+      <stop offset="0.857143" stop-color="rgb(82.0914%,59.4731%,98.1108%)" />
+      <stop offset="0.892857" stop-color="rgb(81.9070%,59.4732%,98.0745%)" />
+      <stop offset="0.920635" stop-color="rgb(81.5534%,59.2233%,98.0583%)" />
+      <stop offset="0.928571" stop-color="rgb(81.4005%,59.0678%,98.0636%)" />
+      <stop offset="0.952381" stop-color="rgb(80.7190%,58.2867%,98.1066%)" />
+      <stop offset="0.970238" stop-color="rgb(80.3738%,57.9439%,98.1308%)" />
+      <stop offset="0.976190" stop-color="rgb(80.3866%,58.0150%,98.1301%)" />
+      <stop offset="1.000000" stop-color="rgb(80.9524%,59.0476%,98.0952%)" />
+    </linearGradient>
+    <linearGradient id="purpleBlend13" x1="730" x2="740" y1="0" y2="0" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#000" />
+      <stop offset="1" stop-color="#FFF" />
+    </linearGradient>
+    <mask id="purpleMask13" maskUnits="userSpaceOnUse" x="140" y="250" width="980" height="750" style="mask-type:luminance">
+      <rect x="140" y="250" width="980" height="750" fill="url(#purpleBlend13)" />
+    </mask>
+    <clipPath id="blueSurfaceClip">
+      <use href="#pShape" />
+    </clipPath>
+    <linearGradient id="blueLight0" x1="0" x2="0" y1="260" y2="831" gradientUnits="userSpaceOnUse">
+      <stop offset="0.000000" stop-color="rgb(50.4673%,62.6168%,99.0654%)" />
+      <stop offset="0.070053" stop-color="rgb(50.4854%,63.1068%,99.0291%)" />
+      <stop offset="0.199650" stop-color="rgb(51.2927%,63.1910%,98.9510%)" />
+      <stop offset="0.262697" stop-color="rgb(51.4503%,63.0322%,99.1121%)" />
+      <stop offset="0.346760" stop-color="rgb(51.0136%,62.3724%,99.8431%)" />
+      <stop offset="0.385289" stop-color="rgb(50.9434%,62.2642%,100.0000%)" />
+      <stop offset="0.420315" stop-color="rgb(51.1386%,62.4881%,99.8402%)" />
+      <stop offset="0.483363" stop-color="rgb(51.7606%,63.2598%,99.2049%)" />
+      <stop offset="0.514886" stop-color="rgb(51.9493%,63.4936%,99.0127%)" />
+      <stop offset="0.770578" stop-color="rgb(51.9231%,63.4615%,99.0385%)" />
+      <stop offset="0.788091" stop-color="rgb(52.2596%,63.7500%,99.0385%)" />
+      <stop offset="0.830123" stop-color="rgb(52.3152%,63.8537%,99.0385%)" />
+      <stop offset="0.840630" stop-color="rgb(51.9231%,63.4615%,99.0385%)" />
+      <stop offset="0.851138" stop-color="rgb(50.3154%,62.0977%,99.0383%)" />
+      <stop offset="0.861646" stop-color="rgb(47.9110%,60.0675%,99.0380%)" />
+      <stop offset="0.882662" stop-color="rgb(42.2992%,55.2984%,99.0377%)" />
+      <stop offset="0.893170" stop-color="rgb(39.8856%,53.2048%,99.0379%)" />
+      <stop offset="0.903678" stop-color="rgb(38.2660%,51.7364%,99.0386%)" />
+      <stop offset="0.914186" stop-color="rgb(38.0694%,51.1162%,99.0405%)" />
+      <stop offset="0.924694" stop-color="rgb(38.0871%,51.0960%,99.0431%)" />
+      <stop offset="0.935201" stop-color="rgb(38.6826%,51.3190%,99.0458%)" />
+      <stop offset="0.945709" stop-color="rgb(39.0476%,51.4286%,99.0476%)" />
+      <stop offset="1.000000" stop-color="rgb(39.0476%,51.4286%,99.0476%)" />
+    </linearGradient>
+    <linearGradient id="blueLight1" x1="0" x2="0" y1="260" y2="831" gradientUnits="userSpaceOnUse">
+      <stop offset="0.000000" stop-color="rgb(51.4563%,63.1068%,99.0291%)" />
+      <stop offset="0.052539" stop-color="rgb(50.6265%,63.1213%,99.0059%)" />
+      <stop offset="0.094571" stop-color="rgb(50.4179%,63.0586%,99.1026%)" />
+      <stop offset="0.157618" stop-color="rgb(50.3938%,62.8779%,99.3689%)" />
+      <stop offset="0.245184" stop-color="rgb(50.5882%,62.7451%,99.6078%)" />
+      <stop offset="0.346760" stop-color="rgb(51.3038%,63.2020%,99.1965%)" />
+      <stop offset="0.385289" stop-color="rgb(51.4286%,63.3333%,99.0476%)" />
+      <stop offset="0.409807" stop-color="rgb(51.3079%,63.3232%,98.9947%)" />
+      <stop offset="0.472855" stop-color="rgb(50.5949%,63.1242%,98.9423%)" />
+      <stop offset="0.504378" stop-color="rgb(50.4738%,63.1006%,99.0151%)" />
+      <stop offset="0.514886" stop-color="rgb(50.5704%,63.1611%,99.0670%)" />
+      <stop offset="0.525394" stop-color="rgb(50.8737%,63.3663%,99.1518%)" />
+      <stop offset="0.546410" stop-color="rgb(51.8523%,64.0228%,99.3890%)" />
+      <stop offset="0.556918" stop-color="rgb(52.3853%,64.2017%,99.5236%)" />
+      <stop offset="0.567426" stop-color="rgb(52.7731%,64.2017%,99.6568%)" />
+      <stop offset="0.598949" stop-color="rgb(52.7731%,64.2017%,99.9589%)" />
+      <stop offset="0.609457" stop-color="rgb(52.6403%,64.0524%,99.9971%)" />
+      <stop offset="0.612960" stop-color="rgb(52.3810%,63.8095%,100.0000%)" />
+      <stop offset="0.619965" stop-color="rgb(50.7500%,62.4188%,99.9045%)" />
+      <stop offset="0.630473" stop-color="rgb(45.7876%,58.2711%,99.5311%)" />
+      <stop offset="0.640981" stop-color="rgb(40.6337%,53.9307%,99.1300%)" />
+      <stop offset="0.644483" stop-color="rgb(39.4231%,52.8846%,99.0385%)" />
+      <stop offset="0.651489" stop-color="rgb(39.2732%,52.5109%,99.0278%)" />
+      <stop offset="0.656743" stop-color="rgb(39.8148%,52.7778%,99.0741%)" />
+      <stop offset="0.683012" stop-color="rgb(39.8305%,52.5424%,99.1525%)" />
+      <stop offset="0.726795" stop-color="rgb(38.9831%,52.5424%,99.1525%)" />
+      <stop offset="0.756567" stop-color="rgb(38.2814%,51.8702%,99.1525%)" />
+      <stop offset="0.770578" stop-color="rgb(38.1356%,51.6949%,99.1525%)" />
+      <stop offset="0.788091" stop-color="rgb(38.2505%,51.8333%,99.1556%)" />
+      <stop offset="0.819615" stop-color="rgb(38.7452%,52.3780%,99.1622%)" />
+      <stop offset="0.840630" stop-color="rgb(38.9831%,52.5424%,99.1525%)" />
+      <stop offset="0.861646" stop-color="rgb(38.9882%,52.2806%,99.1152%)" />
+      <stop offset="0.903678" stop-color="rgb(38.8368%,51.4391%,99.0276%)" />
+      <stop offset="0.945709" stop-color="rgb(39.0476%,51.4286%,99.0476%)" />
+      <stop offset="1.000000" stop-color="rgb(39.0476%,51.4286%,99.0476%)" />
+    </linearGradient>
+    <linearGradient id="blueBlend1" x1="530" x2="620" y1="0" y2="0" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#000" />
+      <stop offset="1" stop-color="#FFF" />
+    </linearGradient>
+    <mask id="blueMask1" maskUnits="userSpaceOnUse" x="140" y="250" width="980" height="750" style="mask-type:luminance">
+      <rect x="140" y="250" width="980" height="750" fill="url(#blueBlend1)" />
+    </mask>
+    <linearGradient id="blueLight2" x1="0" x2="0" y1="260" y2="831" gradientUnits="userSpaceOnUse">
+      <stop offset="0.000000" stop-color="rgb(52.4272%,64.0777%,99.0291%)" />
+      <stop offset="0.070053" stop-color="rgb(51.5748%,63.7795%,99.2126%)" />
+      <stop offset="0.220665" stop-color="rgb(51.0294%,63.1989%,99.2283%)" />
+      <stop offset="0.388792" stop-color="rgb(50.9735%,63.1047%,99.0286%)" />
+      <stop offset="0.430823" stop-color="rgb(51.3630%,63.4140%,99.0615%)" />
+      <stop offset="0.472855" stop-color="rgb(51.3630%,63.4990%,99.1235%)" />
+      <stop offset="0.493870" stop-color="rgb(51.3630%,63.1987%,99.1460%)" />
+      <stop offset="0.507881" stop-color="rgb(50.8475%,62.7119%,99.1525%)" />
+      <stop offset="0.525394" stop-color="rgb(49.6851%,61.6621%,99.1501%)" />
+      <stop offset="0.546410" stop-color="rgb(47.6150%,59.8109%,99.1359%)" />
+      <stop offset="0.588441" stop-color="rgb(42.6548%,55.4204%,99.0902%)" />
+      <stop offset="0.609457" stop-color="rgb(40.4900%,53.5324%,99.0685%)" />
+      <stop offset="0.619965" stop-color="rgb(39.7464%,52.9310%,99.0582%)" />
+      <stop offset="0.630473" stop-color="rgb(39.4890%,52.8456%,99.0460%)" />
+      <stop offset="0.644483" stop-color="rgb(39.4231%,52.8846%,99.0385%)" />
+      <stop offset="0.656743" stop-color="rgb(39.8148%,52.7778%,99.0741%)" />
+      <stop offset="0.661996" stop-color="rgb(39.8620%,52.7263%,99.0912%)" />
+      <stop offset="0.683012" stop-color="rgb(39.8305%,52.5424%,99.1525%)" />
+      <stop offset="0.726795" stop-color="rgb(38.9831%,52.5424%,99.1525%)" />
+      <stop offset="0.756567" stop-color="rgb(38.2814%,51.8702%,99.1525%)" />
+      <stop offset="0.770578" stop-color="rgb(38.1356%,51.6949%,99.1525%)" />
+      <stop offset="0.788091" stop-color="rgb(38.2505%,51.8333%,99.1556%)" />
+      <stop offset="0.819615" stop-color="rgb(38.7452%,52.3780%,99.1622%)" />
+      <stop offset="0.840630" stop-color="rgb(38.9831%,52.5424%,99.1525%)" />
+      <stop offset="0.861646" stop-color="rgb(38.9978%,52.2794%,99.1160%)" />
+      <stop offset="0.903678" stop-color="rgb(38.8325%,51.4397%,99.0272%)" />
+      <stop offset="0.945709" stop-color="rgb(38.8350%,51.4563%,99.0291%)" />
+      <stop offset="1.000000" stop-color="rgb(39.0476%,51.4286%,99.0476%)" />
+    </linearGradient>
+    <linearGradient id="blueBlend2" x1="620" x2="700" y1="0" y2="0" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#000" />
+      <stop offset="1" stop-color="#FFF" />
+    </linearGradient>
+    <mask id="blueMask2" maskUnits="userSpaceOnUse" x="140" y="250" width="980" height="750" style="mask-type:luminance">
+      <rect x="140" y="250" width="980" height="750" fill="url(#blueBlend2)" />
+    </mask>
+    <linearGradient id="blueLight3" x1="0" x2="0" y1="260" y2="831" gradientUnits="userSpaceOnUse">
+      <stop offset="0.000000" stop-color="rgb(52.8846%,64.4231%,99.0385%)" />
+      <stop offset="0.042032" stop-color="rgb(52.0813%,63.7788%,99.1630%)" />
+      <stop offset="0.070053" stop-color="rgb(51.7647%,63.5294%,99.2157%)" />
+      <stop offset="0.105079" stop-color="rgb(51.7617%,63.5491%,99.2266%)" />
+      <stop offset="0.189142" stop-color="rgb(52.1311%,63.9164%,99.1999%)" />
+      <stop offset="0.231173" stop-color="rgb(52.1948%,63.9648%,99.2052%)" />
+      <stop offset="0.273205" stop-color="rgb(51.9471%,63.6917%,99.2648%)" />
+      <stop offset="0.357268" stop-color="rgb(50.7883%,62.4422%,99.4920%)" />
+      <stop offset="0.388792" stop-color="rgb(50.4613%,62.1130%,99.5131%)" />
+      <stop offset="0.409807" stop-color="rgb(50.4740%,62.1301%,99.4807%)" />
+      <stop offset="0.462347" stop-color="rgb(50.8339%,62.5281%,99.2975%)" />
+      <stop offset="0.483363" stop-color="rgb(50.6899%,62.4431%,99.2196%)" />
+      <stop offset="0.493870" stop-color="rgb(50.4764%,62.2702%,99.1866%)" />
+      <stop offset="0.507881" stop-color="rgb(50.0000%,61.8644%,99.1525%)" />
+      <stop offset="0.525394" stop-color="rgb(48.9683%,60.9625%,99.1248%)" />
+      <stop offset="0.546410" stop-color="rgb(47.1596%,59.3680%,99.1044%)" />
+      <stop offset="0.598949" stop-color="rgb(41.8773%,54.7023%,99.0815%)" />
+      <stop offset="0.612960" stop-color="rgb(40.7407%,53.7037%,99.0741%)" />
+      <stop offset="0.619965" stop-color="rgb(40.3920%,53.4081%,99.0703%)" />
+      <stop offset="0.644483" stop-color="rgb(40.1869%,53.2710%,99.0654%)" />
+      <stop offset="0.656743" stop-color="rgb(39.8148%,52.7778%,99.0741%)" />
+      <stop offset="0.661996" stop-color="rgb(39.7953%,52.6925%,99.0889%)" />
+      <stop offset="0.683012" stop-color="rgb(39.8305%,52.5424%,99.1525%)" />
+      <stop offset="0.693520" stop-color="rgb(39.6725%,52.5405%,99.1593%)" />
+      <stop offset="0.726795" stop-color="rgb(38.9831%,52.5424%,99.1525%)" />
+      <stop offset="0.756567" stop-color="rgb(38.2814%,51.8702%,99.1525%)" />
+      <stop offset="0.767075" stop-color="rgb(38.1460%,51.7078%,99.1525%)" />
+      <stop offset="0.788091" stop-color="rgb(38.2468%,51.8273%,99.1525%)" />
+      <stop offset="0.819615" stop-color="rgb(38.7336%,52.3593%,99.1525%)" />
+      <stop offset="0.840630" stop-color="rgb(38.9831%,52.5424%,99.1525%)" />
+      <stop offset="0.861646" stop-color="rgb(39.0526%,52.3655%,99.1550%)" />
+      <stop offset="0.914186" stop-color="rgb(38.9379%,51.5701%,99.1393%)" />
+      <stop offset="0.977233" stop-color="rgb(38.4511%,51.2783%,99.0969%)" />
+      <stop offset="0.987741" stop-color="rgb(38.6045%,51.3178%,99.3773%)" />
+      <stop offset="1.000000" stop-color="rgb(39.0476%,51.4286%,100.0000%)" />
+    </linearGradient>
+    <linearGradient id="blueBlend3" x1="700" x2="732" y1="0" y2="0" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#000" />
+      <stop offset="1" stop-color="#FFF" />
+    </linearGradient>
+    <mask id="blueMask3" maskUnits="userSpaceOnUse" x="140" y="250" width="980" height="750" style="mask-type:luminance">
+      <rect x="140" y="250" width="980" height="750" fill="url(#blueBlend3)" />
+    </mask>
+    <linearGradient id="blueLight4" x1="0" x2="0" y1="260" y2="831" gradientUnits="userSpaceOnUse">
+      <stop offset="0.000000" stop-color="rgb(51.4563%,63.1068%,99.0291%)" />
+      <stop offset="0.042032" stop-color="rgb(51.3652%,63.6795%,99.4520%)" />
+      <stop offset="0.070053" stop-color="rgb(51.3725%,63.9216%,99.6078%)" />
+      <stop offset="0.147110" stop-color="rgb(51.8316%,64.1275%,99.4999%)" />
+      <stop offset="0.210158" stop-color="rgb(52.1717%,64.0885%,99.3016%)" />
+      <stop offset="0.245184" stop-color="rgb(52.1569%,63.9216%,99.2157%)" />
+      <stop offset="0.273205" stop-color="rgb(51.9373%,63.6300%,99.1651%)" />
+      <stop offset="0.357268" stop-color="rgb(50.6006%,62.1989%,99.0484%)" />
+      <stop offset="0.388792" stop-color="rgb(50.2113%,61.8052%,99.0334%)" />
+      <stop offset="0.409807" stop-color="rgb(50.1693%,61.7534%,99.0432%)" />
+      <stop offset="0.462347" stop-color="rgb(50.3716%,61.9557%,99.1164%)" />
+      <stop offset="0.483363" stop-color="rgb(50.2120%,61.8478%,99.1442%)" />
+      <stop offset="0.507881" stop-color="rgb(49.5798%,61.3445%,99.1597%)" />
+      <stop offset="0.525394" stop-color="rgb(48.6671%,60.6117%,99.1542%)" />
+      <stop offset="0.546410" stop-color="rgb(47.0850%,59.3508%,99.1332%)" />
+      <stop offset="0.588441" stop-color="rgb(43.3520%,56.3140%,99.0768%)" />
+      <stop offset="0.609457" stop-color="rgb(41.7353%,54.9213%,99.0582%)" />
+      <stop offset="0.619965" stop-color="rgb(41.2371%,54.3849%,99.0609%)" />
+      <stop offset="0.644483" stop-color="rgb(41.0714%,53.5714%,99.1071%)" />
+      <stop offset="0.656743" stop-color="rgb(39.8148%,52.7778%,99.0741%)" />
+      <stop offset="0.661996" stop-color="rgb(39.7181%,52.6663%,99.0853%)" />
+      <stop offset="0.683012" stop-color="rgb(39.8305%,52.5424%,99.1525%)" />
+      <stop offset="0.726795" stop-color="rgb(38.9831%,52.5424%,99.1525%)" />
+      <stop offset="0.756567" stop-color="rgb(38.2814%,51.8702%,99.1525%)" />
+      <stop offset="0.767075" stop-color="rgb(38.1460%,51.7078%,99.1525%)" />
+      <stop offset="0.788091" stop-color="rgb(38.2542%,51.8241%,99.1496%)" />
+      <stop offset="0.830123" stop-color="rgb(38.8997%,52.4834%,99.1457%)" />
+      <stop offset="0.851138" stop-color="rgb(38.9987%,52.5104%,99.1715%)" />
+      <stop offset="0.901926" stop-color="rgb(38.6861%,51.8248%,99.2701%)" />
+      <stop offset="0.945709" stop-color="rgb(38.3784%,51.3514%,98.9189%)" />
+      <stop offset="0.966725" stop-color="rgb(38.3337%,51.0373%,98.9548%)" />
+      <stop offset="0.980736" stop-color="rgb(38.3621%,50.8621%,99.1379%)" />
+      <stop offset="1.000000" stop-color="rgb(38.5965%,50.8772%,100.0000%)" />
+    </linearGradient>
+    <linearGradient id="blueBlend4" x1="732" x2="741" y1="0" y2="0" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#000" />
+      <stop offset="1" stop-color="#FFF" />
+    </linearGradient>
+    <mask id="blueMask4" maskUnits="userSpaceOnUse" x="140" y="250" width="980" height="750" style="mask-type:luminance">
+      <rect x="140" y="250" width="980" height="750" fill="url(#blueBlend4)" />
+    </mask>
+    <linearGradient id="blueLight5" x1="0" x2="0" y1="260" y2="831" gradientUnits="userSpaceOnUse">
+      <stop offset="0.000000" stop-color="rgb(51.9231%,64.4231%,100.0000%)" />
+      <stop offset="0.042032" stop-color="rgb(51.5039%,63.7788%,99.4487%)" />
+      <stop offset="0.070053" stop-color="rgb(51.3725%,63.5294%,99.2157%)" />
+      <stop offset="0.115587" stop-color="rgb(51.5390%,63.5829%,99.1276%)" />
+      <stop offset="0.199650" stop-color="rgb(52.0655%,63.9481%,99.1640%)" />
+      <stop offset="0.252189" stop-color="rgb(52.1435%,63.8839%,99.2239%)" />
+      <stop offset="0.304729" stop-color="rgb(51.8140%,63.2838%,99.3535%)" />
+      <stop offset="0.388792" stop-color="rgb(50.9391%,62.1048%,99.5132%)" />
+      <stop offset="0.451839" stop-color="rgb(50.7360%,62.0912%,99.3446%)" />
+      <stop offset="0.472855" stop-color="rgb(50.5281%,62.0136%,99.2644%)" />
+      <stop offset="0.493870" stop-color="rgb(50.0730%,61.7174%,99.1943%)" />
+      <stop offset="0.504378" stop-color="rgb(49.7196%,61.4532%,99.1671%)" />
+      <stop offset="0.514886" stop-color="rgb(49.2492%,61.0824%,99.1464%)" />
+      <stop offset="0.525394" stop-color="rgb(48.6203%,60.5753%,99.1294%)" />
+      <stop offset="0.546410" stop-color="rgb(47.0068%,59.2553%,99.1039%)" />
+      <stop offset="0.598949" stop-color="rgb(42.4560%,55.4968%,99.0663%)" />
+      <stop offset="0.612960" stop-color="rgb(41.5094%,54.7170%,99.0566%)" />
+      <stop offset="0.619965" stop-color="rgb(41.2675%,54.5376%,99.0551%)" />
+      <stop offset="0.640981" stop-color="rgb(41.5082%,54.7601%,99.0602%)" />
+      <stop offset="0.644483" stop-color="rgb(41.5094%,54.7170%,99.0566%)" />
+      <stop offset="0.656743" stop-color="rgb(41.2060%,53.7688%,98.9950%)" />
+      <stop offset="0.661996" stop-color="rgb(41.1598%,53.7117%,99.0061%)" />
+      <stop offset="0.683012" stop-color="rgb(41.0959%,53.8813%,99.0868%)" />
+      <stop offset="0.725044" stop-color="rgb(41.1126%,53.4433%,99.0868%)" />
+      <stop offset="0.770578" stop-color="rgb(40.1826%,52.9680%,99.0868%)" />
+      <stop offset="0.788091" stop-color="rgb(40.2038%,52.9208%,99.0858%)" />
+      <stop offset="0.830123" stop-color="rgb(40.5814%,52.9449%,99.0845%)" />
+      <stop offset="0.872154" stop-color="rgb(40.7395%,53.1852%,99.1023%)" />
+      <stop offset="0.893170" stop-color="rgb(40.6904%,53.2930%,99.1186%)" />
+      <stop offset="0.914186" stop-color="rgb(40.3866%,53.1546%,99.1418%)" />
+      <stop offset="0.935201" stop-color="rgb(39.7623%,52.7263%,99.1742%)" />
+      <stop offset="0.956217" stop-color="rgb(39.0734%,52.0776%,99.1969%)" />
+      <stop offset="0.980736" stop-color="rgb(38.2470%,50.9960%,99.2032%)" />
+      <stop offset="1.000000" stop-color="rgb(38.1356%,50.0000%,99.1525%)" />
+    </linearGradient>
+    <linearGradient id="blueBlend5" x1="741" x2="747" y1="0" y2="0" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#000" />
+      <stop offset="1" stop-color="#FFF" />
+    </linearGradient>
+    <mask id="blueMask5" maskUnits="userSpaceOnUse" x="140" y="250" width="980" height="750" style="mask-type:luminance">
+      <rect x="140" y="250" width="980" height="750" fill="url(#blueBlend5)" />
+    </mask>
+    <linearGradient id="blueLight6" x1="0" x2="0" y1="260" y2="831" gradientUnits="userSpaceOnUse">
+      <stop offset="0.000000" stop-color="rgb(51.4286%,63.8095%,99.0476%)" />
+      <stop offset="0.070053" stop-color="rgb(51.3725%,63.5294%,99.2157%)" />
+      <stop offset="0.199650" stop-color="rgb(51.7427%,63.9317%,99.2364%)" />
+      <stop offset="0.245184" stop-color="rgb(51.7647%,63.9216%,99.2157%)" />
+      <stop offset="0.283713" stop-color="rgb(51.6434%,63.6825%,99.1710%)" />
+      <stop offset="0.388792" stop-color="rgb(50.9494%,62.5964%,99.0286%)" />
+      <stop offset="0.451839" stop-color="rgb(50.8574%,62.5438%,99.0859%)" />
+      <stop offset="0.472855" stop-color="rgb(50.7154%,62.4545%,99.1161%)" />
+      <stop offset="0.504378" stop-color="rgb(50.1073%,61.9572%,99.1503%)" />
+      <stop offset="0.525394" stop-color="rgb(49.2568%,61.2139%,99.1599%)" />
+      <stop offset="0.546410" stop-color="rgb(47.9985%,60.1048%,99.1631%)" />
+      <stop offset="0.598949" stop-color="rgb(44.4375%,56.9563%,99.1597%)" />
+      <stop offset="0.612960" stop-color="rgb(43.6975%,56.3025%,99.1597%)" />
+      <stop offset="0.619965" stop-color="rgb(43.4907%,56.1171%,99.1487%)" />
+      <stop offset="0.630473" stop-color="rgb(43.4976%,56.1156%,99.1200%)" />
+      <stop offset="0.644483" stop-color="rgb(43.6975%,56.3025%,99.1597%)" />
+      <stop offset="0.656743" stop-color="rgb(44.1048%,56.7686%,99.5633%)" />
+      <stop offset="0.683012" stop-color="rgb(43.5294%,55.6863%,99.2157%)" />
+      <stop offset="0.693520" stop-color="rgb(43.5705%,55.6920%,99.1770%)" />
+      <stop offset="0.726795" stop-color="rgb(43.9216%,56.0784%,99.2157%)" />
+      <stop offset="0.770578" stop-color="rgb(43.5294%,55.2941%,99.6078%)" />
+      <stop offset="0.861646" stop-color="rgb(43.6001%,55.7664%,99.1886%)" />
+      <stop offset="0.882662" stop-color="rgb(43.6646%,55.8001%,99.2033%)" />
+      <stop offset="0.901926" stop-color="rgb(43.5294%,55.6863%,99.2157%)" />
+      <stop offset="0.924694" stop-color="rgb(42.8857%,55.2273%,99.2166%)" />
+      <stop offset="0.945709" stop-color="rgb(41.9608%,54.5098%,99.2157%)" />
+      <stop offset="0.980736" stop-color="rgb(39.8406%,52.5896%,99.2032%)" />
+      <stop offset="1.000000" stop-color="rgb(38.9831%,51.6949%,99.1525%)" />
+    </linearGradient>
+    <linearGradient id="blueBlend6" x1="747" x2="755" y1="0" y2="0" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#000" />
+      <stop offset="1" stop-color="#FFF" />
+    </linearGradient>
+    <mask id="blueMask6" maskUnits="userSpaceOnUse" x="140" y="250" width="980" height="750" style="mask-type:luminance">
+      <rect x="140" y="250" width="980" height="750" fill="url(#blueBlend6)" />
+    </mask>
+    <linearGradient id="blueLight7" x1="0" x2="0" y1="260" y2="831" gradientUnits="userSpaceOnUse">
+      <stop offset="0.000000" stop-color="rgb(52.4272%,64.0777%,99.0291%)" />
+      <stop offset="0.042032" stop-color="rgb(51.6537%,63.6762%,99.1603%)" />
+      <stop offset="0.070053" stop-color="rgb(51.3725%,63.5294%,99.2157%)" />
+      <stop offset="0.115587" stop-color="rgb(51.4877%,63.6045%,99.2398%)" />
+      <stop offset="0.210158" stop-color="rgb(52.0977%,63.9418%,99.2332%)" />
+      <stop offset="0.262697" stop-color="rgb(52.1045%,63.8359%,99.2002%)" />
+      <stop offset="0.385289" stop-color="rgb(50.9709%,62.6214%,99.0291%)" />
+      <stop offset="0.409807" stop-color="rgb(50.8016%,62.6008%,99.0361%)" />
+      <stop offset="0.472855" stop-color="rgb(50.4096%,62.8535%,99.1167%)" />
+      <stop offset="0.504378" stop-color="rgb(50.0525%,62.7468%,99.1504%)" />
+      <stop offset="0.535902" stop-color="rgb(49.4235%,62.2056%,99.1607%)" />
+      <stop offset="0.612960" stop-color="rgb(47.4576%,60.1695%,99.1525%)" />
+      <stop offset="0.619965" stop-color="rgb(47.3749%,60.1001%,99.1412%)" />
+      <stop offset="0.640981" stop-color="rgb(47.4423%,60.1848%,99.1266%)" />
+      <stop offset="0.651489" stop-color="rgb(47.5823%,60.0281%,99.4109%)" />
+      <stop offset="0.656743" stop-color="rgb(47.5983%,59.8253%,99.5633%)" />
+      <stop offset="0.661996" stop-color="rgb(47.4388%,59.5407%,99.5368%)" />
+      <stop offset="0.672504" stop-color="rgb(46.9719%,58.8624%,99.3610%)" />
+      <stop offset="0.683012" stop-color="rgb(46.6667%,58.4314%,99.2157%)" />
+      <stop offset="0.693520" stop-color="rgb(46.6854%,58.4101%,99.1856%)" />
+      <stop offset="0.726795" stop-color="rgb(47.0588%,58.8235%,99.2157%)" />
+      <stop offset="0.770578" stop-color="rgb(46.2745%,58.0392%,99.2157%)" />
+      <stop offset="0.788091" stop-color="rgb(46.2920%,58.1422%,99.2157%)" />
+      <stop offset="0.840630" stop-color="rgb(46.6667%,58.8235%,99.2157%)" />
+      <stop offset="0.872154" stop-color="rgb(46.7770%,58.9561%,99.1863%)" />
+      <stop offset="0.903678" stop-color="rgb(46.6455%,58.8026%,99.2236%)" />
+      <stop offset="0.924694" stop-color="rgb(46.1894%,58.3610%,99.4440%)" />
+      <stop offset="0.945709" stop-color="rgb(45.4902%,57.6471%,99.6078%)" />
+      <stop offset="0.980736" stop-color="rgb(43.8247%,55.7769%,99.2032%)" />
+      <stop offset="1.000000" stop-color="rgb(43.2203%,55.0847%,99.1525%)" />
+    </linearGradient>
+    <linearGradient id="blueBlend7" x1="755" x2="765" y1="0" y2="0" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#000" />
+      <stop offset="1" stop-color="#FFF" />
+    </linearGradient>
+    <mask id="blueMask7" maskUnits="userSpaceOnUse" x="140" y="250" width="980" height="750" style="mask-type:luminance">
+      <rect x="140" y="250" width="980" height="750" fill="url(#blueBlend7)" />
+    </mask>
+    <linearGradient id="blueLight8" x1="0" x2="0" y1="260" y2="831" gradientUnits="userSpaceOnUse">
+      <stop offset="0.000000" stop-color="rgb(51.7857%,64.2857%,99.1071%)" />
+      <stop offset="0.042032" stop-color="rgb(51.4630%,63.7219%,99.1834%)" />
+      <stop offset="0.070053" stop-color="rgb(51.3725%,63.5294%,99.2157%)" />
+      <stop offset="0.115587" stop-color="rgb(51.5529%,63.6755%,99.2184%)" />
+      <stop offset="0.199650" stop-color="rgb(52.0704%,64.2167%,99.1959%)" />
+      <stop offset="0.252189" stop-color="rgb(52.1429%,64.2985%,99.2239%)" />
+      <stop offset="0.294221" stop-color="rgb(51.8879%,64.0139%,99.3222%)" />
+      <stop offset="0.385289" stop-color="rgb(50.9709%,63.1068%,99.5146%)" />
+      <stop offset="0.462347" stop-color="rgb(50.2248%,62.8012%,99.2913%)" />
+      <stop offset="0.504378" stop-color="rgb(50.0033%,62.7180%,99.1586%)" />
+      <stop offset="0.535902" stop-color="rgb(50.1065%,62.6857%,99.1286%)" />
+      <stop offset="0.612960" stop-color="rgb(50.8475%,62.7119%,99.1525%)" />
+      <stop offset="0.640981" stop-color="rgb(50.8618%,62.7011%,99.1542%)" />
+      <stop offset="0.656743" stop-color="rgb(50.6550%,62.8821%,99.1266%)" />
+      <stop offset="0.683012" stop-color="rgb(50.1961%,61.9608%,99.6078%)" />
+      <stop offset="0.726795" stop-color="rgb(50.1961%,61.5686%,99.2157%)" />
+      <stop offset="0.767075" stop-color="rgb(49.4441%,61.1915%,99.2145%)" />
+      <stop offset="0.777583" stop-color="rgb(49.3727%,61.1569%,99.2157%)" />
+      <stop offset="0.935201" stop-color="rgb(49.4125%,61.1934%,99.2166%)" />
+      <stop offset="0.977233" stop-color="rgb(49.4604%,61.0141%,99.2068%)" />
+      <stop offset="0.987741" stop-color="rgb(49.1071%,60.7333%,99.1889%)" />
+      <stop offset="1.000000" stop-color="rgb(48.3051%,60.1695%,99.1525%)" />
+    </linearGradient>
+    <linearGradient id="blueBlend8" x1="765" x2="780" y1="0" y2="0" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#000" />
+      <stop offset="1" stop-color="#FFF" />
+    </linearGradient>
+    <mask id="blueMask8" maskUnits="userSpaceOnUse" x="140" y="250" width="980" height="750" style="mask-type:luminance">
+      <rect x="140" y="250" width="980" height="750" fill="url(#blueBlend8)" />
+    </mask>
+    <linearGradient id="blueLight9" x1="0" x2="0" y1="260" y2="831" gradientUnits="userSpaceOnUse">
+      <stop offset="0.000000" stop-color="rgb(51.7986%,64.0288%,99.2806%)" />
+      <stop offset="0.042032" stop-color="rgb(51.4669%,63.6455%,99.5267%)" />
+      <stop offset="0.070053" stop-color="rgb(51.3725%,63.5294%,99.6078%)" />
+      <stop offset="0.210158" stop-color="rgb(52.1120%,64.3032%,99.2961%)" />
+      <stop offset="0.262697" stop-color="rgb(52.1045%,64.2141%,99.1835%)" />
+      <stop offset="0.357268" stop-color="rgb(51.2357%,62.8938%,99.0446%)" />
+      <stop offset="0.385289" stop-color="rgb(50.9709%,62.6214%,99.0291%)" />
+      <stop offset="0.430823" stop-color="rgb(50.4870%,62.4960%,99.0575%)" />
+      <stop offset="0.462347" stop-color="rgb(50.1578%,62.5447%,99.1018%)" />
+      <stop offset="0.493870" stop-color="rgb(49.9885%,62.6547%,99.1418%)" />
+      <stop offset="0.514886" stop-color="rgb(50.0356%,62.7451%,99.1559%)" />
+      <stop offset="0.535902" stop-color="rgb(50.2772%,62.8886%,99.1607%)" />
+      <stop offset="0.612960" stop-color="rgb(51.6949%,63.5593%,99.1525%)" />
+      <stop offset="0.644483" stop-color="rgb(51.6949%,63.5593%,99.1525%)" />
+      <stop offset="0.656743" stop-color="rgb(51.9651%,63.7555%,99.1266%)" />
+      <stop offset="0.683012" stop-color="rgb(51.7647%,63.5294%,99.2157%)" />
+      <stop offset="0.714536" stop-color="rgb(51.4551%,63.2189%,98.8879%)" />
+      <stop offset="0.735552" stop-color="rgb(51.3475%,63.1122%,98.8595%)" />
+      <stop offset="0.777583" stop-color="rgb(51.3725%,63.1373%,99.2352%)" />
+      <stop offset="0.893170" stop-color="rgb(51.3485%,63.1132%,99.2157%)" />
+      <stop offset="0.945709" stop-color="rgb(51.7647%,63.5294%,99.2157%)" />
+      <stop offset="0.966725" stop-color="rgb(51.8861%,63.4958%,99.2129%)" />
+      <stop offset="0.980736" stop-color="rgb(51.7928%,63.3466%,99.2032%)" />
+      <stop offset="0.987741" stop-color="rgb(51.5403%,63.1665%,99.1889%)" />
+      <stop offset="1.000000" stop-color="rgb(50.8475%,62.7119%,99.1525%)" />
+    </linearGradient>
+    <linearGradient id="blueBlend9" x1="780" x2="800" y1="0" y2="0" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#000" />
+      <stop offset="1" stop-color="#FFF" />
+    </linearGradient>
+    <mask id="blueMask9" maskUnits="userSpaceOnUse" x="140" y="250" width="980" height="750" style="mask-type:luminance">
+      <rect x="140" y="250" width="980" height="750" fill="url(#blueBlend9)" />
+    </mask>
+    <linearGradient id="blueLight10" x1="0" x2="0" y1="260" y2="831" gradientUnits="userSpaceOnUse">
+      <stop offset="0.000000" stop-color="rgb(51.6340%,64.0523%,99.3464%)" />
+      <stop offset="0.042032" stop-color="rgb(51.4180%,63.6525%,99.2545%)" />
+      <stop offset="0.070053" stop-color="rgb(51.3725%,63.5294%,99.2157%)" />
+      <stop offset="0.105079" stop-color="rgb(51.5143%,63.6622%,99.2059%)" />
+      <stop offset="0.199650" stop-color="rgb(52.0989%,64.3133%,99.2206%)" />
+      <stop offset="0.245184" stop-color="rgb(52.1569%,64.3137%,99.2157%)" />
+      <stop offset="0.283713" stop-color="rgb(51.8873%,63.8482%,99.1910%)" />
+      <stop offset="0.367776" stop-color="rgb(50.8233%,62.1926%,99.1090%)" />
+      <stop offset="0.399299" stop-color="rgb(50.5853%,61.8878%,99.0792%)" />
+      <stop offset="0.441331" stop-color="rgb(50.3272%,61.7480%,98.9993%)" />
+      <stop offset="0.483363" stop-color="rgb(50.2976%,61.8973%,98.9708%)" />
+      <stop offset="0.514886" stop-color="rgb(50.5848%,62.2363%,99.0648%)" />
+      <stop offset="0.535902" stop-color="rgb(51.0590%,62.6879%,99.2473%)" />
+      <stop offset="0.598949" stop-color="rgb(53.0186%,64.4773%,99.9362%)" />
+      <stop offset="0.619965" stop-color="rgb(53.3900%,64.8035%,99.9475%)" />
+      <stop offset="0.644483" stop-color="rgb(53.0201%,64.4295%,99.3289%)" />
+      <stop offset="0.656743" stop-color="rgb(52.6971%,64.3154%,99.1701%)" />
+      <stop offset="0.683012" stop-color="rgb(52.1569%,63.9216%,99.2157%)" />
+      <stop offset="0.726795" stop-color="rgb(52.1569%,63.9216%,99.2157%)" />
+      <stop offset="0.756567" stop-color="rgb(51.8681%,63.9439%,99.5267%)" />
+      <stop offset="0.777583" stop-color="rgb(51.7433%,63.8910%,99.5987%)" />
+      <stop offset="0.840630" stop-color="rgb(51.7647%,63.5294%,99.2157%)" />
+      <stop offset="0.901926" stop-color="rgb(52.1569%,63.9216%,99.2157%)" />
+      <stop offset="0.945709" stop-color="rgb(52.1569%,63.9216%,99.2157%)" />
+      <stop offset="0.977233" stop-color="rgb(52.7774%,64.0305%,99.2073%)" />
+      <stop offset="0.987741" stop-color="rgb(52.6976%,63.8168%,99.1676%)" />
+      <stop offset="1.000000" stop-color="rgb(52.2936%,63.3028%,99.0826%)" />
+    </linearGradient>
+    <linearGradient id="blueBlend10" x1="800" x2="840" y1="0" y2="0" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#000" />
+      <stop offset="1" stop-color="#FFF" />
+    </linearGradient>
+    <mask id="blueMask10" maskUnits="userSpaceOnUse" x="140" y="250" width="980" height="750" style="mask-type:luminance">
+      <rect x="140" y="250" width="980" height="750" fill="url(#blueBlend10)" />
+    </mask>
+    <linearGradient id="blueLight11" x1="0" x2="0" y1="260" y2="831" gradientUnits="userSpaceOnUse">
+      <stop offset="0.000000" stop-color="rgb(51.4286%,63.8095%,99.0476%)" />
+      <stop offset="0.070053" stop-color="rgb(51.3725%,63.5294%,99.2157%)" />
+      <stop offset="0.231173" stop-color="rgb(51.7442%,63.9002%,99.2164%)" />
+      <stop offset="0.336252" stop-color="rgb(51.8208%,63.9668%,99.2185%)" />
+      <stop offset="0.399299" stop-color="rgb(51.7229%,63.8906%,99.2105%)" />
+      <stop offset="0.507881" stop-color="rgb(51.2295%,63.5246%,99.1803%)" />
+      <stop offset="0.612960" stop-color="rgb(51.7647%,63.9216%,99.6078%)" />
+      <stop offset="0.644483" stop-color="rgb(51.7647%,63.9216%,99.2157%)" />
+      <stop offset="0.656743" stop-color="rgb(51.7647%,63.9216%,99.2157%)" />
+      <stop offset="0.672504" stop-color="rgb(51.7859%,63.6630%,99.2157%)" />
+      <stop offset="0.693520" stop-color="rgb(51.6824%,63.4954%,99.2157%)" />
+      <stop offset="0.725044" stop-color="rgb(51.3812%,63.5290%,99.2157%)" />
+      <stop offset="0.756567" stop-color="rgb(51.3366%,63.5071%,99.2157%)" />
+      <stop offset="0.830123" stop-color="rgb(51.6775%,63.8570%,99.2157%)" />
+      <stop offset="0.893170" stop-color="rgb(52.4672%,64.2744%,99.2157%)" />
+      <stop offset="0.935201" stop-color="rgb(52.6856%,64.5346%,99.2293%)" />
+      <stop offset="0.945709" stop-color="rgb(52.5490%,64.3137%,99.2157%)" />
+      <stop offset="0.956217" stop-color="rgb(52.1669%,63.6458%,99.1730%)" />
+      <stop offset="0.977233" stop-color="rgb(51.0826%,61.7501%,99.0520%)" />
+      <stop offset="0.980736" stop-color="rgb(50.9615%,61.5385%,99.0385%)" />
+      <stop offset="0.987741" stop-color="rgb(50.8786%,61.3934%,99.0292%)" />
+      <stop offset="1.000000" stop-color="rgb(50.9615%,61.5385%,99.0385%)" />
+    </linearGradient>
+    <linearGradient id="blueBlend11" x1="840" x2="910" y1="0" y2="0" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#000" />
+      <stop offset="1" stop-color="#FFF" />
+    </linearGradient>
+    <mask id="blueMask11" maskUnits="userSpaceOnUse" x="140" y="250" width="980" height="750" style="mask-type:luminance">
+      <rect x="140" y="250" width="980" height="750" fill="url(#blueBlend11)" />
+    </mask>
+    <linearGradient id="blueLight12" x1="0" x2="0" y1="260" y2="831" gradientUnits="userSpaceOnUse">
+      <stop offset="0.000000" stop-color="rgb(51.4286%,63.8095%,99.0476%)" />
+      <stop offset="0.070053" stop-color="rgb(51.4286%,63.8095%,99.0476%)" />
+      <stop offset="0.252189" stop-color="rgb(50.9816%,63.5233%,99.2191%)" />
+      <stop offset="0.385289" stop-color="rgb(51.3725%,63.5294%,99.2157%)" />
+      <stop offset="0.507881" stop-color="rgb(51.3725%,63.9216%,99.2157%)" />
+      <stop offset="0.619965" stop-color="rgb(51.3725%,63.5172%,99.2157%)" />
+      <stop offset="0.767075" stop-color="rgb(51.3623%,63.5294%,99.2157%)" />
+      <stop offset="0.819615" stop-color="rgb(51.8716%,63.7649%,99.2230%)" />
+      <stop offset="0.840630" stop-color="rgb(51.7647%,63.5294%,99.2157%)" />
+      <stop offset="0.851138" stop-color="rgb(51.4668%,63.1636%,99.2060%)" />
+      <stop offset="0.882662" stop-color="rgb(49.8645%,61.3387%,99.1577%)" />
+      <stop offset="0.893170" stop-color="rgb(49.3885%,60.8129%,99.1386%)" />
+      <stop offset="0.903678" stop-color="rgb(49.0897%,60.4926%,99.1188%)" />
+      <stop offset="0.914186" stop-color="rgb(49.0491%,60.4921%,99.0661%)" />
+      <stop offset="0.945709" stop-color="rgb(49.5146%,61.1650%,99.0291%)" />
+      <stop offset="0.966725" stop-color="rgb(49.5377%,61.0454%,99.6957%)" />
+      <stop offset="0.980736" stop-color="rgb(49.5238%,60.9524%,100.0000%)" />
+      <stop offset="0.987741" stop-color="rgb(49.5218%,60.9984%,99.7899%)" />
+      <stop offset="1.000000" stop-color="rgb(49.5146%,61.1650%,99.0291%)" />
+    </linearGradient>
+    <linearGradient id="blueBlend12" x1="910" x2="1000" y1="0" y2="0" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#000" />
+      <stop offset="1" stop-color="#FFF" />
+    </linearGradient>
+    <mask id="blueMask12" maskUnits="userSpaceOnUse" x="140" y="250" width="980" height="750" style="mask-type:luminance">
+      <rect x="140" y="250" width="980" height="750" fill="url(#blueBlend12)" />
+    </mask>
+    <linearGradient id="blueLight13" x1="0" x2="0" y1="260" y2="831" gradientUnits="userSpaceOnUse">
+      <stop offset="0.000000" stop-color="rgb(51.4019%,63.5514%,99.0654%)" />
+      <stop offset="0.052539" stop-color="rgb(51.8493%,64.3243%,99.0404%)" />
+      <stop offset="0.084063" stop-color="rgb(51.9460%,64.4149%,99.0406%)" />
+      <stop offset="0.178634" stop-color="rgb(51.9961%,63.9461%,99.0748%)" />
+      <stop offset="0.245184" stop-color="rgb(51.8182%,63.6364%,99.0909%)" />
+      <stop offset="0.283713" stop-color="rgb(51.5298%,63.6561%,99.0817%)" />
+      <stop offset="0.378284" stop-color="rgb(50.5282%,63.8299%,99.0465%)" />
+      <stop offset="0.409807" stop-color="rgb(50.3181%,63.6566%,99.0622%)" />
+      <stop offset="0.462347" stop-color="rgb(50.0747%,63.0915%,99.1224%)" />
+      <stop offset="0.514886" stop-color="rgb(50.0061%,62.6889%,99.1516%)" />
+      <stop offset="0.612960" stop-color="rgb(50.4762%,62.8571%,99.0476%)" />
+      <stop offset="0.644483" stop-color="rgb(50.0000%,62.5000%,99.0385%)" />
+      <stop offset="0.656743" stop-color="rgb(50.4673%,62.6168%,99.0654%)" />
+      <stop offset="0.683012" stop-color="rgb(50.0000%,62.2642%,99.0566%)" />
+      <stop offset="0.704028" stop-color="rgb(49.9330%,62.1851%,99.0575%)" />
+      <stop offset="0.726795" stop-color="rgb(50.0000%,62.2642%,99.0566%)" />
+      <stop offset="0.756567" stop-color="rgb(50.3574%,62.9398%,99.0364%)" />
+      <stop offset="0.770578" stop-color="rgb(50.4854%,63.1068%,99.0291%)" />
+      <stop offset="0.788091" stop-color="rgb(50.5636%,62.9832%,99.0265%)" />
+      <stop offset="0.830123" stop-color="rgb(50.5748%,62.2840%,99.0283%)" />
+      <stop offset="0.851138" stop-color="rgb(50.3206%,62.0169%,99.0304%)" />
+      <stop offset="0.893170" stop-color="rgb(49.2257%,61.6182%,99.0380%)" />
+      <stop offset="0.924694" stop-color="rgb(48.7111%,61.3491%,99.0316%)" />
+      <stop offset="0.945709" stop-color="rgb(48.5437%,61.1650%,99.0291%)" />
+      <stop offset="0.980736" stop-color="rgb(48.5981%,60.7477%,99.0654%)" />
+      <stop offset="1.000000" stop-color="rgb(48.5981%,60.7477%,99.0654%)" />
+    </linearGradient>
+    <linearGradient id="blueBlend13" x1="1000" x2="1111" y1="0" y2="0" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#000" />
+      <stop offset="1" stop-color="#FFF" />
+    </linearGradient>
+    <mask id="blueMask13" maskUnits="userSpaceOnUse" x="140" y="250" width="980" height="750" style="mask-type:luminance">
+      <rect x="140" y="250" width="980" height="750" fill="url(#blueBlend13)" />
+    </mask>
+    <clipPath id="clipFold">
+      <use href="#foldShape" />
+    </clipPath>
+  </defs>
+  <g id="up-mark">
+    <g id="blue-p" clip-path="url(#blueSurfaceClip)">
+      <rect x="140" y="250" width="980" height="750" fill="url(#blueLight0)" />
+      <rect x="140" y="250" width="980" height="750" fill="url(#blueLight1)" mask="url(#blueMask1)" />
+      <rect x="140" y="250" width="980" height="750" fill="url(#blueLight2)" mask="url(#blueMask2)" />
+      <rect x="140" y="250" width="980" height="750" fill="url(#blueLight3)" mask="url(#blueMask3)" />
+      <rect x="140" y="250" width="980" height="750" fill="url(#blueLight4)" mask="url(#blueMask4)" />
+      <rect x="140" y="250" width="980" height="750" fill="url(#blueLight5)" mask="url(#blueMask5)" />
+      <rect x="140" y="250" width="980" height="750" fill="url(#blueLight6)" mask="url(#blueMask6)" />
+      <rect x="140" y="250" width="980" height="750" fill="url(#blueLight7)" mask="url(#blueMask7)" />
+      <rect x="140" y="250" width="980" height="750" fill="url(#blueLight8)" mask="url(#blueMask8)" />
+      <rect x="140" y="250" width="980" height="750" fill="url(#blueLight9)" mask="url(#blueMask9)" />
+      <rect x="140" y="250" width="980" height="750" fill="url(#blueLight10)" mask="url(#blueMask10)" />
+      <rect x="140" y="250" width="980" height="750" fill="url(#blueLight11)" mask="url(#blueMask11)" />
+      <rect x="140" y="250" width="980" height="750" fill="url(#blueLight12)" mask="url(#blueMask12)" />
+      <rect x="140" y="250" width="980" height="750" fill="url(#blueLight13)" mask="url(#blueMask13)" />
+      <path d="M1111.2 548 C1111.2 697.6 985.6 831 826 831 H710" stroke="#5879FF" stroke-width="2.3" opacity=".47" clip-path="url(#clipP)" />
+    </g>
+    <g id="pink-u" clip-path="url(#pinkSurfaceClip)">
+      <rect x="140" y="250" width="980" height="750" fill="url(#pinkLight0)" />
+      <rect x="140" y="250" width="980" height="750" fill="url(#pinkLight1)" mask="url(#pinkMask1)" />
+      <rect x="140" y="250" width="980" height="750" fill="url(#pinkLight2)" mask="url(#pinkMask2)" />
+      <rect x="140" y="250" width="980" height="750" fill="url(#pinkLight3)" mask="url(#pinkMask3)" />
+      <rect x="140" y="250" width="980" height="750" fill="url(#pinkLight4)" mask="url(#pinkMask4)" />
+      <rect x="140" y="250" width="980" height="750" fill="url(#pinkLight5)" mask="url(#pinkMask5)" />
+      <rect x="140" y="250" width="980" height="750" fill="url(#pinkLight6)" mask="url(#pinkMask6)" />
+      <rect x="140" y="250" width="980" height="750" fill="url(#pinkLight7)" mask="url(#pinkMask7)" />
+      <rect x="140" y="250" width="980" height="750" fill="url(#pinkLight8)" mask="url(#pinkMask8)" />
+      <rect x="140" y="250" width="980" height="750" fill="url(#pinkLight9)" mask="url(#pinkMask9)" />
+      <rect x="140" y="250" width="980" height="750" fill="url(#pinkLight10)" mask="url(#pinkMask10)" />
+      <path d="M529 715.5 V857 C529 935.6 478 989 409 989" stroke="#FFE3F1" stroke-width="1.6" opacity=".3" />
+    </g>
+    <g id="purple-fold" clip-path="url(#purpleSurfaceClip)">
+      <rect x="140" y="250" width="980" height="750" fill="url(#purpleLight0)" />
+      <rect x="140" y="250" width="980" height="750" fill="url(#purpleLight1)" mask="url(#purpleMask1)" />
+      <rect x="140" y="250" width="980" height="750" fill="url(#purpleLight2)" mask="url(#purpleMask2)" />
+      <rect x="140" y="250" width="980" height="750" fill="url(#purpleLight3)" mask="url(#purpleMask3)" />
+      <rect x="140" y="250" width="980" height="750" fill="url(#purpleLight4)" mask="url(#purpleMask4)" />
+      <rect x="140" y="250" width="980" height="750" fill="url(#purpleLight5)" mask="url(#purpleMask5)" />
+      <rect x="140" y="250" width="980" height="750" fill="url(#purpleLight6)" mask="url(#purpleMask6)" />
+      <rect x="140" y="250" width="980" height="750" fill="url(#purpleLight7)" mask="url(#purpleMask7)" />
+      <rect x="140" y="250" width="980" height="750" fill="url(#purpleLight8)" mask="url(#purpleMask8)" />
+      <rect x="140" y="250" width="980" height="750" fill="url(#purpleLight9)" mask="url(#purpleMask9)" />
+      <rect x="140" y="250" width="980" height="750" fill="url(#purpleLight10)" mask="url(#purpleMask10)" />
+      <rect x="140" y="250" width="980" height="750" fill="url(#purpleLight11)" mask="url(#purpleMask11)" />
+      <rect x="140" y="250" width="980" height="750" fill="url(#purpleLight12)" mask="url(#purpleMask12)" />
+      <rect x="140" y="250" width="980" height="750" fill="url(#purpleLight13)" mask="url(#purpleMask13)" />
+      <path d="M741 486 V768 C741 843.1 668.21 990.5 465.8 990.5" stroke="#B96AEE" stroke-width="2.5" opacity=".65" clip-path="url(#clipFold)" />
+    </g>
+  </g>
+</svg>

@@ -155,6 +155,7 @@ app.get('/api/covers/:id', async (c) => {
   if (!row?.cover_url) return new Response(null, { status: 404 });
   const url = new URL(row.cover_url.replace(/^http:/, 'https:'));
   if (!/(^|\.)hdslb\.com$/.test(url.hostname)) return new Response(null, { status: 403 });
+  if (c.req.query('variant') === 'bubble') url.pathname=url.pathname.replace(/@.*$/,'')+'@256w_256h_1c.webp';
   if (c.req.query('variant') === 'thumb') url.pathname += '@128w_128h_1c.webp';
   const upstream = await fetch(url, { headers: { referer:'https://member.bilibili.com/', 'user-agent':'Mozilla/5.0' }, cf: { cacheTtl: 86400, cacheEverything: true } });
   if (!upstream.ok) return new Response(null, { status: 502 });
@@ -211,7 +212,7 @@ registerAi(app,readDeepSeekKey);
 app.get('/api/settings/deepseek/status', async (c) => {
   const setting = await c.env.DB.prepare("SELECT value_json,updated_at FROM settings WHERE key='deepseek_status'").first<{ value_json:string; updated_at:string }>();
   const value = setting ? JSON.parse(setting.value_json) : {};
-  return c.json({ ok:true, configured:Boolean(await readDeepSeekKey(c.env)), last4:value.last4 ?? null, lastTestAt:value.lastTestAt ?? null, model:await aiModel(c.env),models:AI_MODELS,effort:await aiEffort(c.env),dailyBudget:Number(c.env.AI_DAILY_CNY_LIMIT)||1,monthlyBudget:Number(c.env.AI_MONTHLY_CNY_LIMIT)||5 });
+  return c.json({ ok:true, configured:Boolean(await readDeepSeekKey(c.env)), maskedKey:await readDeepSeekKey(c.env).then(key=>key?key.slice(0,4)+'********'+key.slice(-4):null), last4:value.last4 ?? null, lastTestAt:value.lastTestAt ?? null, model:await aiModel(c.env),models:AI_MODELS,effort:await aiEffort(c.env),dailyBudget:Number(c.env.AI_DAILY_CNY_LIMIT)||1,monthlyBudget:Number(c.env.AI_MONTHLY_CNY_LIMIT)||5 });
 });
 app.put('/api/settings/deepseek', zValidator('json', z.object({ apiKey:z.string().min(8).max(256).optional(), model:z.enum(AI_MODELS).optional(),effort:z.enum(['off','low','high','max']).optional() })), async (c) => {
   if (!c.env.MASTER_ENCRYPTION_KEY_BASE64) return jsonError(c,503,'encryption_not_configured','请先配置本地主加密密钥');

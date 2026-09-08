@@ -1,17 +1,14 @@
-import {ConnectAccount} from './ConnectAccount';
-import {Preferences} from './Preferences';
+import {useState} from 'react';
 import {useQuery,useQueryClient} from '@tanstack/react-query';
-import {useState,useEffect} from 'react';
-import {UserRound,ArrowLeftRight,ExternalLink} from 'lucide-react';
+import {UserRound,Plus,Check,ArrowLeftRight} from 'lucide-react';
 import {request} from '../format';
-import {Sheet,Segments} from './ui';
-import {navigate} from './route';
+import {ConnectAccount} from './ConnectAccount';
+import {Sheet,AnimatePresence} from './ui';
 type Profile={uid:string;name:string;avatar:string};
-export function Account(){
- const client=useQueryClient(),[open,setOpen]=useState(false),[error,setError]=useState(''),[connecting,setConnecting]=useState(false);
-
- const q=useQuery({queryKey:['account-profile'],queryFn:()=>request<{profile:Profile|null;accounts:Profile[]}>('/api/account/profile'),staleTime:300000});const p=q.data?.profile;
- const avatar=p?.avatar?<img src={p.avatar} alt="" referrerPolicy="no-referrer"/>:<UserRound/>;
- async function change(uid:string){try{await request('/api/account/switch',{method:'POST',body:JSON.stringify({uid})});await client.invalidateQueries();setOpen(false);navigate('overview');}catch(e){setError((e as Error).message)}}
- return <><button className="s-sidebar-footer" aria-label="UP主账号" onClick={()=>{setConnecting(false);setOpen(true)}}><span className="s-avatar">{avatar}</span><div><b>{p?.name??(q.isPending?'读取账号…':'连接UP主账号')}</b><small>{p?'UID '+p.uid:'点击管理账号连接'}</small></div></button>{open&&<Sheet wide title={p?.name??'UP主账号'} subtitle={p?'UID '+p.uid:'扫码连接后显示真实UP主资料'} close={()=>setOpen(false)}>{connecting?<ConnectAccount done={()=>{setConnecting(false);setOpen(false);navigate('overview')}}/>:<><div className="s-account-profile"><span className="s-avatar">{avatar}</span><div><b>{p?.name??'尚未读取UP主资料'}</b><p className="s-muted">{p?'已连接的哔哩哔哩账号':'昵称和头像由登录账号提供'}</p></div></div><div className="s-workspace-actions">{q.data?.accounts.filter(a=>a.uid!==p?.uid).map(a=><button key={a.uid} onClick={()=>change(a.uid)}><ArrowLeftRight/><span>切换至 {a.name}<small>UID {a.uid}</small></span></button>)}<button onClick={()=>{setConnecting(true);}}><ArrowLeftRight/><span><b>切换 / 添加账号</b><small>使用目标UP主扫码登录，历史按账号独立保存</small></span></button></div></>} {(error||q.error)&&<p role="alert" className="s-error">{error||q.error?.message}</p>}</Sheet>}</>;
+function useProfile(){return useQuery({queryKey:['account-profile'],queryFn:()=>request<{profile:Profile|null;accounts:Profile[]}>('/api/account/profile'),staleTime:300000})}
+function Avatar({profile}:{profile:Profile|null|undefined}){return <span className="s-avatar">{profile?.avatar?<img src={profile.avatar} alt="" referrerPolicy="no-referrer"/>:<UserRound/>}</span>}
+export function Account(){const q=useProfile(),p=q.data?.profile;return <div className="s-sidebar-footer" aria-label="UP主信息"><Avatar profile={p}/><div><b>{p?.name??(q.isPending?'读取账号…':'未连接账号')}</b><small>{p?'UID '+p.uid:'在设置中连接账号'}</small></div></div>}
+export function AccountSettings(){const q=useProfile(),client=useQueryClient(),[connecting,setConnecting]=useState(false),[switching,setSwitching]=useState(''),[error,setError]=useState('');const p=q.data?.profile,accounts=q.data?.accounts??[];const list=p&&!accounts.some(a=>a.uid===p.uid)?[p,...accounts]:accounts;
+ async function change(uid:string){setSwitching(uid);setError('');try{await request('/api/account/switch',{method:'POST',body:JSON.stringify({uid})});await client.cancelQueries();client.removeQueries({predicate:q=>!['account-profile','local-status','deepseek-status','ai-status'].includes(String(q.queryKey[0]))});await client.invalidateQueries();}catch(e){setError((e as Error).message)}finally{setSwitching('')}}
+ return <><div className="s-section-head"><h2>哔哩哔哩账号</h2><button className="s-secondary" onClick={()=>setConnecting(true)}><Plus/> 添加账号</button></div><div className="s-account-list">{list.map(a=><div className="s-account-row" key={a.uid}><Avatar profile={a}/><div><b>{a.name}</b><small>UID {a.uid}</small></div>{a.uid===p?.uid?<span className="s-current-account"><Check/> 当前账号</span>:<button className="s-secondary" disabled={!!switching} onClick={()=>change(a.uid)}><ArrowLeftRight/>{switching===a.uid?'切换中…':'切换账号'}</button>}</div>)}</div>{!list.length&&<p className="s-muted">添加账号后开始同步创作数据。</p>}{(error||q.error)&&<p role="alert" className="s-error">{error||q.error?.message}</p>}<AnimatePresence>{connecting&&<Sheet title="添加哔哩哔哩账号" close={()=>setConnecting(false)}><ConnectAccount done={()=>setConnecting(false)}/></Sheet>}</AnimatePresence></>;
 }

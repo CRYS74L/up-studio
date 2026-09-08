@@ -66,7 +66,7 @@ test('a video opens a separate detail with audience and retention tabs',async({p
  await page.getByRole('button',{name:'观众',exact:true}).click();
  await expect(page.getByRole('heading',{name:'地域分布'})).toBeVisible();
  await expect(page.getByText('上海',{exact:true})).toBeVisible();
- await page.getByRole('button',{name:'留存与趋势',exact:true}).click();
+ await page.getByRole('button',{name:'表现',exact:true}).click();
  await expect(page.getByRole('heading',{name:'观众留存',exact:true})).toBeVisible();
  await page.getByRole('button',{name:'下一篇稿件'}).click();
  await expect(page.locator('.s-detail-hero h2')).toHaveText('城市漫步');
@@ -209,7 +209,7 @@ test('detail shows labeled audiences and persistent historical windows',async({p
  await page.getByRole('button',{name:'观众',exact:true}).click();
  await expect(page.locator('.s-age-chart canvas')).toBeVisible();
  await expect(page.getByRole('heading',{name:'兴趣分布'})).toBeVisible();
- await page.getByRole('button',{name:'留存与趋势',exact:true}).click();
+ await page.getByRole('button',{name:'表现',exact:true}).click();
  for(const window of ['发稿后48小时','发稿后30天','近30天','全部已记录']){
   await page.getByRole('button',{name:window,exact:true}).click();
   await expect(page.getByRole('heading',{name:window+'播放趋势'})).toBeVisible();
@@ -223,8 +223,8 @@ async function choose(page:Page,name:string,label:string){if(name==='分析主�
 test('expanded sidebar shows the real UP profile and account actions',async({page})=>{
  await page.goto('/');await expect(page.getByRole('button',{name:'收起侧栏'})).toHaveCount(0);
  if((page.viewportSize()?.width??1000)<700)await page.getByRole('button',{name:'打开导航'}).click();
- await expect(page.getByText('测试UP主',{exact:true})).toBeVisible();await page.getByRole('button',{name:'UP主账号'}).click();
- await expect(page.getByRole('dialog',{name:'测试UP主'})).toBeVisible();await expect(page.getByRole('button',{name:/切换 \/ 添加账号/})).toBeVisible();
+ await expect(page.getByText('测试UP主',{exact:true})).toBeVisible();await page.goto('/#settings');
+ await expect(page.getByRole('heading',{name:'哔哩哔哩账号'})).toBeVisible();await expect(page.getByRole('button',{name:'添加账号',exact:true})).toBeVisible();
 });
 test('analysis uses two categories and displays multiple charts together',async({page})=>{
  await page.goto('/#analysis');await expect(page.getByRole('combobox',{name:'分析主题'})).toHaveCount(0);
@@ -265,7 +265,7 @@ test('rapid library switches do not scale cards and metric hover is inert',async
 });
 test('freshness is in the header and relation points have a visible manuscript key',async({page})=>{
  await page.goto('/');await expect(page.locator('.s-header-actions .s-header-freshness')).toBeVisible();await expect(page.getByRole('button',{name:'查看数据状态'})).toHaveCount(0);
- await page.goto('/#analysis');await page.getByRole('button',{name:'稿件分析',exact:true}).click();await expect(page.locator('.s-point-key button')).toHaveCount(2);await expect(page.locator('.s-point-key')).toContainText('海边日记');
+ await page.goto('/#analysis');await page.getByRole('button',{name:'稿件分析',exact:true}).click();await expect(page.locator('.s-point-key')).toHaveCount(0);await expect(page.getByRole('heading',{name:'封标点击率 × 平均播放百分比'})).toBeVisible();
 });
 
 test('sync toast disappears without a close button',async({page})=>{
@@ -282,7 +282,7 @@ test('automatic update frequency can be changed',async({page})=>{
 });
 
 test('sync icon settles while the pointer remains on the button',async({page})=>{
- await page.emulateMedia({reducedMotion:'no-preference'});await page.goto('/');const button=page.getByRole('button',{name:'同步',exact:true});const icon=button.locator('svg');await button.hover();await expect(icon).toHaveAttribute('data-motion-state','drawing');await expect(icon).toHaveAttribute('data-motion-state','resting',{timeout:2500});await page.waitForTimeout(650);await expect(icon).toHaveAttribute('data-motion-state','resting');await expect(button.locator('.spin')).toHaveCount(0);
+ await page.emulateMedia({reducedMotion:'no-preference'});await page.goto('/');const button=page.getByRole('button',{name:'同步',exact:true});const icon=button.locator('svg');await button.hover();await expect(icon).toHaveAttribute('data-motion-state','resting');await expect(icon).toHaveAttribute('data-motion-state','resting',{timeout:2500});await page.waitForTimeout(650);await expect(icon).toHaveAttribute('data-motion-state','resting');await expect(button.locator('.spin')).toHaveCount(0);
 });
 
 test('reordering has real positional animation without scaling',async({page})=>{
@@ -294,7 +294,7 @@ test('saved AI reports survive navigation and account connection opens a QR code
  await page.route('**/api/ai/history',r=>r.fulfill({json:{ok:true,history:[record]}}));
  await page.goto('/#analysis');await page.getByRole('button',{name:'AI 分析',exact:true}).click();await expect(page.locator('.s-ai-result')).toContainText('保留的分析结论');await page.getByRole('button',{name:'关闭',exact:true}).click();await page.goto('/#videos');await page.goto('/#analysis');await page.getByRole('button',{name:'AI 分析',exact:true}).click();await expect(page.locator('.s-ai-result')).toContainText('保留的分析结论');await page.getByRole('button',{name:'关闭',exact:true}).click();
  await page.route('**/api/bilibili/qr/start',r=>r.fulfill({json:{ok:true,key:'test',url:'https://example.com/test-qr'}}));await page.route('**/api/bilibili/qr/status/test',r=>r.fulfill({json:{ok:true,state:'waiting'}}));
- if((page.viewportSize()?.width??1000)<700)await page.getByRole('button',{name:'打开导航'}).click();await page.getByRole('button',{name:'UP主账号'}).click();await page.getByRole('button',{name:/切换 \/ 添加账号/}).click();await expect(page.getByRole('img',{name:'B站账号登录二维码'})).toBeVisible();await expect(page.getByRole('button',{name:'AI设置',exact:true})).toHaveCount(0);
+ if((page.viewportSize()?.width??1000)<700)await page.getByRole('button',{name:'打开导航'}).click();await page.goto('/#settings');await page.getByRole('button',{name:'添加账号',exact:true}).click();await expect(page.getByRole('img',{name:'B站账号登录二维码'})).toBeVisible();await expect(page.getByRole('dialog').getByRole('button',{name:'AI设置',exact:true})).toHaveCount(0);
 });
 test('direct manuscript selection avoids a modal and KPI content stays within each card',async({page})=>{
  await page.goto('/');const outside=await page.locator('.s-overview-kpis article').evaluateAll(cards=>cards.some(card=>{const r=card.getBoundingClientRect();return [...card.querySelectorAll('strong,.s-kpi-change,.s-spark')].some(el=>{const b=el.getBoundingClientRect();return b.left<r.left-1||b.right>r.right+1})}));expect(outside).toBe(false);
@@ -306,7 +306,18 @@ test('realistic manuscript count retains readable categories and two recent rows
  await page.route('**/api/videos*',r=>r.fulfill({json:{ok:true,videos:many}}));
  await page.route('**/api/dashboard/summary',r=>r.fulfill({json:{ok:true,...summary,miniTrends:{overview:[{views:5000,avg_views:1900,avg_interactions:180},{views:6000,avg_views:2000,avg_interactions:190}],account:[{followers:3380},{followers:3382}]}}}));
  await page.goto('/');await expect(page.locator('.s-overview-kpis .s-spark')).toHaveCount(4);await expect(page.locator('.s-spark-loading')).toHaveCount(0);
- const recent=page.locator('.s-recent-item:visible');await expect(recent).toHaveCount((page.viewportSize()?.width??1000)<700?4:8);const rows=await recent.evaluateAll(els=>new Set(els.map(e=>Math.round(e.getBoundingClientRect().top))).size);expect(rows).toBe(2);
+ const recent=page.locator('.s-recent-item:visible');await expect(recent).toHaveCount((page.viewportSize()!.width<page.viewportSize()!.height||page.viewportSize()!.width<700)?4:8);const rows=await recent.evaluateAll(els=>new Set(els.map(e=>Math.round(e.getBoundingClientRect().top))).size);expect(rows).toBe(2);
  const clipped=await recent.evaluateAll(els=>els.some(e=>{const r=e.getBoundingClientRect();return [...e.querySelectorAll('h3,.s-stat')].some(child=>child.getBoundingClientRect().right>r.right+1)}));expect(clipped).toBe(false);
  await page.goto('/#analysis');await expect(page.locator('.s-combo-chart')).toHaveCount(3);for(const chart of await page.locator('.s-combo-chart').all()){expect(await chart.evaluate(e=>e.clientWidth)).toBeGreaterThanOrEqual(17*30);}
+});
+
+test('header AI persists, sidebar profile is static, and icons animate only on activation',async({page})=>{
+ await page.emulateMedia({reducedMotion:'no-preference'});await page.goto('/');const nav=page.locator('.s-sidebar nav').getByRole('button',{name:'概览',exact:true});if((page.viewportSize()?.width??1000)<700)await page.getByRole('button',{name:'打开导航'}).click();await nav.hover();await expect(nav.locator('svg')).toHaveAttribute('data-motion-state','resting');await nav.click();if((page.viewportSize()?.width??1000)>=700)await expect(nav.locator('svg')).toHaveAttribute('data-motion-state','drawing');else await expect(page.locator('.s-nav-scrim')).toHaveCount(0);await expect(page.getByRole('button',{name:'UP主账号'})).toHaveCount(0);
+ for(const pageName of ['overview','videos','analysis','sources','settings']){await page.goto('/#'+pageName);await expect(page.locator('.s-header-actions .s-ai-capsule')).toBeVisible();await expect(page.locator('.s-ai-capsule')).toHaveCount(1);}
+});
+test('detail content follows performance and audience groups and has cover overlays',async({page})=>{
+ await page.goto('/#videos?video=1');await expect(page.locator('.s-detail-cover .s-cover-numbers')).toContainText('3000');await expect(page.getByRole('button',{name:'留存与趋势',exact:true})).toHaveCount(0);await expect(page.getByRole('heading',{name:'观众留存',exact:true})).toBeVisible();await expect(page.getByRole('heading',{name:'游客播放与转粉'})).toHaveCount(0);await page.getByRole('button',{name:'观众',exact:true}).click();await expect(page.getByRole('heading',{name:'游客播放与转粉'})).toBeVisible();await expect(page.getByRole('heading',{name:'观众选题偏好'})).toBeVisible();await expect(page.getByRole('heading',{name:'观众留存',exact:true})).toHaveCount(0);
+});
+test('saved API key is masked and never resubmitted as a replacement',async({page})=>{
+ await page.route('**/api/settings/deepseek/status',r=>r.fulfill({json:{ok:true,configured:true,maskedKey:'sk-a********7890',model:'deepseek-v4-flash'}}));let body:any;await page.route('**/api/settings/deepseek',r=>{body=r.request().postDataJSON();return r.fulfill({json:{ok:true}})});await page.goto('/#settings?tab=ai');await expect(page.locator('.s-field input')).toHaveValue('sk-a********7890');await page.getByRole('button',{name:'保存设置'}).click();expect(body.apiKey).toBeUndefined();
 });

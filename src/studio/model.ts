@@ -5,7 +5,7 @@ export type Metric = { id: MetricId; label: string; unit: string; color: string;
 export const metrics: Metric[] = [
   { id:'views', label:'播放量', unit:'次', color:'#FF82B2', group:'流量与观看' },
   { id:'avg_watch_percent', label:'平均播放百分比', unit:'%', color:'#93CDD9', group:'流量与观看' },
-  { id:'avg_watch_seconds', label:'平均播放时长', unit:'秒', color:'#89B8FF', group:'流量与观看' },
+  { id:'avg_watch_seconds', label:'平均播放时长', unit:'s', color:'#89B8FF', group:'流量与观看' },
   { id:'cover_ctr', label:'封标点击率', unit:'星', color:'#FFCE73', group:'流量与观看' },
   { id:'interactions', label:'互动量', unit:'次', color:'#A5DF94', group:'转化与互动' },
   { id:'unfollows', label:'取消关注', unit:'人', color:'#FFCE73', group:'转化与互动' },
@@ -25,7 +25,7 @@ export function valueOf(v:Video,id:MetricId):number|null {
 export function formatMetric(value:number|null|undefined,id:MetricId){
   if(value==null)return '—';
   const unit=metricById[id].unit;
-  return unit==='%'?percent(value):unit==='秒'?seconds(value):unit==='星'?`${value.toFixed(1)} / 5`:compact(value);
+  return unit==='%'?percent(value):unit==='s'?seconds(value):unit==='星'?`${value.toFixed(1)} / 5`:compact(value);
 }
 export function filterVideos(videos:Video[],search:string,length:string,sort:string){
   return videos.filter(v=>`${v.title} ${v.bvid}`.toLowerCase().includes(search.trim().toLowerCase()))

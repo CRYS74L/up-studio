@@ -1,6 +1,6 @@
 # UP Studio
 
-<img src="public/brand/up-studio.png" alt="UP Studio" width="112" height="112" />
+<img src="public/brand/up-studio.svg" alt="UP Studio" width="112" height="112" />
 
 个人创作者的数据工作区。当前开发版本 **v0.1.0-dev.15**。
 
