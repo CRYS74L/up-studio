@@ -1,0 +1,93 @@
+[
+  {
+    "id": "ui-regular",
+    "source": "ping-Light",
+    "family": "UP Studio UI",
+    "weight": "1 549",
+    "file": "ui-regular-f35962154af0.woff2",
+    "sha256": "f35962154af0cc77d43d9eb84def855a2dbf591fb5d1331f49c072f1f7366fb4",
+    "bytes": 5196656,
+    "sourceFile": "PingFangSC-Light_1.ttf",
+    "sourceSha256": "a6af36907fd7e9c7f72481865d916fab1474e691808c280bb6ee1f6d2843333c",
+    "collectionIndex": null,
+    "glyphCount": 42199
+  },
+  {
+    "id": "ui-bold",
+    "source": "ping-Medium",
+    "family": "UP Studio UI",
+    "weight": "550 799",
+    "file": "ui-bold-c8d997db8e5e.woff2",
+    "sha256": "c8d997db8e5ea14ed21d0fdeb3038a3d5709ee998fd2657c9176909a3689b17e",
+    "bytes": 5310200,
+    "sourceFile": "PingFangSC-Medium_1.ttf",
+    "sourceSha256": "1028e6f1eea66710015fbef51f98db2480c414fbcf87528a85fef9ef6c69a994",
+    "collectionIndex": null,
+    "glyphCount": 42199
+  },
+  {
+    "id": "ui-heavy",
+    "source": "ping-Semibold",
+    "family": "UP Studio UI",
+    "weight": "800 1000",
+    "file": "ui-heavy-3dae2bebfd48.woff2",
+    "sha256": "3dae2bebfd48e1cce2718f004aeb07bb1a7f535701f9b9b9604b24d0f5406c33",
+    "bytes": 5138200,
+    "sourceFile": "PingFangSC-Semibold_1.ttf",
+    "sourceSha256": "5c0378b28840c91a5d9c9f6257a60abdff87e4db49fa793f8b2dfd3eae4686ed",
+    "collectionIndex": null,
+    "glyphCount": 42199
+  },
+  {
+    "id": "chart-regular",
+    "source": "msyh.ttc-1",
+    "family": "UP Studio Chart",
+    "weight": "1 549",
+    "file": "chart-regular-a73279582bf4.woff2",
+    "sha256": "a73279582bf4a28a5516899b08d19d2440fe682b25b9f8078c296babf3800d2f",
+    "bytes": 8028612,
+    "sourceFile": "msyh.ttc",
+    "sourceSha256": "c1b7326ea075e9a2db40f92c9d516cfa39bb8760a11db2da30a18d3247d3bb7e",
+    "collectionIndex": 1,
+    "glyphCount": 50159
+  },
+  {
+    "id": "chart-bold",
+    "source": "msyhbd.ttc-1",
+    "family": "UP Studio Chart",
+    "weight": "550 1000",
+    "file": "chart-bold-0082f74da22c.woff2",
+    "sha256": "0082f74da22c6c4f345224ddb24a7d43df61644b65e8cc2a151c5ae009a16cf5",
+    "bytes": 7938264,
+    "sourceFile": "msyhbd.ttc",
+    "sourceSha256": "356da57585463ab3a55d79a61789459003014bfc32cd6b9297697013dbc4f53e",
+    "collectionIndex": 1,
+    "glyphCount": 50159
+  },
+  {
+    "id": "cloud-regular",
+    "source": "msyh.ttc-0",
+    "family": "UP Studio Cloud",
+    "weight": "1 549",
+    "file": "cloud-regular-34c0a3f63931.woff2",
+    "sha256": "34c0a3f639316cc1e97684675e1ce30003c65a4d6aed2e9093dff6db60e12903",
+    "bytes": 8027732,
+    "sourceFile": "msyh.ttc",
+    "sourceSha256": "c1b7326ea075e9a2db40f92c9d516cfa39bb8760a11db2da30a18d3247d3bb7e",
+    "collectionIndex": 0,
+    "glyphCount": 50159
+  },
+  {
+    "id": "cloud-bold",
+    "source": "msyhbd.ttc-0",
+    "family": "UP Studio Cloud",
+    "weight": "550 1000",
+    "file": "cloud-bold-d96824e20a41.woff2",
+    "sha256": "d96824e20a41eebcde014a888fd7762b208343a5d690bf057ace6a4408b4e175",
+    "bytes": 7983664,
+    "sourceFile": "msyhbd.ttc",
+    "sourceSha256": "356da57585463ab3a55d79a61789459003014bfc32cd6b9297697013dbc4f53e",
+    "collectionIndex": 0,
+    "glyphCount": 50159
+  }
+]

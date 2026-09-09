@@ -23,7 +23,7 @@ const env = {...config, DB:db, ASSETS:{ async fetch(request) {
   const client = path.join(release,'client'); let file = path.resolve(client,'.'+pathname);
   if (!file.startsWith(client+path.sep)) file=path.join(client,'index.html');
   if (!fs.existsSync(file) || !fs.statSync(file).isFile()) file=path.join(client,'index.html');
-  return new Response(fs.readFileSync(file), {headers:{'Content-Type':mime[path.extname(file)]??'application/octet-stream','Cache-Control':'no-cache'}});
+  return new Response(fs.readFileSync(file), {headers:{'Content-Type':mime[path.extname(file)]??'application/octet-stream','Cache-Control':/^\/fonts\/[a-z-]+-[a-f0-9]{12}\.woff2$/.test(pathname)?'public, max-age=31536000, immutable':'no-cache'}});
 }}};
 let intervalMinutes=[0,5,10,15,30,60,180].includes(config.COLLECT_INTERVAL_MINUTES)?config.COLLECT_INTERVAL_MINUTES:15;let timer;
 let collecting=false, lastCollection=null, stopping=false, retryCount=0, retryTimer;

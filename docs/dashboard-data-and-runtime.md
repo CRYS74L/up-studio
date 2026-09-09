@@ -160,6 +160,15 @@ B站封面播放与弹幕图标的实际SVG路径保存在src/studio/BiliIcons.t
 - DeepSeek：首次调用 https://api-docs.deepseek.com/zh-cn/ ，思考模式 https://api-docs.deepseek.com/zh-cn/guides/thinking_mode/ ，图像理解 https://api-docs.deepseek.com/zh-cn/guides/vision/ ，JSON输出 https://api-docs.deepseek.com/zh-cn/guides/json_mode/ 。
 - Apple HIG：按钮 https://developer.apple.com/design/human-interface-guidelines/buttons ，动效 https://developer.apple.com/design/human-interface-guidelines/motion 。网页使用相应的圆角、反馈、响应式与减少动态效果原则；不是嵌入原生UIKit组件。
 
+## v0.1.0-dev.25 — 内嵌当前字体并保持排版
+
+- 页面沿用当前安装的苹方；图表沿用微软雅黑 UI；兴趣词云沿用微软雅黑。根据浏览器实际选中的文件转换 WOFF2，不更换相似字体，不调整现有字号、字重、字距和行高。
+- 保留完整字符集、字体度量和排版表，使用内容哈希文件名与长期缓存；不通过 `local()` 依赖访问设备的字体安装情况。
+- 页面文字在字体加载后显示；图表和词云等待各自字体再测量、绘制。首次加载失败提供刷新路径，避免静默使用替代字体。
+- 1440×1000 和 390×844 的四个主页面共 530 项文字记录，内嵌前后尺寸、位置、换行、字号和字重一致；两种宽度的概览和分析截图逐像素一致。180 项混排字体矩阵逐像素一致，CDP 确认实际使用下载的字体。
+- 验证：构建、29 项单元测试、原有 108 项桌面/手机/平板交互测试，以及新增 6 项字体加载、失败重试和实际字体来源测试通过。
+- 文件来源与转换说明见 `public/fonts/README.md` 和 `public/fonts/manifest.json`。跨系统抗锯齿差异属于渲染环境差异，未声称跨系统截图逐像素相同。
+
 ## v0.1.0-dev.24 — 统一全局操作与稿件详情
 
 - 接入用户提供的 UP-mark-refined.svg 与 UP-refined.svg，网站侧栏、版本区、favicon 和 README 使用纯矢量；Apple touch icon 保留由矢量渲染的兼容 PNG。

@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { echarts } from '../charts';
+import { chartFont, loadFonts } from '../fonts';
 
 // Theme only chart typography and chrome; series/item colors carry metric identity.
 function themedOption(option: any, element: HTMLElement | null) {
@@ -37,15 +38,18 @@ export function Chart({ option, className, events }: { option: any; className: s
   useEffect(() => {
     if (!element.current) return;
     let live = true;
+    let fontsReady = false;
     const resize = () => {
-      if (!live || !element.current?.clientWidth || !element.current.clientHeight) return;
+      if (!live || !fontsReady || !element.current?.clientWidth || !element.current.clientHeight) return;
       if (!instance.current) { instance.current = echarts.init(element.current); update(); }
       else { instance.current.resize(); update(); }
     };
     const observer = new ResizeObserver(resize);
     observer.observe(element.current);
     const reduced = matchMedia('(prefers-reduced-motion: reduce)');
-    resize();
+    loadFonts(chartFont).then(() => { fontsReady = true; resize(); }).catch(() => {
+      if (live && element.current) element.current.textContent = '图表字体加载失败，请刷新页面。';
+    });
     reduced.addEventListener('change', update);
     const themeObserver=new MutationObserver(update);
     themeObserver.observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});

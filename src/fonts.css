@@ -1,0 +1,56 @@
+@font-face {
+  font-family: 'UP Studio UI';
+  src: url('/fonts/ui-regular-f35962154af0.woff2') format('woff2');
+  font-style: normal;
+  font-weight: 1 549;
+  font-display: block;
+}
+
+@font-face {
+  font-family: 'UP Studio UI';
+  src: url('/fonts/ui-bold-c8d997db8e5e.woff2') format('woff2');
+  font-style: normal;
+  font-weight: 550 799;
+  font-display: block;
+}
+
+@font-face {
+  font-family: 'UP Studio UI';
+  src: url('/fonts/ui-heavy-3dae2bebfd48.woff2') format('woff2');
+  font-style: normal;
+  font-weight: 800 1000;
+  font-display: block;
+}
+
+@font-face {
+  font-family: 'UP Studio Chart';
+  src: url('/fonts/chart-regular-a73279582bf4.woff2') format('woff2');
+  font-style: normal;
+  font-weight: 1 549;
+  font-display: block;
+}
+
+@font-face {
+  font-family: 'UP Studio Chart';
+  src: url('/fonts/chart-bold-0082f74da22c.woff2') format('woff2');
+  font-style: normal;
+  font-weight: 550 1000;
+  font-display: block;
+}
+
+@font-face {
+  font-family: 'UP Studio Cloud';
+  src: url('/fonts/cloud-regular-34c0a3f63931.woff2') format('woff2');
+  font-style: normal;
+  font-weight: 1 549;
+  font-display: block;
+}
+
+@font-face {
+  font-family: 'UP Studio Cloud';
+  src: url('/fonts/cloud-bold-d96824e20a41.woff2') format('woff2');
+  font-style: normal;
+  font-weight: 550 1000;
+  font-display: block;
+}
+

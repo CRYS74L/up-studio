@@ -1,9 +1,10 @@
+import {chartFont} from '../fonts';
 import {useId} from 'react';
 import { Chart } from '../components/Chart';
 import { compact,escapeHtml } from '../format';
 import type { Video } from '../types';
 import {formatMetric,metricById,valueOf,type MetricId} from './model';
-export function chartBase(){const dark=document.documentElement.dataset.theme==='dark';return {textStyle:{fontFamily:'system-ui',fontSize:12,color:dark?'#c9cad5':'#717585'},animationDuration:320,grid:{left:48,right:20,top:20,bottom:46},tooltip:{trigger:'axis',valueFormatter:(n:unknown)=>typeof n==='number'?n.toLocaleString('zh-CN',{useGrouping:false,maximumFractionDigits:2}):String(n??'—'),confine:true,backgroundColor:dark?'#2d303d':'#fff',borderWidth:0,textStyle:{color:dark?'#f3f4f8':'#272c3a',fontSize:13},extraCssText:'border-radius:14px;max-width:300px;white-space:normal;line-height:1.6;box-shadow:0 10px 35px #0002'},xAxis:{axisLine:{lineStyle:{color:dark?'#ffffff14':'#00000010'}},axisTick:{show:false},axisLabel:{fontSize:12}},yAxis:{type:'value',splitLine:{lineStyle:{type:'dashed',color:dark?'#ffffff10':'#0000000d'}},axisLabel:{fontSize:12,formatter:compact}}};}
+export function chartBase(){const dark=document.documentElement.dataset.theme==='dark';return {textStyle:{fontFamily:chartFont,fontSize:12,color:dark?'#c9cad5':'#717585'},animationDuration:320,grid:{left:48,right:20,top:20,bottom:46},tooltip:{trigger:'axis',valueFormatter:(n:unknown)=>typeof n==='number'?n.toLocaleString('zh-CN',{useGrouping:false,maximumFractionDigits:2}):String(n??'—'),confine:true,backgroundColor:dark?'#2d303d':'#fff',borderWidth:0,textStyle:{color:dark?'#f3f4f8':'#272c3a',fontSize:13},extraCssText:'border-radius:14px;max-width:300px;white-space:normal;line-height:1.6;box-shadow:0 10px 35px #0002'},xAxis:{axisLine:{lineStyle:{color:dark?'#ffffff14':'#00000010'}},axisTick:{show:false},axisLabel:{fontSize:12}},yAxis:{type:'value',splitLine:{lineStyle:{type:'dashed',color:dark?'#ffffff10':'#0000000d'}},axisLabel:{fontSize:12,formatter:compact}}};}
 export function scoreExtent(values:Array<number|null>) {
  const xs=values.filter((v):v is number=>v!=null&&Number.isFinite(v));if(!xs.length)return {min:0,max:1};
  const lo=Math.min(...xs),hi=Math.max(...xs),pad=Math.max(.1,(hi-lo)*.12);

@@ -1,5 +1,37 @@
 import { expect, test, type Page } from '@playwright/test';
 
+test('embedded fonts load before text layout and use downloaded faces', async ({page}) => {
+  let release!: () => void;
+  const gate = new Promise<void>(resolve => { release = resolve; });
+  await page.route('**/fonts/*.woff2', async route => { await gate; await route.continue(); });
+  await page.goto('/', {waitUntil:'domcontentloaded'});
+  await expect(page.locator('#root')).toBeEmpty();
+  release();
+  await expect(page.locator('.s-main h1')).toBeVisible();
+  await expect(page.locator('canvas').first()).toBeVisible();
+  expect(await page.evaluate(() => [400,700].every(w => document.fonts.check(`${w} 14px "UP Studio UI"`)))).toBe(true);
+  expect(await page.evaluate(() => document.fonts.check('400 12px "UP Studio Chart"'))).toBe(true);
+  const cdp = await page.context().newCDPSession(page);
+  await cdp.send('DOM.enable'); await cdp.send('CSS.enable');
+  const {root} = await cdp.send('DOM.getDocument');
+  const {nodeId} = await cdp.send('DOM.querySelector', {nodeId:root.nodeId,selector:'.s-main h1'});
+  const {fonts} = await cdp.send('CSS.getPlatformFontsForNode', {nodeId});
+  expect(fonts.length).toBeGreaterThan(0);
+  expect(fonts.every(font => font.isCustomFont)).toBe(true);
+});
+
+test('failed embedded font downloads offer a working reload', async ({page}) => {
+  let fail = true;
+  await page.route('**/fonts/*.woff2', route => fail ? route.abort() : route.continue());
+  await page.goto('/');
+  await expect(page.getByRole('alert')).toContainText('字体加载失败');
+  await expect(page.locator('.s-main')).toHaveCount(0);
+  fail = false;
+  await page.getByRole('button', {name:'重新加载',exact:true}).click();
+  await expect(page.locator('.s-main h1')).toBeVisible();
+  await expect(page.getByRole('alert')).toHaveCount(0);
+});
+
 // Deterministic test data only; the application never imports these fixtures.
 const videos = [0, 1, 2].map((i) => ({
   id: String(i + 1), bvid: `BV_TEST_${i + 1}`, title: ['山间旅行', '海边日记', '城市漫步'][i],

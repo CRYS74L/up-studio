@@ -1,3 +1,4 @@
+import {cloudFont,loadFonts} from '../fonts';
 import {useEffect,useState,useRef,cloneElement,isValidElement,type ReactNode} from 'react';
 import {Chart} from '../components/Chart';
 import {echarts} from '../charts';
@@ -22,7 +23,7 @@ export function RegionMap({rows,highlighted=[],focus}:{rows:Array<{name:string;v
 export function InterestCloud({rows}:{rows:Array<{name:string;value:number}>}){
  const ref=useRef<HTMLDivElement>(null);const signature=JSON.stringify(rows.slice(0,10));
  useEffect(()=>{let live=true;const root=ref.current!;let draw:(()=>void)|undefined;
- import('wordcloud').then(({default:WordCloud})=>{if(!live)return;draw=()=>{if(!live||!root.clientWidth)return;const ranked=JSON.parse(signature) as Array<{name:string;value:number}>,scale=Math.min(1,root.clientWidth/440);const dark=document.documentElement.dataset.theme==='dark';const colors=dark?['#83A1FF','#64DAB0','#FFD17B','#9AADCD','#FF9A90','#B49AFF','#85D9ED']:['#3E6EFF','#38CC94','#FFC246','#6C81B1','#FD7661','#9380EE','#67CBE3'];WordCloud(root,{list:ranked.map((r,i)=>[r.name,i===0?2.5:i<3?2:i<6?1.8:1.5]),weightFactor:18*scale,fontFamily:'sans-serif',fontWeight:(word:string)=>ranked.findIndex(r=>r.name===word)<3?'bold':'normal',gridSize:Math.max(12,Math.round(27*scale)),rotateRatio:0,drawOutOfBound:false,shrinkToFit:true,backgroundColor:'transparent',color:(word:string)=>colors[ranked.findIndex(r=>r.name===word)]??(dark?'#F3F3F5':'#000000')});};draw();});
+ Promise.all([import('wordcloud'),loadFonts(cloudFont)]).then(([{default:WordCloud}])=>{if(!live)return;draw=()=>{if(!live||!root.clientWidth)return;const ranked=JSON.parse(signature) as Array<{name:string;value:number}>,scale=Math.min(1,root.clientWidth/440);const dark=document.documentElement.dataset.theme==='dark';const colors=dark?['#83A1FF','#64DAB0','#FFD17B','#9AADCD','#FF9A90','#B49AFF','#85D9ED']:['#3E6EFF','#38CC94','#FFC246','#6C81B1','#FD7661','#9380EE','#67CBE3'];WordCloud(root,{list:ranked.map((r,i)=>[r.name,i===0?2.5:i<3?2:i<6?1.8:1.5]),weightFactor:18*scale,fontFamily:cloudFont,fontWeight:(word:string)=>ranked.findIndex(r=>r.name===word)<3?'bold':'normal',gridSize:Math.max(12,Math.round(27*scale)),rotateRatio:0,drawOutOfBound:false,shrinkToFit:true,backgroundColor:'transparent',color:(word:string)=>colors[ranked.findIndex(r=>r.name===word)]??(dark?'#F3F3F5':'#000000')});};draw();}).catch(()=>{if(live)root.textContent="词云字体加载失败，请刷新页面。";});
  const size=new ResizeObserver(()=>draw?.());size.observe(root);const theme=new MutationObserver(()=>draw?.());theme.observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});return()=>{live=false;size.disconnect();theme.disconnect()};},[signature]);
  return <div ref={ref} className="s-reference-cloud" aria-label="兴趣权重词云"/>;
 }
