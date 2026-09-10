@@ -49,10 +49,13 @@ const server=http.createServer(async(req,res)=>{
       intervalMinutes=value;config.COLLECT_INTERVAL_MINUTES=value;const next=path.join(root,'config.next.json');fs.writeFileSync(next,JSON.stringify(config));fs.renameSync(next,path.join(root,'config.json'));clearInterval(timer);clearTimeout(initial);clearTimeout(retryTimer);if(value>0)timer=setInterval(collect,value*60000);
       res.writeHead(200,{'Content-Type':'application/json'});res.end(JSON.stringify({ok:true,intervalMinutes:value}));return;
     }
-    const request=new Request(url,{method:req.method,headers:req.headers,...(!['GET','HEAD'].includes(req.method)?{body:Buffer.concat(chunks)}:{})});
+    const controller=new AbortController();res.on('close',()=>controller.abort());
+    const request=new Request(url,{method:req.method,headers:req.headers,signal:controller.signal,...(!['GET','HEAD'].includes(req.method)?{body:Buffer.concat(chunks)}:{})});
     const response=await worker.fetch(request,env,{waitUntil(p){p.catch(()=>log({event:'background_failed'}));},passThroughOnException(){}});
-    res.writeHead(response.status,Object.fromEntries(response.headers));res.end(Buffer.from(await response.arrayBuffer()));
-  } catch {log({event:'request_failed'});res.writeHead(500);res.end('Local service error');}
+    res.writeHead(response.status,Object.fromEntries(response.headers));
+    if(response.body){const reader=response.body.getReader();const cancel=()=>{void reader.cancel().catch(()=>{})};res.on('close',cancel);try{while(!res.destroyed){const {value,done}=await reader.read();if(done)break;if(!res.write(Buffer.from(value)))await new Promise(resolve=>{const done=()=>{res.off('drain',done);res.off('close',done);resolve()};res.once('drain',done);res.once('close',done)});}}finally{res.off('close',cancel);reader.releaseLock();}}
+    res.end();
+  } catch {log({event:'request_failed'});if(!res.headersSent)res.writeHead(500);res.end();}
 });
 server.on('error',error=>{log({event:'listen_failed',code:error.code});db.database.close();process.exit(1);});
 server.listen(5173,'127.0.0.1',()=>{fs.writeFileSync(path.join(root,'service.json'),JSON.stringify({pid:process.pid,started,release:current.id}));log({event:'started',pid:process.pid,version:current.version});});

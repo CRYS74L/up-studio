@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { echarts } from '../charts';
 import { chartFont, loadFonts } from '../fonts';
+import {queueRender,cancelRender} from '../studio/render-queue';
 
 // Theme only chart typography and chrome; series/item colors carry metric identity.
 function themedOption(option: any, element: HTMLElement | null) {
@@ -23,6 +24,8 @@ export function Chart({ option, className, events }: { option: any; className: s
   const latest = useRef({ option, events });
   latest.current = { option, events };
   const bound = useRef<Record<string, (p: any) => void>>({});
+  const dirty = useRef(true);
+  const schedule = useRef<() => void>(() => {});
   const update = () => {
     const chart = instance.current;
     if (!chart) return;
@@ -31,6 +34,7 @@ export function Chart({ option, className, events }: { option: any; className: s
     const resolved=themedOption(current.option,element.current);
     const x=resolved.xAxis;if(x?.type==='category'&&x.axisLabel?.interval===0&&x.data?.length){const width=(element.current?.clientWidth??800)-110;const tight=width/x.data.length<30;x.axisLabel={...x.axisLabel,hideOverlap:false,showMinLabel:true,showMaxLabel:true,rotate:tight?-90:x.axisLabel.rotate};}
     chart.setOption({ ...resolved, animation: !reduced && current.option.animation !== false, animationDurationUpdate: reduced ? 0 : 300 }, { notMerge: true });
+    dirty.current=false;
     for (const [name, callback] of Object.entries(bound.current)) chart.off(name, callback);
     bound.current = current.events ?? {};
     for (const [name, callback] of Object.entries(bound.current)) chart.on(name, callback);
@@ -39,23 +43,34 @@ export function Chart({ option, className, events }: { option: any; className: s
     if (!element.current) return;
     let live = true;
     let fontsReady = false;
+    let visible = false;
+    let settled = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let width = 0, height = 0;
     const resize = () => {
-      if (!live || !fontsReady || !element.current?.clientWidth || !element.current.clientHeight) return;
+      if (!live || !settled || !fontsReady || !visible || !element.current?.clientWidth || !element.current.clientHeight) return;
       if (!instance.current) { instance.current = echarts.init(element.current); update(); }
-      else { instance.current.resize(); update(); }
+      else if(width!==element.current.clientWidth||height!==element.current.clientHeight) { instance.current.resize(); update(); }
+      else if(dirty.current)update();
+      width=element.current.clientWidth;height=element.current.clientHeight;
     };
-    const observer = new ResizeObserver(resize);
+    schedule.current=()=>{dirty.current=true;queueRender(element,()=>{if(!live||!visible)return;if(instance.current)update();else resize();});};
+    // Let the 280ms page transition finish before the first canvas text layout.
+    const enterTimer=setTimeout(()=>{settled=true;queueRender(element,resize);},320);
+    const observer = new ResizeObserver(()=>queueRender(element,resize));
     observer.observe(element.current);
+    const intersection=new IntersectionObserver(entries=>{visible=entries[0].isIntersecting;if(visible)queueRender(element,resize);},{rootMargin:'120px'});
+    intersection.observe(element.current);
     const reduced = matchMedia('(prefers-reduced-motion: reduce)');
-    loadFonts(chartFont).then(() => { fontsReady = true; resize(); }).catch(() => {
+    loadFonts(chartFont).then(() => { fontsReady = true; queueRender(element,resize); }).catch(() => {
       if (live && element.current) element.current.textContent = '图表字体加载失败，请刷新页面。';
     });
-    reduced.addEventListener('change', update);
-    const themeObserver=new MutationObserver(update);
+    const refresh=()=>schedule.current();
+    reduced.addEventListener('change', refresh);
+    const themeObserver=new MutationObserver(refresh);
     themeObserver.observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
-    return () => { live = false; observer.disconnect(); themeObserver.disconnect(); reduced.removeEventListener('change', update); instance.current?.dispose(); instance.current = null; bound.current = {}; };
+    return () => { live = false; clearTimeout(enterTimer);cancelRender(element);intersection.disconnect();observer.disconnect(); themeObserver.disconnect(); reduced.removeEventListener('change', refresh); instance.current?.dispose(); instance.current = null; bound.current = {}; };
   }, []);
-  useEffect(update, [option, events]);
+  useEffect(()=>schedule.current(), [option, events]);
   const category=option.xAxis?.type==='category'&&option.xAxis?.axisLabel?.interval===0;const count=category?option.xAxis.data?.length??0:0;
   return <div className={'s-chart-viewport'+(className==='s-rank-chart'?' s-chart-no-scroll':'')}><div ref={element} style={count>10?{minWidth:count*30}:undefined} className={className} role="img" aria-label={option.accessibleLabel ?? '交互数据图表，详细数值可在对应稿件中查看'} /></div>;
 }

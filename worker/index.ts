@@ -1,4 +1,5 @@
 import {registerAi,aiModel,aiEffort,AI_MODELS} from './ai-analysis';
+import {registerChat} from './ai-chat';
 import {accountDatabase,rootDatabase,prepareAccount,fetchProfile} from './accounts';
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
@@ -182,7 +183,7 @@ app.get('/api/bilibili/status', async (c) => {
 });
 
 app.get('/api/acquisition/runs', async (c) => {
-  const rows = (await c.env.DB.prepare('SELECT id,status,started_at,finished_at,coverage,coverage_json,error_code,timings_json,request_count FROM acquisition_runs ORDER BY started_at DESC LIMIT 20').all()).results;
+  const rows = (await c.env.DB.prepare('SELECT id,status,started_at,finished_at,coverage,coverage_json,error_code,timings_json,request_count FROM acquisition_runs ORDER BY started_at DESC LIMIT 90').all()).results;
   return c.json({ok:true,runs:rows.map((row:any)=>({...row,details:JSON.parse(row.coverage_json||'{}'),timings:JSON.parse(row.timings_json||'{}'),coverage_json:undefined,timings_json:undefined}))});
 });
 async function overviewHistory(db:D1Database){
@@ -209,12 +210,13 @@ async function readDeepSeekKey(env: Bindings) {
   return env.DEEPSEEK_API_KEY;
 }
 registerAi(app,readDeepSeekKey);
+registerChat(app,readDeepSeekKey);
 app.get('/api/settings/deepseek/status', async (c) => {
   const setting = await c.env.DB.prepare("SELECT value_json,updated_at FROM settings WHERE key='deepseek_status'").first<{ value_json:string; updated_at:string }>();
   const value = setting ? JSON.parse(setting.value_json) : {};
   return c.json({ ok:true, configured:Boolean(await readDeepSeekKey(c.env)), maskedKey:await readDeepSeekKey(c.env).then(key=>key?key.slice(0,4)+'********'+key.slice(-4):null), last4:value.last4 ?? null, lastTestAt:value.lastTestAt ?? null, model:await aiModel(c.env),models:AI_MODELS,effort:await aiEffort(c.env),dailyBudget:Number(c.env.AI_DAILY_CNY_LIMIT)||1,monthlyBudget:Number(c.env.AI_MONTHLY_CNY_LIMIT)||5 });
 });
-app.put('/api/settings/deepseek', zValidator('json', z.object({ apiKey:z.string().min(8).max(256).optional(), model:z.enum(AI_MODELS).optional(),effort:z.enum(['off','low','high','max']).optional() })), async (c) => {
+app.put('/api/settings/deepseek', zValidator('json', z.object({ apiKey:z.string().min(8).max(256).optional(), model:z.enum(AI_MODELS).optional(),effort:z.enum(['low','high','max']).optional() })), async (c) => {
   if (!c.env.MASTER_ENCRYPTION_KEY_BASE64) return jsonError(c,503,'encryption_not_configured','请先配置本地主加密密钥');
   const input=c.req.valid('json'),now=new Date().toISOString();
   if(input.effort)await c.env.DB.prepare("INSERT INTO settings(key,value_json,updated_at) VALUES('deepseek_effort',?,?) ON CONFLICT(key) DO UPDATE SET value_json=excluded.value_json,updated_at=excluded.updated_at").bind(JSON.stringify(input.effort),now).run();

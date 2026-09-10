@@ -28,6 +28,8 @@
     "qrcode": "1.5.4",
     "react": "19.2.8",
     "react-dom": "19.2.8",
+    "react-markdown": "^10.1.0",
+    "remark-gfm": "^4.0.1",
     "wordcloud": "1.2.3",
     "zod": "4.4.3"
   },

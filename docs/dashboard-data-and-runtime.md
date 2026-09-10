@@ -160,6 +160,21 @@ B站封面播放与弹幕图标的实际SVG路径保存在src/studio/BiliIcons.t
 - DeepSeek：首次调用 https://api-docs.deepseek.com/zh-cn/ ，思考模式 https://api-docs.deepseek.com/zh-cn/guides/thinking_mode/ ，图像理解 https://api-docs.deepseek.com/zh-cn/guides/vision/ ，JSON输出 https://api-docs.deepseek.com/zh-cn/guides/json_mode/ 。
 - Apple HIG：按钮 https://developer.apple.com/design/human-interface-guidelines/buttons ，动效 https://developer.apple.com/design/human-interface-guidelines/motion 。网页使用相应的圆角、反馈、响应式与减少动态效果原则；不是嵌入原生UIKit组件。
 
+## v0.1.0-dev.26 — 页面细节、转场性能与 AI 对话
+
+- 概览：增加竖屏指标内边距，横屏保持原值；封标评分按发稿时间从旧到新排列。
+- 稿件：移除多选跳转分析；搜索补齐非线性悬停与聚焦反馈；封面解码后淡入，重排动画延长到 420ms，仍为可中断的位移动画。
+- 详情：移除分析入口和重复时长、播放量；细分指标上移，表现/观众统一网格间距；兴趣词云的黑色词条改为灰色。
+- 下拉和悬停使用统一缓动；修正多余的纵向滚动容器，保留确有溢出的图表、表格及聊天内容滚动。
+- 同步历史参照 OpenAI 状态页实际 SVG：宽5、高16、圆角1、间距约2.34，绿色 `#24c19a`，150ms `cubic-bezier(.4,0,.2,1)`；一格对应一次同步，点击仅显示一条详情，不再铺开每次同步的列表。最近90次真实记录按屏宽分页，未补造记录。
+- 持续运行时间超过1小时显示小时和分钟；账号卡片区分当前状态与悬停。侧栏品牌居中且不可点击，底部资料的左/下/右间距一致。移除数据导出。
+- AI 入口移至分析页第三个选项，使用完整 Markdown 对话、稿件范围选择、可选封面、连续追问、流式回复、新会话、停止与复制。SQLite 保存会话和部分回复，按账号隔离；旧报告以幂等方式迁入，保留原记录。
+- 模型与思考强度按2026-09-10官方文档更新：`deepseek-flash` 对应 V4.1 Flash 并支持图片，保留当前仍可调用的 `deepseek-v4-pro`；废弃 Flash/视觉实验版设置在读取时映射为新模型；`low/high/max` 显示为轻度/高/最高。官方说明 V4 Pro 自9月14日12:00起也将由 Flash 承接。
+- 图表仅在接近视口时初始化，首轮文字布局避开280ms页面转场，每帧最多处理一个图表任务，重复 resize 合并；AI Markdown 独立代码块按需加载。
+- 性能对比：本机 Chromium、1440×1000、真实数据，三轮概览→稿件→分析→稿件分析。在切换起始320ms窗口内，旧版稿件分析出现59–114ms长任务，最慢帧117ms；新版九次切换未记录到长任务，最慢帧17ms。该结果是指定场景测量，不表示所有设备绝无卡顿。
+- 验证：33项单元测试、123项桌面/手机/平板浏览器用例（包括修正后的定向复测）、构建通过；详情逐张滚动验证图表绘制；1440/768/390三种宽度的五个主页面无横向溢出。字体保持dev.25的内嵌文件。
+- 参考：[状态页](https://status.openai.com/)、[DeepSeek模型](https://api-docs.deepseek.com/zh-cn/)、[思考模式](https://api-docs.deepseek.com/zh-cn/guides/thinking_mode/)、[图像理解](https://api-docs.deepseek.com/zh-cn/guides/vision/)。
+
 ## v0.1.0-dev.25 — 内嵌当前字体并保持排版
 
 - 页面沿用当前安装的苹方；图表沿用微软雅黑 UI；兴趣词云沿用微软雅黑。根据浏览器实际选中的文件转换 WOFF2，不更换相似字体，不调整现有字号、字重、字距和行高。

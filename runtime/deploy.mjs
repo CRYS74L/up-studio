@@ -32,7 +32,7 @@ if(!fs.existsSync(path.join(root,'bin/node.exe')))fs.copyFileSync(process.execPa
 const allowed=new Set(['MASTER_ENCRYPTION_KEY_BASE64','APP_PASSWORD_HASH','INTERNAL_COLLECT_SECRET','DEEPSEEK_API_KEY','GOOGLE_CLIENT_ID','GOOGLE_CLIENT_SECRET','RESEND_API_KEY','ALERT_RECIPIENT']);
 const configPath=path.join(root,'config.json');
 const previousConfig=fs.existsSync(configPath)?JSON.parse(fs.readFileSync(configPath,'utf8')):{};
-const config={...previousConfig,APP_ORIGIN:'http://localhost:5173',DEEPSEEK_MODEL:'deepseek-v4-flash',AI_DAILY_CNY_LIMIT:'1',AI_MONTHLY_CNY_LIMIT:'5'};
+const config={...previousConfig,APP_ORIGIN:'http://localhost:5173',DEEPSEEK_MODEL:'deepseek-flash',AI_DAILY_CNY_LIMIT:'1',AI_MONTHLY_CNY_LIMIT:'5'};
 for(const line of fs.readFileSync(path.join(project,'.dev.vars'),'utf8').split(/\r?\n/)){const match=line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*?)\s*$/);if(match&&allowed.has(match[1]))config[match[1]]=match[2].replace(/^(['"])(.*)\1$/,'$2');}
 if(previousConfig.MASTER_ENCRYPTION_KEY_BASE64)config.MASTER_ENCRYPTION_KEY_BASE64=previousConfig.MASTER_ENCRYPTION_KEY_BASE64;
 if(!config.MASTER_ENCRYPTION_KEY_BASE64)throw new Error('Encryption key is missing');
