@@ -33,7 +33,7 @@ export function Chart({ option, className, events }: { option: any; className: s
     const current = latest.current;
     const resolved=themedOption(current.option,element.current);
     const x=resolved.xAxis;if(x?.type==='category'&&x.axisLabel?.interval===0&&x.data?.length){const width=(element.current?.clientWidth??800)-110;const tight=width/x.data.length<30;x.axisLabel={...x.axisLabel,hideOverlap:false,showMinLabel:true,showMaxLabel:true,rotate:tight?-90:x.axisLabel.rotate,...(tight?{fontSize:10,lineHeight:10}:{})};}
-    chart.setOption({ ...resolved, animation: !reduced && !document.documentElement.dataset.transitionKind && current.option.animation !== false, animationDurationUpdate: reduced ? 0 : 300 }, { notMerge: true });
+    chart.setOption({ ...resolved, animation: !reduced && !document.documentElement.dataset.transitionKind && !document.documentElement.dataset.contentSwitch && !element.current?.closest('[data-content-motion]') && current.option.animation !== false, animationDurationUpdate: reduced ? 0 : 300 }, { notMerge: true });
     dirty.current=false;
     for (const [name, callback] of Object.entries(bound.current)) chart.off(name, callback);
     bound.current = current.events ?? {};
@@ -44,18 +44,15 @@ export function Chart({ option, className, events }: { option: any; className: s
     let live = true;
     let fontsReady = false;
     let visible = false;
-    let settled = matchMedia('(prefers-reduced-motion: reduce)').matches;
     let width = 0, height = 0;
     const resize = () => {
-      if (!live || !settled || !fontsReady || !visible || !element.current?.clientWidth || !element.current.clientHeight) return;
+      if (!live || !fontsReady || !visible || !element.current?.clientWidth || !element.current.clientHeight) return;
       if (!instance.current) { instance.current = echarts.init(element.current); update(); }
       else if(width!==element.current.clientWidth||height!==element.current.clientHeight) { instance.current.resize(); update(); }
       else if(dirty.current)update();
       width=element.current.clientWidth;height=element.current.clientHeight;
     };
     schedule.current=()=>{dirty.current=true;queueRender(element,()=>{if(!live||!visible)return;if(instance.current)update();else resize();});};
-    // Let the 280ms page transition finish before the first canvas text layout.
-    const enterTimer=setTimeout(()=>{settled=true;queueRender(element,resize);},320);
     const observer = new ResizeObserver(()=>queueRender(element,resize));
     observer.observe(element.current);
     const intersection=new IntersectionObserver(entries=>{visible=entries[0].isIntersecting;if(visible)queueRender(element,resize);},{rootMargin:'120px'});
@@ -64,12 +61,12 @@ export function Chart({ option, className, events }: { option: any; className: s
     loadFonts(chartFont).then(() => { fontsReady = true; queueRender(element,resize); }).catch(() => {
       if (live && element.current) element.current.textContent = '图表字体加载失败，请刷新页面。';
     });
-    const prepare=()=>{const r=element.current?.getBoundingClientRect();if(r&&r.bottom>0&&r.top<innerHeight){visible=true;settled=true;dirty.current=true;cancelRender(element);resize();}};document.addEventListener('up:prepare-view',prepare);
+    const prepare=()=>{const r=element.current?.getBoundingClientRect();if(r&&r.bottom>0&&r.top<innerHeight){visible=true;dirty.current=true;cancelRender(element);resize();}};document.addEventListener('up:prepare-view',prepare);
     const refresh=()=>schedule.current();
     reduced.addEventListener('change', refresh);
     const themeObserver=new MutationObserver(refresh);
     themeObserver.observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
-    return () => { live = false; document.removeEventListener('up:prepare-view',prepare);clearTimeout(enterTimer);cancelRender(element);intersection.disconnect();observer.disconnect(); themeObserver.disconnect(); reduced.removeEventListener('change', refresh); instance.current?.dispose(); instance.current = null; bound.current = {}; };
+    return () => { live = false; document.removeEventListener('up:prepare-view',prepare);cancelRender(element);intersection.disconnect();observer.disconnect(); themeObserver.disconnect(); reduced.removeEventListener('change', refresh); instance.current?.dispose(); instance.current = null; bound.current = {}; };
   }, []);
   useEffect(()=>schedule.current(), [option, events]);
   const category=option.xAxis?.type==='category'&&option.xAxis?.axisLabel?.interval===0;const count=category?option.xAxis.data?.length??0:0;const minimum=count*9+(Number(option.grid?.left)||50)+(Number(option.grid?.right)||25);

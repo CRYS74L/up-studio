@@ -33,38 +33,30 @@ async function prefetch(route:StudioRoute,signal:AbortSignal){
  };
  await bounded(work(),signal,2000);
 }
-export async function preparePage(signal:AbortSignal){
- if(signal.aborted)return;
- const visible=[...document.querySelectorAll<HTMLImageElement>('.studio > .s-main .s-page img')].filter(img=>{const r=img.getBoundingClientRect();return r.bottom>0&&r.top<innerHeight&&r.width>0});
- visible.forEach(img=>{img.loading='eager'});
- await bounded(Promise.all(visible.map(img=>img.decode().catch(()=>{}))),signal,120);
- if(signal.aborted)return;
- flushSync(()=>{});
- document.dispatchEvent(new Event('up:prepare-view'));
- await bounded(new Promise(r=>setTimeout(r,0)),signal,30);
-}
-export async function transitionPage(update:()=>void,route?:StudioRoute,restore?:()=>void){
+export async function transitionPage(update:()=>void,route?:StudioRoute,restore?:()=>void,axis:'x'|'y'='y',selector?:string){
  cancelPageTransition();const token=revision,controller=new AbortController();preparing=controller;
- if(route)await prefetch(route,controller.signal);
+ if(route)void prefetch(route,controller.signal);
  if(controller.signal.aborted||token!==revision)return;
  if(matchMedia('(prefers-reduced-motion: reduce)').matches){flushSync(update);restore?.();preparing=undefined;return;}
- const old=capturePage();
+ const main=document.querySelector<HTMLElement>('.studio > .s-main')!;
+ const old=capturePage(selector?main.querySelector<HTMLElement>(selector):null);
  document.documentElement.dataset.transitionKind='page';
  document.documentElement.dataset.routePhase='preparing';
- const main=document.querySelector<HTMLElement>('.studio > .s-main')!;
- main.style.opacity='0.001';main.style.zIndex='21';main.style.willChange='transform,opacity';
+
  const animations:Animation[]=[];
- cleanup=()=>{for(const a of animations)a.cancel();old?.remove();main.style.removeProperty('opacity');main.style.removeProperty('transform');main.style.removeProperty('will-change');main.style.removeProperty('z-index')};
  flushSync(update);restore?.();
- await preparePage(controller.signal);
- await bounded(new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))),controller.signal,60);
+ const target=(selector?main.querySelector<HTMLElement>(selector):main)??main;
+ target.style.zIndex='21';target.style.willChange='transform,opacity';
+ cleanup=()=>{for(const a of animations)a.cancel();old?.remove();target.style.removeProperty('opacity');target.style.removeProperty('transform');target.style.removeProperty('will-change');target.style.removeProperty('z-index')};
  if(controller.signal.aborted||token!==revision)return;
  document.documentElement.dataset.routePhase='animating';
- // Both navigation and content start on this frame, after layout/decode work.
+ // No network, decode timer, or extra frame is awaited on the click path.
  flushSync(()=>document.dispatchEvent(new Event('up:route-motion')));
- main.style.willChange='transform,opacity';main.style.removeProperty('opacity');
- animations.push(main.animate([{opacity:0,transform:'translateY(14px)'},{opacity:1,transform:'translateY(0)'}],{duration:420,easing:'cubic-bezier(.16,1,.3,1)',fill:'both'}));
- if(old)animations.push(old.animate([{opacity:1,transform:'translateY(0)'},{opacity:0,transform:'translateY(-7px)'}],{duration:280,easing:'cubic-bezier(.4,0,1,1)',fill:'both'}));
+ const timing={duration:360,easing:'cubic-bezier(.22,1,.36,1)',fill:'both' as const};
+ const enter=target.animate([{opacity:0,transform:axis==='x'?'translateX(18px)':'translateY(12px)'},{opacity:1,transform:'translate(0,0)'}],timing);
+ animations.push(enter);
+ if(old)animations.push(old.animate([{opacity:1,transform:'translate(0,0)'},{opacity:0,transform:axis==='x'?'translateX(-9px)':'translateY(-6px)'}],timing));
+ const start=document.timeline.currentTime;for(const animation of animations)animation.startTime=start;
  await Promise.allSettled(animations.map(a=>a.finished));
  if(token===revision){cleanup?.();cleanup=undefined;preparing=undefined;delete document.documentElement.dataset.transitionKind;delete document.documentElement.dataset.routePhase;}
 }
