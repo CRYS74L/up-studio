@@ -1,3 +1,4 @@
+import {registerVideoDetail} from './video-detail';
 import {registerAi,aiModel,aiEffort,AI_MODELS} from './ai-analysis';
 import {registerChat} from './ai-chat';
 import {accountDatabase,rootDatabase,prepareAccount,fetchProfile} from './accounts';
@@ -306,6 +307,7 @@ app.post('/internal/collect', async (c) => {
   return c.json({ ok: true, run: await collect(c.env, 'proxy') });
 });
 
+registerVideoDetail(app);
 app.notFound(async (c) => c.env.ASSETS.fetch(c.req.raw));
 
 export default {

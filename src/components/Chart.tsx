@@ -1,3 +1,4 @@
+import {spaceNumbers} from '../typography/spacing';
 import { useEffect, useRef } from 'react';
 import { echarts } from '../charts';
 import { chartFont, loadFonts } from '../fonts';
@@ -9,13 +10,14 @@ function themedOption(option: any, element: HTMLElement | null) {
   const text=style.getPropertyValue('--text').trim()||'#242937',muted=style.getPropertyValue('--muted').trim()||text;
   const line=style.getPropertyValue('--line').trim()||'#e9ecf2',surface=style.getPropertyValue('--surface').trim()||'#fff';
   const map=(value:any,fn:(item:any)=>any)=>Array.isArray(value)?value.map(fn):value?fn(value):value;
-  const label=(value:any)=>({...value,color:text});
-  const axis=(value:any)=>({...value,nameTextStyle:label(value.nameTextStyle),axisLabel:{...value.axisLabel,color:value.type==='category'?text:muted},axisLine:{...value.axisLine,lineStyle:{...value.axisLine?.lineStyle,color:line}},splitLine:{...value.splitLine,lineStyle:{...value.splitLine?.lineStyle,color:line}}});
+  const fmt=(fn:any)=>(...args:any[])=>spaceNumbers(String(typeof fn==='function'?fn(...args):typeof fn==='string'?fn.replace('{value}',String(args[0])):args[0]));
+  const label=(value:any)=>({...value,color:text,...(value?.formatter?{formatter:fmt(value.formatter)}:{})});
+  const axis=(value:any)=>({...value,nameTextStyle:label(value.nameTextStyle),name:typeof value.name==='string'?spaceNumbers(value.name):value.name,axisLabel:{...value.axisLabel,formatter:fmt(value.axisLabel?.formatter),color:value.type==='category'?text:muted},axisLine:{...value.axisLine,lineStyle:{...value.axisLine?.lineStyle,color:line}},splitLine:{...value.splitLine,lineStyle:{...value.splitLine?.lineStyle,color:line}}});
   const radial=Array.isArray(option.series)&&option.series.every((s:any)=>['pie','map'].includes(s.type));
   return {...option,grid:radial?undefined:option.grid,textStyle:label(option.textStyle),xAxis:radial?undefined:map(option.xAxis,axis),yAxis:radial?undefined:map(option.yAxis,axis),
-    legend:map(option.legend,(v:any)=>({...v,textStyle:label(v.textStyle),inactiveColor:muted})),
-    tooltip:map(option.tooltip,(v:any)=>({...v,backgroundColor:surface,borderColor:line,textStyle:label(v.textStyle)})),
-    series:map(option.series,(v:any)=>({...v,...(v.type==='pie'?{padAngle:1,minAngle:2.5,itemStyle:{...v.itemStyle,borderRadius:7},data:v.data?.map((d:any)=>({...d,itemStyle:{...d.itemStyle,borderRadius:7}}))}:{}),...(v.type==='line'?{symbol:'circle',itemStyle:{...v.itemStyle,color:surface,borderColor:v.lineStyle?.color??v.itemStyle?.color,borderWidth:2},smooth:.5,smoothMonotone:'x',connectNulls:false,areaStyle:{opacity:1,color:{type:'linear',x:0,y:0,x2:0,y2:1,colorStops:[{offset:0,color:(v.lineStyle?.color??v.itemStyle?.color??'#FF73AC')+'55'},{offset:1,color:(v.lineStyle?.color??v.itemStyle?.color??'#FF73AC')+'00'}]}}}:{}),label:label(v.label),endLabel:label(v.endLabel),emphasis:{...v.emphasis,label:label(v.emphasis?.label)},markLine:v.markLine?{...v.markLine,label:label(v.markLine.label)}:v.markLine}))};
+    legend:map(option.legend,(v:any)=>({...v,textStyle:label(v.textStyle),inactiveColor:muted,formatter:fmt(v.formatter)})),
+    tooltip:map(option.tooltip,(v:any)=>({...v,backgroundColor:surface,borderColor:line,textStyle:label(v.textStyle),...(v.formatter?{formatter:fmt(v.formatter)}:{})})),
+    series:map(option.series,(v:any)=>({...v,...(v.type==='pie'?{padAngle:1,minAngle:2.5,itemStyle:{...v.itemStyle,borderRadius:7},data:v.data?.map((d:any)=>({...d,itemStyle:{...d.itemStyle,borderRadius:7}}))}:{}),...(v.type==='line'?{symbol:'circle',lineStyle:{...v.lineStyle,color:v.lineStyle?.color??v.itemStyle?.color,width:v.lineStyle?.width??2.2},itemStyle:{...v.itemStyle,color:surface,borderColor:v.lineStyle?.color??v.itemStyle?.color,borderWidth:2},smooth:v.smooth??.25,smoothMonotone:'x',connectNulls:false,areaStyle:v.areaStyle??{opacity:.5,color:{type:'linear',x:0,y:0,x2:0,y2:1,colorStops:[{offset:0,color:(v.lineStyle?.color??v.itemStyle?.color??'#FF73AC')+'28'},{offset:1,color:(v.lineStyle?.color??v.itemStyle?.color??'#FF73AC')+'00'}]}}}:{}),label:label(v.label),endLabel:label(v.endLabel),emphasis:{...v.emphasis,label:label(v.emphasis?.label)},markLine:v.markLine?{...v.markLine,label:label(v.markLine.label)}:v.markLine}))};
 }
 
 export function Chart({ option, className, events }: { option: any; className: string; events?: Record<string, (p: any) => void> }) {
@@ -25,6 +27,7 @@ export function Chart({ option, className, events }: { option: any; className: s
   latest.current = { option, events };
   const bound = useRef<Record<string, (p: any) => void>>({});
   const dirty = useRef(true);
+  const signature=useRef('');
   const schedule = useRef<() => void>(() => {});
   const update = () => {
     const chart = instance.current;
@@ -40,7 +43,9 @@ export function Chart({ option, className, events }: { option: any; className: s
       resolved.yAxis=axes.map(a=>({...a,offset:Math.floor((a.offset??0)/54)*32,nameTextStyle:{...a.nameTextStyle,fontSize:10},axisLabel:{...a.axisLabel,fontSize:10}}));
     }
     const x=resolved.xAxis;if(x?.type==='category'&&x.axisLabel?.interval===0&&x.data?.length){const width=available-(Number(resolved.grid?.left)||50)-(Number(resolved.grid?.right)||25);const tight=width/x.data.length<30;const size=Math.max(8,Math.min(10,Math.floor(width/x.data.length)));x.axisLabel={...x.axisLabel,hideOverlap:false,showMinLabel:true,showMaxLabel:true,rotate:tight?-90:x.axisLabel.rotate,...(tight?{fontSize:size,lineHeight:size}:{})};}
-    chart.setOption({ ...resolved, animation: !reduced && !document.documentElement.dataset.transitionKind && !document.documentElement.dataset.contentSwitch && !element.current?.closest('[data-content-motion]') && current.option.animation !== false, animationDurationUpdate: reduced ? 0 : 300 }, { notMerge: true });
+    const nextSignature=JSON.stringify({...resolved,tooltip:undefined});
+    if(nextSignature!==signature.current){chart.setOption({...resolved,animation:!reduced&&document.documentElement.dataset.transitionKind!=='theme'&&current.option.animation!==false,animationDuration:650,animationDurationUpdate:300},{notMerge:true});signature.current=nextSignature;}
+    else chart.setOption({tooltip:resolved.tooltip});
     dirty.current=false;
     for (const [name, callback] of Object.entries(bound.current)) chart.off(name, callback);
     bound.current = current.events ?? {};
@@ -73,7 +78,7 @@ export function Chart({ option, className, events }: { option: any; className: s
     reduced.addEventListener('change', refresh);
     const themeObserver=new MutationObserver(refresh);
     themeObserver.observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
-    return () => { live = false; document.removeEventListener('up:prepare-view',prepare);cancelRender(element);intersection.disconnect();observer.disconnect(); themeObserver.disconnect(); reduced.removeEventListener('change', refresh); instance.current?.dispose(); instance.current = null; bound.current = {}; };
+    return () => { live = false; document.removeEventListener('up:prepare-view',prepare);cancelRender(element);intersection.disconnect();observer.disconnect(); themeObserver.disconnect(); reduced.removeEventListener('change', refresh); instance.current?.dispose(); instance.current = null; signature.current=""; bound.current = {}; };
   }, []);
   useEffect(()=>schedule.current(), [option, events]);
   const category=option.xAxis?.type==='category'&&option.xAxis?.axisLabel?.interval===0;const count=category?option.xAxis.data?.length??0:0;const minimum=count*9+(Number(option.grid?.left)||50)+(Number(option.grid?.right)||25);

@@ -16,8 +16,9 @@ export function VideoDiagnostics({video}:{video:Video}){
 
 export function VideoEngagement({video}:{video:Video}){
  const retention=video.dimensions?.retention??{},base=chartBase();
- const dm=Array.isArray(retention.dm)?retention.dm:[],peer=Array.isArray(retention.peerDm)?retention.peerDm:[],items=retention.danmuInfo?.list??[];
- const option={...base,legend:{top:0,textStyle:base.textStyle},grid:{left:50,right:25,top:50,bottom:45},xAxis:{...base.xAxis,type:'value',name:'s'},yAxis:{...base.yAxis,name:'弹幕数'},series:[{name:'你的作品',type:'line',showSymbol:false,data:dm.map((p:any)=>[p.duration_key,p.num]),itemStyle:{color:'#B3A0FF'}},{name:'同类作品',type:'line',showSymbol:false,data:peer.map((p:any)=>[p.duration_key,p.num<0?null:p.num]),itemStyle:{color:'#93CDD9'}}]};
+ const rawDm=Array.isArray(retention.dm)?retention.dm:[],rawPeer=Array.isArray(retention.peerDm)?retention.peerDm:[];
+ const dm=rawDm.length?[{duration_key:0,num:0},...rawDm]:[],peer=rawPeer.length?dm.map((p:any,i:number)=>({duration_key:p.duration_key,num:i===0?0:Math.max(0,rawPeer[i-1]?.num??0)})):[],items=retention.danmuInfo?.list??[];
+ const option={...base,legend:{top:0,textStyle:base.textStyle},grid:{left:50,right:25,top:50,bottom:45},xAxis:{...base.xAxis,type:'value',name:'s',min:0,max:video.duration_seconds},yAxis:{...base.yAxis,name:'弹幕数',min:0,minInterval:1,max:(v:any)=>Math.max(1,Math.ceil(v.max*1.15))},series:[{name:'你的作品',type:'line',smooth:false,showSymbol:false,data:dm.map((p:any)=>[p.duration_key,p.num]),itemStyle:{color:'#B3A0FF'}},{name:'同类作品',type:'line',smooth:false,showSymbol:false,data:peer.map((p:any)=>[p.duration_key,p.num<0?null:p.num]),itemStyle:{color:'#93CDD9'}}]};
  if(!dm.length&&!items.length)return null;
  return <div className="s-two-col s-diagnostics">{dm.length>0&&<section className="s-panel"><h3>弹幕高光时刻</h3><Chart className="s-large-chart" option={option}/></section>}<section className="s-panel"><h3>互动弹幕</h3><p className="s-source-insight">通过弹幕组件产生 {compact(retention.danmuInfo?.total)} 次互动</p>{items.map((item:any,i:number)=><div className="s-data-row" key={i}><span>{seconds(item.progress/1000)} · {item.title}</span><b>{compact(item.count)} 人{item.count>0&&typeof item.score==='number'?` · 均分 ${compact(item.score/item.count)}`:''}</b></div>)}</section></div>;
 }

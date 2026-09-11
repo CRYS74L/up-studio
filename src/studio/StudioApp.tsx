@@ -20,7 +20,7 @@ import {Sources} from './Sources';
 import {navigate,useStudioRoute} from './route';
 import {spring,Sheet} from './ui';
 import {NavButton,NavSelection} from './NavButton';
-import {Account} from './Account';
+import {Account,Brand} from './Account';
 import './studio.css';
 const pages=[['overview','概览',LayoutDashboard],['videos','稿件',SquarePlay],['analysis','分析',ChartNoAxesCombined],['sources','数据源',DatabaseZap]] as const;
 function Studio(){const {summary,videos}=useDashboardData();const route=useStudioRoute(),[theme,setTheme]=useState(getInitialTheme),[menu,setMenu]=useState(false),sync=useSync();const page=route.page==='matrix'?'analysis':route.page;useEffect(()=>{applyTheme(getInitialTheme());void loadFonts(chartFont).catch(()=>{});const idle=globalThis.requestIdleCallback?.(()=>warmSnapshotStyles());return()=>{if(idle!=null)cancelIdleCallback(idle)}},[]);
@@ -32,7 +32,7 @@ function Studio(){const {summary,videos}=useDashboardData();const route=useStudi
   useEffect(()=>{if(!sync.data&&!sync.error)return;const timer=setTimeout(()=>sync.reset(),sync.error?6500:3500);return()=>clearTimeout(timer)},[sync.data,sync.error]);
   function go(p:string){navigate(p);setMenu(false);}
   return <MotionConfig reducedMotion="user" transition={spring}><LayoutGroup><div className={`studio ${menu?'nav-open':''}`}>
-    <aside className="s-sidebar"><div className="s-brand"><img className="s-brand-logo" src="/brand/up-mark.svg" alt=""/><div><b>UP Studio</b></div></div><nav aria-label="主导航"><NavSelection page={page}/>{pages.map(([id,label])=><NavButton key={id} id={id} label={label} active={page===id} onClick={()=>go(id)}></NavButton>)}</nav><Account/></aside>
+    <aside className="s-sidebar"><Brand/><nav aria-label="主导航"><NavSelection page={page}/>{pages.map(([id,label])=><NavButton key={id} id={id} label={label} active={page===id} onClick={()=>go(id)}></NavButton>)}</nav><Account/></aside>
     <main className="s-main"><header className="s-header"><div><h1>{titles[page]??'创作概览'}</h1></div><div className="s-header-actions">{summary?.configured&&<span className="s-header-freshness">最近同步 · {ageLabel(summary.freshnessMinutes)}</span>}<ThemeSwitch value={theme} onChange={(next,origin)=>{void transitionTheme(next,origin,()=>setTheme(next))}}/></div></header>
     <AnimatePresence>{(sync.data||sync.error)&&<motion.div className={`s-toast s-floating-toast ${sync.error?'error':''}`} role="status" initial={{opacity:0,y:-16,scale:.98}} animate={{opacity:1,y:0,scale:1}} exit={{opacity:0,y:-12,scale:.98}} transition={{type:'tween',duration:.2}}><span>{sync.error?.message??(sync.data?.status==='partial'?'同步完成，部分数据待更新':sync.data?.status==='skipped'?'正在同步中':'同步完成')}</span></motion.div>}</AnimatePresence>
     <div className="s-page" key={page+':'+(route.video??'')+(page==='settings'?location.hash:'')}>{page==='videos'?<Library route={route}/>:page==='analysis'?<Analysis route={route}/>:page==='sources'?<Sources sync={sync}/>:<Overview/>}</div></main><BackToTop/>
