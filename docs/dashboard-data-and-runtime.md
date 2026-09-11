@@ -160,6 +160,17 @@ B站封面播放与弹幕图标的实际SVG路径保存在src/studio/BiliIcons.t
 - DeepSeek：首次调用 https://api-docs.deepseek.com/zh-cn/ ，思考模式 https://api-docs.deepseek.com/zh-cn/guides/thinking_mode/ ，图像理解 https://api-docs.deepseek.com/zh-cn/guides/vision/ ，JSON输出 https://api-docs.deepseek.com/zh-cn/guides/json_mode/ 。
 - Apple HIG：按钮 https://developer.apple.com/design/human-interface-guidelines/buttons ，动效 https://developer.apple.com/design/human-interface-guidelines/motion 。网页使用相应的圆角、反馈、响应式与减少动态效果原则；不是嵌入原生UIKit组件。
 
+## v0.1.0-dev.27 — 连贯转场与上下文设置
+
+- 页面切换取消先退出再进入的等待，改为内容直接衔接、72%至100%的短淡入；取消整页纵向滑入。逐帧验证内容节点始终存在、没有全透明阶段。
+- 使用稳定滚动条槽，验证有无滚动条时主区域宽度和横向位置不变。滚动超过240px显示回到顶部，支持减少动态效果偏好。
+- 页面标题增至桌面32px、手机29px；上升值颜色偏红橙 `#FF8868`。稿件/数据源改为现成 Files/CloudDownload 图标，保留仅点击时的SVG动画。
+- 深浅色切换为太阳/月亮双段滑块。品牌整体左移4px且彻底取消悬停动效。UP主信息默认透明，点击弹窗可添加/切换账号并查看版本。
+- 删除独立设置页与入口；旧设置链接落到AI对话。AI连接设置放入对话内弹窗。
+- AI输入区新增模型/推理强度浮层，采用三档圆点轨道、白色滑块、当前档位与模型名、重置按钮；支持鼠标、触摸、键盘。每次请求携带所选模型和强度，并在回复记录中保存实际参数。
+- 下拉触发器及选项不继承全局按下缩放；显式使用tween缓动，避免继承全局spring。宽的更新频率与窄的稿件排序均验证按下前后尺寸相同。
+- 构建和33项单元测试通过；135项桌面/手机/平板浏览器用例通过（包括更新断言后的定向复测）。本轮保留已确认的内嵌字体、同步状态格和数据口径。
+
 ## v0.1.0-dev.26 — 页面细节、转场性能与 AI 对话
 
 - 概览：增加竖屏指标内边距，横屏保持原值；封标评分按发稿时间从旧到新排列。

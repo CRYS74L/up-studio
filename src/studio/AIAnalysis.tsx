@@ -1,3 +1,5 @@
+import {ReasoningPicker} from './ReasoningPicker';
+import {Preferences} from './Preferences';
 import {useEffect,useRef,useState} from 'react';
 import {useQuery,useQueryClient} from '@tanstack/react-query';
 import {ArrowUp,Square,Plus,MessageSquare,Settings,Copy,PanelLeftClose,PanelLeftOpen,Paperclip} from 'lucide-react';
@@ -8,7 +10,7 @@ import type {Video} from '../types';
 import {modelLabel,supportsVision} from '../../shared/ai-models';
 import {navigate} from './route';
 import {ManuscriptPicker} from './ManuscriptPicker';
-import {AnimatePresence} from './ui';
+import {AnimatePresence,Sheet} from './ui';
 
 type Message={id:string;role:'user'|'assistant';content:string;status?:string;error?:string;model?:string;createdAt:string};
 type Conversation={id:string;title:string;messages:Message[];videoIds:string[];busy:boolean};
@@ -18,6 +20,7 @@ const write=(key:string,value:string)=>{try{localStorage.setItem(key,value)}catc
 export function AIAnalysis({videos}:{videos:Video[]}){
  const client=useQueryClient(),profile=useQuery({queryKey:['account-profile'],queryFn:()=>request<any>('/api/account/profile')});
  const owner=profile.data?.profile?.uid??'local';
+ const [settings,setSettings]=useState(false),[model,setModel]=useState<string|null>(()=>read('up-ai-model')||null),[effort,setEffort]=useState<string|null>(()=>read('up-ai-effort')||null);
  const [active,setActive]=useState(''),[draft,setDraft]=useState(''),[scope,setScope]=useState<string[]|null>(null),[picker,setPicker]=useState(false),[covers,setCovers]=useState(false),[historyOpen,setHistoryOpen]=useState(false),[sending,setSending]=useState(false),[error,setError]=useState(''),[copied,setCopied]=useState('');
  const scroll=useRef<HTMLDivElement>(null),stick=useRef(true),input=useRef<HTMLTextAreaElement>(null),generation=useRef(0);
  const select=(id:string)=>{generation.current++;setActive(id);write('up-ai-active:'+owner,id);setScope(null);setHistoryOpen(false);setError('');stick.current=true;};
@@ -31,11 +34,11 @@ export function AIAnalysis({videos}:{videos:Video[]}){
  useEffect(()=>{if(input.current){input.current.style.height='auto';input.current.style.height=Math.min(160,input.current.scrollHeight)+'px'}},[draft]);
  async function send(text=draft){
    if(!text.trim()||busy||sending)return;
-   if(!status.data?.configured){navigate('settings',{tab:'ai'});return;}
+   if(!status.data?.configured){setSettings(true);return;}
    setSending(true);setError('');stick.current=true;const token=++generation.current,controller=new AbortController();let id=active;
    const cache=(value:Conversation)=>client.setQueryData(['ai-conversation',owner,value.id],{ok:true,conversation:value});
    try{
-     const response=await fetch('/api/ai/chat',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({conversationId:active||undefined,message:text,ids,includeCovers:covers}),signal:controller.signal});
+     const response=await fetch('/api/ai/chat',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({conversationId:active||undefined,message:text,ids,includeCovers:covers,model:model??status.data?.model,effort:effort??status.data?.effort}),signal:controller.signal});
      if(!response.ok){const body=await response.json();throw Error(body.error?.message??'发送失败')}
      if(!response.body)throw Error('没有收到回复');
      setDraft('');write(`up-ai-draft:${owner}:${active}`,'');
@@ -53,13 +56,13 @@ export function AIAnalysis({videos}:{videos:Video[]}){
  const copy=async(m:Message)=>{try{await navigator.clipboard.writeText(m.content);setCopied(m.id);setTimeout(()=>setCopied(''),1800)}catch{setError('复制失败，请手动选择文字。')}};
  return <div className={'s-chat '+(historyOpen?'history-open':'')}>
    <aside className="s-chat-history" aria-label="对话记录"><button className="s-secondary" onClick={()=>select('')}><Plus/> 新对话</button><div className="s-chat-history-list">{history.data?.conversations?.map((c:any)=><button key={c.id} aria-pressed={active===c.id} onClick={()=>select(c.id)}><MessageSquare/><span><b>{c.title}</b><small>{new Date(c.updatedAt).toLocaleDateString('zh-CN')}</small></span></button>)}</div>{history.error&&<p role="alert">记录读取失败</p>}</aside>
-   <section className="s-chat-main"><header className="s-chat-header"><button className="s-icon" aria-label="切换对话记录" aria-expanded={historyOpen} onClick={()=>setHistoryOpen(v=>!v)}>{historyOpen?<PanelLeftClose/>:<PanelLeftOpen/>}</button><div><b>{current?.title??'AI 创作对话'}</b><small>{modelLabel(status.data?.model)}</small></div><button className="s-icon" aria-label="AI模型设置" onClick={()=>navigate('settings',{tab:'ai'})}><Settings/></button></header>
+   <section className="s-chat-main"><header className="s-chat-header"><button className="s-icon" aria-label="切换对话记录" aria-expanded={historyOpen} onClick={()=>setHistoryOpen(v=>!v)}>{historyOpen?<PanelLeftClose/>:<PanelLeftOpen/>}</button><div><b>{current?.title??'AI 创作对话'}</b><small>{modelLabel(model??status.data?.model)}</small></div><button className="s-icon" aria-label="AI模型设置" onClick={()=>setSettings(true)}><Settings/></button></header>
     <div className="s-chat-messages" ref={scroll} onScroll={()=>{const el=scroll.current!;stick.current=el.scrollHeight-el.scrollTop-el.clientHeight<90}}>
      {!active&&!messages.length&&<div className="s-chat-welcome"><img src="/brand/up-mark.svg" alt=""/><h2>想了解哪些创作数据？</h2><div>{['最近哪些内容值得延续？','帮我分析观看流失的原因','给下一篇视频设计一个验证实验'].map(q=><button className="s-secondary" key={q} onClick={()=>{setDraft(q);input.current?.focus()}}>{q}</button>)}</div></div>}
      {conversation.isPending&&active&&<p role="status">读取对话…</p>}{conversation.error&&<p role="alert">{conversation.error.message}</p>}
      {messages.map(m=><article key={m.id} className={'s-chat-message '+m.role} aria-label={m.role==='user'?'你的消息':'AI回复'}><div className="s-chat-message-body">{m.role==='user'?<p>{m.content}</p>:<Markdown remarkPlugins={[remarkGfm]} components={{img:()=>null,a:({href,children})=><a href={href} target={href?.startsWith('/#')?undefined:'_blank'} rel="noreferrer">{children}</a>}}>{m.content}</Markdown>}{m.status==='pending'&&!m.content&&<span className="s-chat-thinking" role="status">正在思考<span>…</span></span>}{m.error&&<p className="s-chat-message-state">{m.error}</p>}</div>{m.role==='assistant'&&m.content&&<button className="s-text" onClick={()=>void copy(m)}><Copy/>{copied===m.id?'已复制':'复制'}</button>}</article>)}
     </div>
-    <footer className="s-chat-footer">{error&&<p className="s-error" role="alert">{error}</p>}<div className="s-chat-compose"><textarea ref={input} aria-label="AI对话消息" rows={2} placeholder={status.data?.configured?'聊聊你的创作，Enter 发送，Shift + Enter 换行':'先配置 DeepSeek，再开始对话'} value={draft} maxLength={4000} onChange={e=>{setDraft(e.target.value);write(`up-ai-draft:${owner}:${active}`,e.target.value)}} onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.nativeEvent.isComposing){e.preventDefault();void send()}}}/><div className="s-chat-compose-tools"><button className="s-text" onClick={()=>setPicker(true)}><Paperclip/>{ids.length} 篇稿件</button>{supportsVision(status.data?.model)&&<label><input type="checkbox" checked={covers} onChange={e=>setCovers(e.target.checked)}/>附带封面</label>}{busy?<button className="s-icon" aria-label="停止生成" disabled={!controllers.has(owner+':'+active)} onClick={()=>controllers.get(owner+':'+active)?.abort()}><Square/></button>:<button className="s-primary s-chat-send" aria-label={status.data?.configured?'发送消息':'配置DeepSeek'} disabled={sending||((!draft.trim()||!ids.length)&&status.data?.configured)} onClick={()=>void send(status.data?.configured?draft:'开始分析')}><ArrowUp/></button>}</div></div></footer>
-   </section><AnimatePresence>{picker&&<ManuscriptPicker videos={videos} selected={ids} onChange={setScope} close={()=>setPicker(false)}/>}</AnimatePresence>
+    <footer className="s-chat-footer">{error&&<p className="s-error" role="alert">{error}</p>}<div className="s-chat-compose"><textarea ref={input} aria-label="AI对话消息" rows={2} placeholder={status.data?.configured?'聊聊你的创作，Enter 发送，Shift + Enter 换行':'先配置 DeepSeek，再开始对话'} value={draft} maxLength={4000} onChange={e=>{setDraft(e.target.value);write(`up-ai-draft:${owner}:${active}`,e.target.value)}} onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.nativeEvent.isComposing){e.preventDefault();void send()}}}/><div className="s-chat-compose-tools"><ReasoningPicker model={model??status.data?.model??'deepseek-flash'} effort={effort??status.data?.effort??'high'} onModel={v=>{setModel(v);write('up-ai-model',v)}} onEffort={v=>{setEffort(v);write('up-ai-effort',v)}} disabled={busy}/><button className="s-text" onClick={()=>setPicker(true)}><Paperclip/>{ids.length} 篇稿件</button>{supportsVision(model??status.data?.model)&&<label><input type="checkbox" checked={covers} onChange={e=>setCovers(e.target.checked)}/>附带封面</label>}{busy?<button className="s-icon" aria-label="停止生成" disabled={!controllers.has(owner+':'+active)} onClick={()=>controllers.get(owner+':'+active)?.abort()}><Square/></button>:<button className="s-primary s-chat-send" aria-label={status.data?.configured?'发送消息':'配置DeepSeek'} disabled={sending||((!draft.trim()||!ids.length)&&status.data?.configured)} onClick={()=>void send(status.data?.configured?draft:'开始分析')}><ArrowUp/></button>}</div></div></footer>
+   </section><AnimatePresence>{settings&&<Sheet title="AI 对话设置" close={()=>setSettings(false)}><Preferences/></Sheet>}{picker&&<ManuscriptPicker videos={videos} selected={ids} onChange={setScope} close={()=>setPicker(false)}/>}</AnimatePresence>
  </div>;
 }

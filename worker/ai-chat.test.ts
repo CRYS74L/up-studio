@@ -21,7 +21,8 @@ it('streams, persists followups and isolates conversations by account',async()=>
  const first=await call({message:'如何改进',ids:['1']});expect(first.status).toBe(200);const stream=await first.text();expect(stream).toContain('event: delta');expect(stream).toContain('event: done');expect(stream).not.toContain('not in answer');
  const row=db.database.prepare('SELECT * FROM ai_conversations').get();expect(JSON.parse(row.messages_json)).toHaveLength(2);expect(row.busy_until).toBe(0);
  expect(requests[0].model).toBe('deepseek-flash');expect(requests[0].reasoning_effort).toBe('high');expect(requests[0].messages[1].content).toContain('测试稿件');
- await (await call({conversationId:row.id,message:'继续，如何验证？',ids:['1']})).text();
+ await (await call({conversationId:row.id,message:'继续，如何验证？',ids:['1'],model:'deepseek-v4-pro',effort:'max'})).text();
+ expect(requests[1].model).toBe('deepseek-v4-pro');expect(requests[1].reasoning_effort).toBe('max');
  expect(requests[1].messages.slice(-3).map((m:any)=>m.role)).toEqual(['user','assistant','user']);
  const saved:any=await(await app.request('/api/ai/conversations/'+row.id,{},env)).json();expect(saved.conversation.messages).toHaveLength(4);expect(saved.conversation.messages.at(-1).status).toBe('complete');
  expect((await app.request('/api/ai/conversations/'+row.id,{}, {...env,DB:{...db,accountUid:'other'}})).status).toBe(404);

@@ -177,11 +177,11 @@ test('sources marks cached runtime status unavailable after connection loss',asy
 
 test('theme changes are persistent and mobile navigation reaches every page',async({page})=>{
  await page.goto('/');
- await page.getByRole('button',{name:'切换深浅色'}).click();
+ await page.getByRole('button',{name:'深色模式'}).click();
  await expect(page.locator('html')).toHaveAttribute('data-theme','dark');
  await page.reload();
  await expect(page.locator('html')).toHaveAttribute('data-theme','dark');
- await page.getByRole('button',{name:'切换深浅色'}).click();
+ await page.getByRole('button',{name:'浅色模式'}).click();
  await expect(page.locator('html')).toHaveAttribute('data-theme','light');
 });
 
@@ -202,7 +202,7 @@ test('empty responses offer an actual connection path',async({page})=>{
 
 test('all page layouts fit the viewport without runtime errors',async({page})=>{
  const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));
- for(const route of ['overview','videos','analysis','sources','settings']){
+ for(const route of ['overview','videos','analysis','sources']){
   await page.goto('/#'+route);
   await expect(page.locator('.s-header h1')).toBeVisible();
   await expect(page.locator('.s-loading')).toHaveCount(0);
@@ -247,7 +247,7 @@ async function choose(page:Page,name:string,label:string){if(name==='分析主�
 test('expanded sidebar shows the real UP profile and account actions',async({page})=>{
  await page.goto('/');await expect(page.getByRole('button',{name:'收起侧栏'})).toHaveCount(0);
  if((page.viewportSize()?.width??1000)<700)await page.getByRole('button',{name:'打开导航'}).click();
- await expect(page.getByText('测试UP主',{exact:true})).toBeVisible();await page.goto('/#settings');
+ await expect(page.getByText('测试UP主',{exact:true})).toBeVisible();await openAccount(page);
  await expect(page.getByRole('heading',{name:'哔哩哔哩账号'})).toBeVisible();await expect(page.getByRole('button',{name:'添加账号',exact:true})).toBeVisible();
 });
 test('analysis uses two categories and displays multiple charts together',async({page})=>{
@@ -296,7 +296,7 @@ test('sync toast disappears without a close button',async({page})=>{
  await page.clock.install();await page.route('**/api/bilibili/collect-now',r=>r.fulfill({json:{ok:true,run:{status:'success'}}}));await page.goto('/#videos');await expect(page.locator('.s-header-freshness')).toBeVisible();await page.getByRole('button',{name:'同步',exact:true}).click();await expect(page.locator('.s-floating-toast')).toContainText('同步完成');await expect(page.getByRole('button',{name:'关闭同步提示'})).toHaveCount(0);await page.clock.fastForward(4000);await expect(page.locator('.s-floating-toast')).toHaveCount(0);
 });
 test('settings uses current model and effort names and has no export action',async({page})=>{
- await page.goto('/#settings');await page.getByRole('button',{name:'AI设置',exact:true}).click();await choose(page,'DeepSeek分析模型','DeepSeek V4 Pro');await expect(page.getByRole('combobox',{name:'DeepSeek分析模型'})).toContainText('V4 Pro');
+ await page.goto('/#analysis?tab=ai');await page.getByRole('button',{name:'AI模型设置'}).click();await choose(page,'DeepSeek分析模型','DeepSeek V4 Pro');await expect(page.getByRole('combobox',{name:'DeepSeek分析模型'})).toContainText('V4 Pro');
  await page.getByRole('combobox',{name:'思考强度'}).click();await expect(page.getByRole('option')).toHaveText(['轻度','高','最高']);await page.keyboard.press('Escape');await expect(page.getByRole('button',{name:'数据导出',exact:true})).toHaveCount(0);await expect(page.getByRole('button',{name:/导出 CSV/})).toHaveCount(0);
 });
 
@@ -326,7 +326,7 @@ test('saved AI reports remain in chat history and account connection opens a QR 
  const record={id:'saved',title:'之前的问题',updatedAt:'2026-09-08',videoIds:['1'],busy:false,messages:[{id:'a',role:'assistant',content:'保留的分析结论',status:'complete'}]};
  await page.route('**/api/ai/conversations',r=>r.fulfill({json:{ok:true,conversations:[record]}}));await page.route('**/api/ai/conversations/saved',r=>r.fulfill({json:{ok:true,conversation:record}}));
  await page.goto('/#analysis');await page.getByRole('button',{name:'AI 对话',exact:true}).click();if(page.viewportSize()!.width<1000)await page.getByRole('button',{name:'切换对话记录'}).click();await page.locator('.s-chat-history-list').getByRole('button',{name:/之前的问题/}).click();await expect(page.locator('.s-chat-message')).toContainText('保留的分析结论');
- await page.route('**/api/bilibili/qr/start',r=>r.fulfill({json:{ok:true,key:'test',url:'https://example.com/test-qr'}}));await page.route('**/api/bilibili/qr/status/test',r=>r.fulfill({json:{ok:true,state:'waiting'}}));await page.goto('/#settings');await page.getByRole('button',{name:'添加账号',exact:true}).click();await expect(page.getByRole('img',{name:'B站账号登录二维码'})).toBeVisible();
+ await page.route('**/api/bilibili/qr/start',r=>r.fulfill({json:{ok:true,key:'test',url:'https://example.com/test-qr'}}));await page.route('**/api/bilibili/qr/status/test',r=>r.fulfill({json:{ok:true,state:'waiting'}}));await openAccount(page);await page.getByRole('button',{name:'添加账号',exact:true}).click();await expect(page.getByRole('img',{name:'B站账号登录二维码'})).toBeVisible();
 });
 
 test('direct manuscript selection avoids a modal and KPI content stays within each card',async({page})=>{
@@ -345,27 +345,27 @@ test('realistic manuscript count retains readable categories and two recent rows
 });
 
 test('AI stays in analysis, sidebar profile is static, and icons animate only on activation',async({page})=>{
- await page.emulateMedia({reducedMotion:'no-preference'});await page.goto('/');const nav=page.locator('.s-sidebar nav').getByRole('button',{name:'概览',exact:true});if((page.viewportSize()?.width??1000)<700)await page.getByRole('button',{name:'打开导航'}).click();await nav.hover();await expect(nav.locator('svg')).toHaveAttribute('data-motion-state','resting');await nav.click();if((page.viewportSize()?.width??1000)>=700)await expect(nav.locator('svg')).toHaveAttribute('data-motion-state','drawing');else await expect(page.locator('.s-nav-scrim')).toHaveCount(0);await expect(page.getByRole('button',{name:'UP主账号'})).toHaveCount(0);
- for(const pageName of ['overview','videos','analysis','sources','settings']){await page.goto('/#'+pageName);await expect(page.locator('.s-header-actions .s-ai-capsule')).toHaveCount(0);await expect(page.locator('button.s-brand')).toHaveCount(0);}
+ await page.emulateMedia({reducedMotion:'no-preference'});await page.goto('/');const nav=page.locator('.s-sidebar nav').getByRole('button',{name:'概览',exact:true});if((page.viewportSize()?.width??1000)<700)await page.getByRole('button',{name:'打开导航'}).click();await nav.hover();await expect(nav.locator('svg')).toHaveAttribute('data-motion-state','resting');await nav.click();if((page.viewportSize()?.width??1000)>=700)await expect(nav.locator('svg')).toHaveAttribute('data-motion-state','drawing');else await expect(page.locator('.s-nav-scrim')).toHaveCount(0);await expect(page.locator('.s-sidebar button[aria-label="UP主账号"]')).toHaveCount(1);
+ for(const pageName of ['overview','videos','analysis','sources']){await page.goto('/#'+pageName);await expect(page.locator('.s-header-actions .s-ai-capsule')).toHaveCount(0);await expect(page.locator('button.s-brand')).toHaveCount(0);}
 });
 test('detail content follows performance and audience groups and has cover overlays',async({page})=>{
  await page.goto('/#videos?video=1');await expect(page.locator('.s-detail-cover .s-cover-numbers')).toContainText('3000');await expect(page.getByRole('button',{name:'留存与趋势',exact:true})).toHaveCount(0);await expect(page.getByRole('heading',{name:'观众留存',exact:true})).toBeVisible();await expect(page.getByRole('heading',{name:'游客播放与转粉'})).toHaveCount(0);await page.getByRole('button',{name:'观众',exact:true}).click();await expect(page.getByRole('heading',{name:'游客播放与转粉'})).toBeVisible();await expect(page.getByRole('heading',{name:'观众选题偏好'})).toBeVisible();await expect(page.getByRole('heading',{name:'观众留存',exact:true})).toHaveCount(0);
 });
 test('saved API key is masked and never resubmitted as a replacement',async({page})=>{
- await page.route('**/api/settings/deepseek/status',r=>r.fulfill({json:{ok:true,configured:true,maskedKey:'sk-a********7890',model:'deepseek-flash'}}));let body:any;await page.route('**/api/settings/deepseek',r=>{body=r.request().postDataJSON();return r.fulfill({json:{ok:true}})});await page.goto('/#settings?tab=ai');await expect(page.locator('.s-field input')).toHaveValue('sk-a********7890');await page.getByRole('button',{name:'保存设置'}).click();expect(body.apiKey).toBeUndefined();
+ await page.route('**/api/settings/deepseek/status',r=>r.fulfill({json:{ok:true,configured:true,maskedKey:'sk-a********7890',model:'deepseek-flash'}}));let body:any;await page.route('**/api/settings/deepseek',r=>{body=r.request().postDataJSON();return r.fulfill({json:{ok:true}})});await page.goto('/#analysis?tab=ai');await page.getByRole('button',{name:'AI模型设置'}).click();await expect(page.locator('.s-field input')).toHaveValue('sk-a********7890');await page.getByRole('button',{name:'保存设置'}).click();expect(body.apiKey).toBeUndefined();
 });
 
 test('portrait spacing, static branding, detail metrics and search feedback match the revised layout',async({page})=>{
  await page.emulateMedia({reducedMotion:'no-preference'});await page.goto('/');await expect(page.locator('.s-overview-kpis article')).toHaveCount(4);
  if(page.viewportSize()!.width<page.viewportSize()!.height){const inset=await page.locator('.s-overview-kpis article').first().evaluate(e=>parseFloat(getComputedStyle(e).paddingLeft));expect(inset).toBeGreaterThanOrEqual(18);}
- if(page.viewportSize()!.width>=700){const gaps=await page.locator('.s-sidebar-footer').evaluate(e=>{const r=e.getBoundingClientRect(),p=e.closest('.s-sidebar')!.getBoundingClientRect();return [r.left-p.left,p.right-r.right,p.bottom-r.bottom]});expect(Math.max(...gaps)-Math.min(...gaps)).toBeLessThanOrEqual(1);const centered=await page.locator('.s-brand').evaluate(e=>{const r=e.getBoundingClientRect(),p=e.closest('.s-sidebar')!.getBoundingClientRect();return Math.abs(r.left+r.width/2-p.left-p.width/2)});expect(centered).toBeLessThan(1);}
+ if(page.viewportSize()!.width>=700){const gaps=await page.locator('.s-sidebar-footer').evaluate(e=>{const r=e.getBoundingClientRect(),p=e.closest('.s-sidebar')!.getBoundingClientRect();return [r.left-p.left,p.right-r.right,p.bottom-r.bottom]});expect(Math.max(...gaps)-Math.min(...gaps)).toBeLessThanOrEqual(1);const centered=await page.locator('.s-brand').evaluate(e=>{const r=e.getBoundingClientRect(),p=e.closest('.s-sidebar')!.getBoundingClientRect();return Math.abs(r.left+r.width/2-p.left-p.width/2)});expect(centered).toBeCloseTo(4,0);}
  await page.goto('/#videos');const search=page.locator('.s-library-toolbar .s-search'),before=await search.evaluate(e=>getComputedStyle(e).backgroundColor);await search.hover();await expect.poll(()=>search.evaluate(e=>getComputedStyle(e).backgroundColor)).not.toBe(before);await page.getByRole('textbox',{name:'搜索稿件'}).click();await expect.poll(()=>search.evaluate(e=>getComputedStyle(e).boxShadow)).not.toBe('none');
  await page.goto('/#videos?video=1');await expect(page.getByRole('button',{name:'分析这篇稿件'})).toHaveCount(0);await expect(page.locator('.s-detail-metrics')).toHaveCount(0);await expect(page.locator('.s-detail-all-metrics')).toContainText('点赞');const order=await page.locator('.s-detail-all-metrics').evaluate(e=>e.getBoundingClientRect().bottom<=e.nextElementSibling!.getBoundingClientRect().top);expect(order).toBe(true);await expect(page.locator('.s-detail-kpis .s-stat>span')).not.toContainText(['播放量']);
 });
 
 test('AI composer clears the mobile navigation and account cards have distinct active and hover states',async({page})=>{
  await page.route('**/api/account/profile',r=>r.fulfill({json:{ok:true,profile:{uid:'123',name:'当前账号'},accounts:[{uid:'123',name:'当前账号'},{uid:'456',name:'另一个账号'}]}}));
- await page.goto('/#settings');const current=page.locator('.s-account-row[data-active=true]'),other=page.locator('.s-account-row[data-active=false]');const bg=await current.evaluate(e=>getComputedStyle(e).backgroundColor);expect(await other.evaluate(e=>getComputedStyle(e).backgroundColor)).not.toBe(bg);const initial=await other.evaluate(e=>getComputedStyle(e).backgroundColor);await other.hover();await expect.poll(()=>other.evaluate(e=>getComputedStyle(e).backgroundColor)).not.toBe(initial);
+ await openAccount(page);const current=page.locator('.s-account-row[data-active=true]'),other=page.locator('.s-account-row[data-active=false]');const bg=await current.evaluate(e=>getComputedStyle(e).backgroundColor);expect(await other.evaluate(e=>getComputedStyle(e).backgroundColor)).not.toBe(bg);const initial=await other.evaluate(e=>getComputedStyle(e).backgroundColor);await other.hover();await expect.poll(()=>other.evaluate(e=>getComputedStyle(e).backgroundColor)).not.toBe(initial);
  await page.route('**/api/ai/conversations',r=>r.fulfill({json:{ok:true,conversations:[]}}));await page.goto('/#analysis?tab=ai');await expect(page.getByRole('textbox',{name:'AI对话消息'})).toBeVisible();if(page.viewportSize()!.width<700){const button=await page.locator('.s-chat-send').boundingBox(),nav=await page.locator('.s-mobile-nav').boundingBox();expect(button!.y+button!.height).toBeLessThan(nav!.y);}
 });
 
@@ -373,4 +373,26 @@ test('each status cell represents one sync and only the selected record expands'
  const runs=Array.from({length:90},(_,i)=>({id:'run-'+i,status:i%8===0?'partial':'success',started_at:new Date(Date.UTC(2026,8,10,12,-10*i)).toISOString(),request_count:100+i,timings:{totalMs:2000},coverage:1,details:{warnings:[]}}));
  await page.route('**/api/acquisition/runs',r=>r.fulfill({json:{ok:true,runs}}));await page.goto('/#sources');const cells=page.locator('.s-sync-plot rect');await expect(cells.first()).toBeVisible();await expect(cells.first()).toHaveAttribute('width','5');await expect(cells.first()).toHaveAttribute('height','16');await expect(cells.first()).toHaveAttribute('rx','1');await expect(page.locator('.s-run-list')).toHaveCount(0);await expect(page.locator('.s-single-run')).toHaveCount(0);
  await cells.first().click();await expect(page.locator('.s-single-run')).toHaveCount(1);const first=await page.locator('.s-single-run').textContent();await cells.last().click();await expect(page.locator('.s-single-run')).toHaveCount(1);await expect.poll(()=>page.locator('.s-single-run').textContent()).not.toBe(first);await expect(page.locator('.s-single-run')).toContainText('100 次请求');
+});
+
+async function openAccount(page:Page){await page.goto('/#overview');if(!await page.getByRole('button',{name:'UP主账号',exact:true}).isVisible())await page.getByRole('button',{name:'打开导航'}).click();await page.getByRole('button',{name:'UP主账号',exact:true}).click();}
+
+test('navigation never blanks and root width stays fixed when scrollbars change',async({page})=>{
+ await page.emulateMedia({reducedMotion:'no-preference'});await page.goto('/');await expect(page.locator('.s-overview-kpis')).toBeVisible();const before=await page.locator('.s-main').boundingBox();await page.evaluate(()=>{(window as any).transitionFrames=[];const stop=performance.now()+700;function sample(){const el=document.querySelector('.s-page');(window as any).transitionFrames.push({exists:!!el,opacity:el?Number(getComputedStyle(el).opacity):0,transform:el?getComputedStyle(el).transform:''});if(performance.now()<stop)requestAnimationFrame(sample)}sample()});
+ if(page.viewportSize()!.width<700)await page.getByRole('button',{name:'打开导航'}).click();await page.locator('.s-sidebar nav').getByRole('button',{name:'稿件',exact:true}).click();await expect(page.locator('.s-library')).toBeVisible();await page.waitForTimeout(400);const frames=await page.evaluate(()=>(window as any).transitionFrames);expect(frames.every((f:any)=>f.exists&&f.opacity>=.7&&f.transform==='none')).toBe(true);await page.evaluate(()=>document.body.style.overflow='hidden');const after=await page.locator('.s-main').boundingBox();expect(after!.width).toBeCloseTo(before!.width,0);expect(after!.x).toBeCloseTo(before!.x,0);
+});
+
+test('theme slider, back to top and account modal provide the shell controls',async({page})=>{
+ await page.route('**/api/videos*',r=>r.fulfill({json:{ok:true,videos:Array.from({length:18},(_,i)=>({...videos[i%3],id:String(i+1)}))}}));
+ await page.goto('/#videos');await page.getByRole('button',{name:'深色模式',exact:true}).click();await expect(page.locator('html')).toHaveAttribute('data-theme','dark');await page.getByRole('button',{name:'浅色模式',exact:true}).click();await page.evaluate(()=>window.scrollTo(0,500));await expect(page.getByRole('button',{name:'回到顶部'})).toBeVisible();await page.getByRole('button',{name:'回到顶部'}).click();await expect.poll(()=>page.evaluate(()=>scrollY)).toBe(0);await openAccount(page);await expect(page.getByRole('dialog',{name:'UP主账号',exact:true})).toBeVisible();await expect(page.locator('.s-version')).toContainText('v0.1.0-dev.14');await expect(page.locator('.s-sidebar nav').getByRole('button',{name:'设置',exact:true})).toHaveCount(0);
+});
+
+test('chat model and reasoning selections are sent to the provider request',async({page})=>{
+ await page.route('**/api/ai/status',r=>r.fulfill({json:{ok:true,configured:true,model:'deepseek-flash',effort:'high'}}));let sent:any;
+ await page.route('**/api/ai/chat',r=>{sent=r.request().postDataJSON();return r.fulfill({status:429,json:{ok:false,error:{message:'测试请求已截获'}}})});await page.goto('/#analysis?tab=ai');await page.getByRole('button',{name:'选择模型与推理强度'}).click();await choose(page,'对话模型','DeepSeek V4 Pro');await page.getByRole('button',{name:'最高',exact:true}).click();await expect(page.getByRole('slider',{name:'推理强度'})).toHaveAttribute('aria-valuetext','最高');await page.keyboard.press('Escape');await page.getByRole('textbox',{name:'AI对话消息'}).fill('检查设置');await page.getByRole('button',{name:'发送消息',exact:true}).click();await expect.poll(()=>sent?.effort).toBe('max');expect(sent.model).toBe('deepseek-v4-pro');await page.getByRole('button',{name:'AI模型设置'}).click();await expect(page.getByRole('dialog',{name:'AI 对话设置'})).toBeVisible();
+});
+
+test('wide and narrow dropdowns keep their scale and use the same tween',async({page})=>{
+ await page.emulateMedia({reducedMotion:'no-preference'});
+ for(const [route,label]of [['videos','稿件排序'],['sources','自动更新频率']]){await page.goto('/#'+route);const trigger=page.getByRole('combobox',{name:label,exact:true});await trigger.scrollIntoViewIfNeeded();const before=await trigger.boundingBox();await trigger.hover();await page.mouse.down();const pressed=await trigger.boundingBox();expect(pressed!.width).toBeCloseTo(before!.width,0);await expect(trigger).toHaveCSS('transform','none');await page.mouse.up();await expect(page.getByRole('listbox',{name:label,exact:true})).toBeVisible();await expect(page.getByRole('listbox',{name:label,exact:true})).toHaveCSS('transform','none');await page.keyboard.press('Escape');}
 });
