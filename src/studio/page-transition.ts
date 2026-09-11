@@ -1,4 +1,5 @@
 import {flushSync} from 'react-dom';
+import {warmCover} from './cover-loading';
 import {chartFont,loadFonts} from '../fonts';
 import {request,coverSrc} from '../format';
 import {client} from './query-client';
@@ -8,15 +9,11 @@ import {animateSwap,type SlideDirection} from './transition-motion';
 let revision=0;
 let cleanup:(()=>void)|undefined;
 let preparing:AbortController|undefined;
-const images=new Map<string,Promise<void>>();
 function bounded(promise:Promise<unknown>,signal:AbortSignal,ms:number){
  return new Promise<void>(resolve=>{const done=()=>{clearTimeout(timer);signal.removeEventListener('abort',done);resolve()};const timer=setTimeout(done,ms);signal.addEventListener('abort',done,{once:true});promise.then(done,done);if(signal.aborted)done()});
 }
 export function cancelPageTransition(){revision++;preparing?.abort();cleanup?.();cleanup=undefined;if(document.documentElement.dataset.transitionKind==='page')delete document.documentElement.dataset.transitionKind;delete document.documentElement.dataset.routePhase;flushSync(()=>document.dispatchEvent(new Event('up:route-motion')));}
-function decode(src:string){
- let promise=images.get(src);if(promise)return promise;
- const image=new Image();image.decoding='async';image.src=src;promise=image.decode().catch(()=>{images.delete(src)});images.set(src,promise);if(images.size>100)images.delete(images.keys().next().value!);return promise;
-}
+const decode=warmCover;
 async function prefetch(route:StudioRoute,signal:AbortSignal){
  const ensure=(key:unknown[],path:string)=>{const cached=client.getQueryData<any>(key);const options={queryKey:key,queryFn:()=>request<any>(path),staleTime:30000};if(cached!==undefined){void client.prefetchQuery(options);return Promise.resolve(cached)}return client.fetchQuery(options)};
  const work=async()=>{
@@ -28,8 +25,8 @@ async function prefetch(route:StudioRoute,signal:AbortSignal){
   if(route.page==='sources')jobs.push(ensure(['bili-status'],'/api/bilibili/status'),ensure(['local-status'],'/api/local/status'),ensure(['acquisition-history'],'/api/acquisition/runs'));
   if(route.page==='analysis'&&route.tab==='ai')jobs.push(import('./AIAnalysis'),ensure(['ai-status'],'/api/ai/status').then(status=>ensure(['ai-conversations',status.accountId??'local',false],'/api/ai/conversations')));
   else if(route.page==='analysis')jobs.push(ensure(['account-history'],'/api/account/history'));
-  if(route.video){const video=videos.find((v:any)=>v.id===route.video);if(video){covers.push(decode(coverSrc(video)));jobs.push(ensure(['timeseries',video.id],`/api/videos/${video.id}/timeseries`),ensure(['video-history',video.id,video.captured_at],`/api/videos/${video.id}/history`));}}
-  else if(route.page==='videos'||route.page==='overview'||route.page==='analysis'&&route.tab==='videos')covers.push(...videos.slice(0,9).map((v:any)=>decode(coverSrc(v))));
+  if(route.video){const video=videos.find((v:any)=>v.id===route.video);if(video){covers.push(decode(coverSrc(video,'card')));jobs.push(ensure(['timeseries',video.id],`/api/videos/${video.id}/timeseries`),ensure(['video-history',video.id,video.captured_at],`/api/videos/${video.id}/history`));}}
+  else if(route.page==='videos'||route.page==='overview'||route.page==='analysis'&&route.tab==='videos')covers.push(...videos.slice(0,9).map((v:any)=>decode(coverSrc(v,route.page==='analysis'?'preview':'card'))));
   await Promise.allSettled(jobs);await bounded(Promise.allSettled(covers),signal,100);
  };
  await bounded(work(),signal,2000);

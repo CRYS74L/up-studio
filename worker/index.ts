@@ -157,6 +157,8 @@ app.get('/api/covers/:id', async (c) => {
   const url = new URL(row.cover_url.replace(/^http:/, 'https:'));
   if (!/(^|\.)hdslb\.com$/.test(url.hostname)) return new Response(null, { status: 403 });
   if (c.req.query('variant') === 'bubble') url.pathname=url.pathname.replace(/@.*$/,'')+'@256w_256h_1c.webp';
+  if (c.req.query('variant') === 'card') url.pathname=url.pathname.replace(/@.*$/, '')+'@800w_450h_1c.webp';
+  if (c.req.query('variant') === 'preview') url.pathname=url.pathname.replace(/@.*$/, '')+'@320w_180h_1c.webp';
   if (c.req.query('variant') === 'thumb') url.pathname += '@128w_128h_1c.webp';
   const upstream = await fetch(url, { headers: { referer:'https://member.bilibili.com/', 'user-agent':'Mozilla/5.0' }, cf: { cacheTtl: 86400, cacheEverything: true } });
   if (!upstream.ok) return new Response(null, { status: 502 });

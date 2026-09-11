@@ -18,7 +18,8 @@ afterEach(()=>{cancelPageTransition();vi.clearAllTimers();vi.useRealTimers();vi.
 it('commits and starts motion in the click task even when every data request is pending',async()=>{
  const update=vi.fn(()=>{document.querySelector('.pane')!.textContent='New'}),restore=vi.fn();
  const done=transitionPage(update,{page:'videos',video:null,ids:[]},restore);
- expect(update).toHaveBeenCalledOnce();expect(restore).toHaveBeenCalledOnce();expect(animations).toHaveLength(2);
+ expect(update).toHaveBeenCalledOnce();expect(restore).toHaveBeenCalledOnce();expect(animations).toHaveLength(3);
+ expect(animations[2].options.duration).toBe(100);expect(animations[2].frames[1].transform).toBe('translateY(-8px)');
  expect(animations[0].options).toEqual(animations[1].options);expect(animations[0].startTime).toBe(animations[1].startTime);
  animations.forEach(a=>a.finish());await done;expect(document.querySelector('.s-route-snapshot')).toBeNull();
 });
@@ -35,5 +36,5 @@ it('a cancelled transition cannot remove the replacement transition or restore s
  const first=transitionPage(()=>{document.querySelector('.pane')!.textContent='First'});
  const second=transitionPage(()=>{document.querySelector('.pane')!.textContent='Latest'});
  await first;expect(document.querySelectorAll('.s-route-snapshot')).toHaveLength(1);expect(document.querySelector('.pane')!.textContent).toBe('Latest');
- animations.slice(2).forEach(a=>a.finish());await second;expect(document.querySelector('.s-route-snapshot')).toBeNull();
+ animations.slice(3).forEach(a=>a.finish());await second;expect(document.querySelector('.s-route-snapshot')).toBeNull();
 });

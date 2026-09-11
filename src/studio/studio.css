@@ -324,3 +324,21 @@ html,body{overflow-x:clip}
 .s-back-top{background:color-mix(in srgb,var(--surface) 68%,transparent);-webkit-backdrop-filter:blur(24px) saturate(150%);backdrop-filter:blur(24px) saturate(150%);border:1px solid color-mix(in srgb,var(--text) 10%,transparent);box-shadow:0 5px 24px #0000000c,inset 0 1px 0 #ffffff44}
 .s-back-top:hover{background:color-mix(in srgb,var(--surface) 82%,transparent);border-color:color-mix(in srgb,var(--text) 14%,transparent);box-shadow:0 5px 24px #00000010}
 .studio .ui-segments:not(.s-theme-switch)>button{min-height:36px}
+
+/* Shared translucent material for floating controls and completion feedback. */
+:root{--floating-glass:color-mix(in srgb,var(--surface) 48%,transparent);--floating-glass-hover:color-mix(in srgb,var(--surface) 64%,transparent)}
+.s-mobile-dock>.s-mobile-nav,.s-mobile-dock>.s-mobile-account,.s-back-top{background:var(--floating-glass)}
+.s-mobile-dock>.s-mobile-account:hover,.s-mobile-dock>.s-mobile-account[aria-expanded=true],.s-back-top:hover{background:var(--floating-glass-hover)}
+.s-floating-toast{width:max-content;max-width:calc(100vw - 32px);border-radius:999px;background:var(--floating-glass);-webkit-backdrop-filter:blur(24px) saturate(150%);backdrop-filter:blur(24px) saturate(150%);border:1px solid color-mix(in srgb,var(--text) 10%,transparent);box-shadow:0 5px 24px #00000012,inset 0 1px 0 #ffffff44;padding:10px 20px;display:flex;align-items:center;justify-content:center;gap:8px;min-height:42px;line-height:20px}
+.s-floating-toast>span{flex-basis:auto}
+.studio .ui-segments:not(.s-theme-switch){--segment-padding:2px}
+.studio .ui-segments:not(.s-theme-switch)>button{min-height:38px}
+.studio .ui-segments.s-theme-switch[data-size=header]{padding:1px}
+.studio .ui-segments.s-theme-switch[data-size=header]>button{height:calc(var(--header-control-height) - 4px);min-height:calc(var(--header-control-height) - 4px)}
+.s-sync-records-panel{max-width:none;width:100%}
+.s-sync-records-panel>.s-sync-history{border:0;border-radius:0;background:transparent;box-shadow:none}
+.s-sync-records-panel .s-sync-summary{padding:0 0 16px;border-bottom:0}
+.s-sync-records-panel .s-sync-range{padding:0 0 12px}
+.s-sync-records-panel .s-sync-plot{margin-inline:0}
+.s-sync-records-panel .s-sync-key{padding-inline:0}
+.s-decoded-cover:not([data-decoded=true]){visibility:hidden}

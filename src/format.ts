@@ -21,7 +21,7 @@ export const seconds = (n: number | null | undefined) => {
 };
 export const date = (value: string | null | undefined) => value && Number.isFinite(Date.parse(value))
   ? new Intl.DateTimeFormat('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }).format(new Date(value)) : '—';
-export const coverSrc = (video: Pick<Video, 'id'>, variant: 'cover' | 'thumb' = 'cover') => `/api/covers/${encodeURIComponent(video.id)}${variant === 'thumb' ? '?variant=thumb' : ''}`;
+export const coverSrc = (video: Pick<Video, 'id'>, variant: 'cover' | 'thumb' | 'card' | 'preview' = 'cover') => `/api/covers/${encodeURIComponent(video.id)}${variant === 'cover' ? '' : '?variant='+variant}`;
 export const escapeHtml = (s: string) => s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!);
 export const ageLabel = (minutes: number | null | undefined) => minutes == null ? '时间未知' : minutes < 1 ? '刚刚' : minutes < 60 ? `${minutes} 分钟前` : minutes < 1440 ? `${Math.floor(minutes / 60)} 小时前` : `${Math.floor(minutes / 1440)} 天前`;
 export function formatChange(delta: NonNullable<Summary['comparison']>[string] | undefined, key: string) {
