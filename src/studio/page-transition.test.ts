@@ -26,7 +26,8 @@ it('switches nested content from the right and cleans only its own animation sty
  const done=transitionPage(()=>{document.querySelector('.pane')!.innerHTML='Nested'},undefined,undefined,'x','.pane');
  expect(animations[0].frames[0].transform).toMatch(/^translateX\([1-9]/);
  expect(animations[0].frames[1].offset).toBe(animations[1].frames[1].offset);
- expect(animations[0].frames[1].opacity).toBe(0);expect(animations[1].frames[1].opacity).toBe(0);
+ expect(animations[0].frames[1].opacity).toBe(1);expect(animations[1].frames[1].opacity).toBe(0);
+ expect(animations[0].frames[0].easing).toBe('steps(1,end)');expect(animations[1].frames[0].easing).toBe('steps(1,end)');
  expect(animations[0].frames[2].opacity).toBe(1);
  animations.forEach(a=>a.finish());await done;expect((document.querySelector('.pane') as HTMLElement).style.willChange).toBe('');expect(document.documentElement.dataset.routePhase).toBeUndefined();
 });

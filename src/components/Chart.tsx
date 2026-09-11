@@ -32,7 +32,14 @@ export function Chart({ option, className, events }: { option: any; className: s
     const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
     const current = latest.current;
     const resolved=themedOption(current.option,element.current);
-    const x=resolved.xAxis;if(x?.type==='category'&&x.axisLabel?.interval===0&&x.data?.length){const width=(element.current?.clientWidth??800)-110;const tight=width/x.data.length<30;x.axisLabel={...x.axisLabel,hideOverlap:false,showMinLabel:true,showMaxLabel:true,rotate:tight?-90:x.axisLabel.rotate,...(tight?{fontSize:10,lineHeight:10}:{})};}
+    const available=element.current?.clientWidth??800;
+    if(className==='s-combo-chart'&&available<500){
+      const axes=resolved.yAxis as any[];
+      const extra=Math.max(0,Math.ceil(axes.length/2)-1)*32;
+      resolved.grid={...resolved.grid,left:40+extra,right:42+extra};
+      resolved.yAxis=axes.map(a=>({...a,offset:Math.floor((a.offset??0)/54)*32,nameTextStyle:{...a.nameTextStyle,fontSize:10},axisLabel:{...a.axisLabel,fontSize:10}}));
+    }
+    const x=resolved.xAxis;if(x?.type==='category'&&x.axisLabel?.interval===0&&x.data?.length){const width=available-(Number(resolved.grid?.left)||50)-(Number(resolved.grid?.right)||25);const tight=width/x.data.length<30;const size=Math.max(8,Math.min(10,Math.floor(width/x.data.length)));x.axisLabel={...x.axisLabel,hideOverlap:false,showMinLabel:true,showMaxLabel:true,rotate:tight?-90:x.axisLabel.rotate,...(tight?{fontSize:size,lineHeight:size}:{})};}
     chart.setOption({ ...resolved, animation: !reduced && !document.documentElement.dataset.transitionKind && !document.documentElement.dataset.contentSwitch && !element.current?.closest('[data-content-motion]') && current.option.animation !== false, animationDurationUpdate: reduced ? 0 : 300 }, { notMerge: true });
     dirty.current=false;
     for (const [name, callback] of Object.entries(bound.current)) chart.off(name, callback);
@@ -70,5 +77,5 @@ export function Chart({ option, className, events }: { option: any; className: s
   }, []);
   useEffect(()=>schedule.current(), [option, events]);
   const category=option.xAxis?.type==='category'&&option.xAxis?.axisLabel?.interval===0;const count=category?option.xAxis.data?.length??0:0;const minimum=count*9+(Number(option.grid?.left)||50)+(Number(option.grid?.right)||25);
-  return <div className={'s-chart-viewport'+(className==='s-rank-chart'?' s-chart-no-scroll':'')}><div ref={element} style={count>10?{minWidth:minimum}:undefined} className={className} role="img" aria-label={option.accessibleLabel ?? '交互数据图表，详细数值可在对应稿件中查看'} /></div>;
+  return <div className={'s-chart-viewport'+(className==='s-rank-chart'?' s-chart-no-scroll':'')}><div ref={element} style={count>10&&className!=='s-combo-chart'?{minWidth:minimum}:undefined} className={className} role="img" aria-label={option.accessibleLabel ?? '交互数据图表，详细数值可在对应稿件中查看'} /></div>;
 }

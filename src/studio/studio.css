@@ -294,7 +294,7 @@ html[data-transition-kind=theme] .studio button,html[data-transition-kind=theme]
 .s-mobile-dock{display:none}
 @media(max-width:699px),(orientation:portrait){
  .s-mobile-dock{display:flex;align-items:center;gap:10px;position:fixed;z-index:38;bottom:calc(12px + env(safe-area-inset-bottom));left:12px;right:12px;max-width:640px;margin-inline:auto;pointer-events:none}
- .s-mobile-dock>.s-mobile-nav,.s-mobile-dock>.s-mobile-account{pointer-events:auto;height:64px;border:1px solid color-mix(in srgb,var(--text) 10%,transparent);background:color-mix(in srgb,var(--surface) 68%,transparent);backdrop-filter:blur(24px) saturate(150%);-webkit-backdrop-filter:blur(24px) saturate(150%);box-shadow:0 5px 24px #0000000c,inset 0 1px 0 #ffffff55}
+ .s-mobile-dock>.s-mobile-nav,.s-mobile-dock>.s-mobile-account{pointer-events:auto;height:64px;border:1px solid color-mix(in srgb,var(--text) 10%,transparent);background:color-mix(in srgb,var(--surface) 68%,transparent);-webkit-backdrop-filter:blur(24px) saturate(150%);backdrop-filter:blur(24px) saturate(150%);box-shadow:0 5px 24px #0000000c,inset 0 1px 0 #ffffff55}
  .s-mobile-dock>.s-mobile-nav{position:relative;inset:auto;flex:1;min-width:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));padding:4px;border-radius:999px;isolation:isolate}
  .s-mobile-dock>.s-mobile-nav>button{min-height:54px;height:54px;padding:0;gap:2px;border-radius:999px;font-size:11px;font-weight:550;line-height:14px;transform:none!important;transition:color 240ms var(--ease-out)}
  .s-mobile-dock>.s-mobile-nav>button>.s-nav-icon{display:flex;align-items:center;justify-content:center;height:26px;width:26px;flex:0 0 26px}
@@ -305,3 +305,22 @@ html[data-transition-kind=theme] .studio button,html[data-transition-kind=theme]
 }
 /* Let the layout use the available width after the stable scrollbar gutter. */
 body{min-width:0}
+
+/* Animated visual overhang must not create a document scrolling axis. */
+html,body{overflow-x:clip}
+.studio .ui-segments:not(.s-theme-switch){--segment-padding:3px}
+.studio .ui-segments.s-theme-switch[data-size=header]{padding:2px}
+.studio .ui-segments.s-theme-switch[data-size=header]>button{height:calc(var(--header-control-height) - 6px);min-height:calc(var(--header-control-height) - 6px)}
+.s-combinations .s-chart-scroll,.s-combinations .s-chart-viewport{min-width:0;width:100%;max-width:100%;overflow:visible;padding-bottom:0}
+.s-combinations .s-combo-chart{width:100%;min-width:0;max-width:100%}
+@media(max-width:699px),(orientation:portrait){
+ .s-header{display:flex;flex-direction:row;align-items:center;flex-wrap:nowrap;gap:8px}
+ .s-header>div:first-child{flex:0 0 auto;min-width:0}
+ .s-header h1{font-size:clamp(20px,6vw,28px);white-space:nowrap}
+ .s-header .s-header-actions{display:flex;flex:1;min-width:0;width:auto;flex-direction:row;flex-wrap:nowrap;align-items:center;justify-content:flex-end;gap:6px}
+ .s-header .s-header-freshness{flex:0 1 auto;min-width:0;max-width:none;margin:0;font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:right}
+ .s-header .s-theme-anchor{flex:0 0 auto}
+}
+.s-back-top{background:color-mix(in srgb,var(--surface) 68%,transparent);-webkit-backdrop-filter:blur(24px) saturate(150%);backdrop-filter:blur(24px) saturate(150%);border:1px solid color-mix(in srgb,var(--text) 10%,transparent);box-shadow:0 5px 24px #0000000c,inset 0 1px 0 #ffffff44}
+.s-back-top:hover{background:color-mix(in srgb,var(--surface) 82%,transparent);border-color:color-mix(in srgb,var(--text) 14%,transparent);box-shadow:0 5px 24px #00000010}
+.studio .ui-segments:not(.s-theme-switch)>button{min-height:36px}
