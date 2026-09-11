@@ -360,3 +360,26 @@ html,body{overflow-x:clip}
 @media(prefers-reduced-transparency:reduce){.s-mobile-dock>.s-mobile-nav,.s-mobile-dock>.s-mobile-account,.s-back-top,.s-floating-toast{background:var(--surface);backdrop-filter:none}}
 :root{--liquid-sheen:linear-gradient(155deg,color-mix(in srgb,var(--surface) 17%,transparent),transparent 42%,color-mix(in srgb,var(--surface) 8%,transparent))}
 .s-mobile-dock>.s-mobile-account:hover,.s-mobile-dock>.s-mobile-account[aria-expanded=true],.s-back-top:hover{background:var(--liquid-sheen),var(--floating-glass-hover)}
+
+:root{--liquid-sheen:linear-gradient(#ffffff0f,#ffffff0f),linear-gradient(155deg,color-mix(in srgb,var(--surface) 17%,transparent),transparent 42%,color-mix(in srgb,var(--surface) 8%,transparent))}
+.s-mobile-dock>.s-mobile-nav,.s-back-top,.s-floating-toast{background:var(--liquid-sheen),var(--floating-glass)}
+.s-back-top:hover{background:var(--liquid-sheen),var(--floating-glass-hover)}
+.s-version-toast{gap:10px;font-size:13px}.s-version-toast img{width:24px;height:24px;object-fit:contain}.s-version-toast b{font-weight:600}.s-version-toast>span{color:var(--muted)}
+.s-run-quality{max-width:320px;overflow-wrap:anywhere}
+.s-library .s-media-stats .s-stat>strong{font-weight:550}
+.s-kpi-change small,.s-kpi-change>b{font-size:14px;font-weight:550}
+@media(max-width:699px){.s-kpi-change small,.s-kpi-change>b{font-size:13px;font-weight:550}}
+@media(max-width:699px),(orientation:portrait){
+ .s-library:not(.list){grid-template-columns:repeat(2,minmax(0,1fr));gap:24px 14px}
+ .s-library:not(.list) .s-media-copy h2{font-size:12px;line-height:1.5}
+ .s-library:not(.list) .s-media-copy>p{font-size:11px}
+ .s-library:not(.list) .s-media-stats{grid-template-columns:repeat(3,minmax(0,1fr));gap:4px}
+ .s-library:not(.list) .s-media-stats .s-stat>span{font-size:10.5px;line-height:14px;white-space:normal;min-height:28px}
+ .s-library:not(.list) .s-media-stats .s-stat>strong{font-size:12px;line-height:18px;font-weight:550}
+ .s-library:not(.list) .s-cover-numbers{gap:5px;font-size:10px;left:6px;bottom:6px}
+ .s-library:not(.list) .s-cover-numbers svg{width:12px;height:12px}
+ .s-library:not(.list) .s-duration{font-size:10px;right:6px;bottom:6px}
+ .s-connection .s-card-actions{flex-wrap:wrap;gap:10px}
+}
+@media(prefers-reduced-transparency:reduce){.s-mobile-dock>.s-mobile-nav,.s-back-top,.s-floating-toast{background:var(--surface)}}
+@media(max-width:360px){.s-library:not(.list) .s-media-stats .s-stat>strong{white-space:normal;min-height:36px;overflow-wrap:normal}}

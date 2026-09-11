@@ -38,3 +38,12 @@ it('a cancelled transition cannot remove the replacement transition or restore s
  await first;expect(document.querySelectorAll('.s-route-snapshot')).toHaveLength(1);expect(document.querySelector('.pane')!.textContent).toBe('Latest');
  animations.slice(3).forEach(a=>a.finish());await second;expect(document.querySelector('.s-route-snapshot')).toBeNull();
 });
+it.each(['x','y'] as const)('matches outgoing and incoming velocity at the %s handoff',async(axis)=>{
+ const done=transitionPage(()=>{},undefined,undefined,axis);
+ const bezier=(value:string)=>value.match(/[\d.]+/g)!.map(Number);
+ const incoming=bezier(String(animations[0].frames[1].easing)),outgoing=bezier(String(animations[2].options.easing));
+ const inputDistance=axis==='x'?18:12,outputDistance=axis==='x'?10:8;
+ const exitMs=Number(animations[2].options.duration),enterMs=Number(animations[0].options.duration)-exitMs;
+ expect(inputDistance/enterMs*incoming[1]/incoming[0]).toBeCloseTo(outputDistance/exitMs*(1-outgoing[3])/(1-outgoing[2]),6);
+ animations.forEach(a=>a.finish());await done;
+});

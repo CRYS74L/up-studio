@@ -31,11 +31,10 @@ export function SyncHistory({runs}:{runs:any[]}){
  return <div className="s-sync-history s-sync-grid-history"><div className="s-sync-summary"><b><span className={`s-run-dot ${runs[0]?.status}`}/>{names[runs[0]?.status]??'暂无同步'}</b><span>{complete.length} 次同步 · {Math.round(complete.filter(r=>r.status==='success').length/Math.max(1,complete.length)*100)}% 完成</span></div>
   <div className="s-sync-range"><span>{slice.length?date(slice[0].started_at)+' — '+date(slice.at(-1).started_at):'暂无记录'}</span>{pages>1&&<div><button className="s-icon" aria-label="更早的同步记录" disabled={current+1>=pages} onClick={()=>{setPage(current+1);setHover(null);setSelected('')}}><ChevronLeft/></button><button className="s-icon" aria-label="更新的同步记录" disabled={current===0} onClick={()=>{setPage(current-1);setHover(null);setSelected('')}}><ChevronRight/></button></div>}</div>
   <div className="s-sync-plot" ref={plot} onPointerLeave={()=>setHover(null)}><svg width="100%" height="16" viewBox={`0 0 ${width} 16`} role="group" aria-label="同步状态历史"><g>{slice.map((run,i)=><rect key={run.id} role="button" tabIndex={0} data-status={run.status} data-active={run.id===activeId} aria-label={date(run.started_at)+' · '+(names[run.status]??run.status)} aria-pressed={run.id===selected} x={offset+i*step} y={0} width={5} height={16} rx={1} ry={1} onPointerEnter={()=>setHover({run,x:offset+i*step})} onFocus={()=>setHover({run,x:offset+i*step})} onBlur={()=>setHover(null)} onClick={()=>setSelected(run.id===selected?'':run.id)} onKeyDown={e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();setSelected(run.id===selected?'':run.id)}}}/>)}</g></svg>
-   <Popover open={!!active?.run} close={()=>{setSelected('');setHover(null)}} anchor={plot} anchorOffset={active?.x??0} role="tooltip" label="同步记录详情" width={active?.run?.status==='success'?280:360}>{active?.run&&<RunDetails run={active.run}/>}</Popover>
+   <Popover open={!!active?.run} close={()=>{setSelected('');setHover(null)}} anchor={plot} anchorOffset={active?.x??0} role="tooltip" label="同步记录详情" width="content">{active?.run&&<RunDetails run={active.run}/>}</Popover>
 
 
   </div>
-  <div className="s-sync-key"><span><i data-status="success"/>完成</span><span><i data-status="partial"/>部分完成</span><span><i data-status="failed"/>失败</span></div>
 
  </div>;
 }
