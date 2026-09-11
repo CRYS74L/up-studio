@@ -1,6 +1,6 @@
 export type SlideDirection = 1 | -1;
-export const exitDuration = 100;
-export const enterDuration = 420;
+export const exitDuration = 80;
+export const enterDuration = 500;
 
 // Keep the outgoing content opaque until an atomic handoff. Fading both
 // layers to zero at that boundary exposes an empty page for a visible frame.

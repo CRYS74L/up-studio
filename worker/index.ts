@@ -185,7 +185,7 @@ app.get('/api/bilibili/status', async (c) => {
 });
 
 app.get('/api/acquisition/runs', async (c) => {
-  const rows = (await c.env.DB.prepare('SELECT id,status,started_at,finished_at,coverage,coverage_json,error_code,timings_json,request_count FROM acquisition_runs ORDER BY started_at DESC LIMIT 90').all()).results;
+  const rows = (await c.env.DB.prepare('SELECT id,status,started_at,finished_at,coverage,coverage_json,error_code,timings_json,request_count FROM acquisition_runs ORDER BY started_at DESC LIMIT 360').all()).results;
   return c.json({ok:true,runs:rows.map((row:any)=>({...row,details:JSON.parse(row.coverage_json||'{}'),timings:JSON.parse(row.timings_json||'{}'),coverage_json:undefined,timings_json:undefined}))});
 });
 async function overviewHistory(db:D1Database){

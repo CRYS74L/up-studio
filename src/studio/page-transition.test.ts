@@ -19,7 +19,7 @@ it('commits and starts motion in the click task even when every data request is 
  const update=vi.fn(()=>{document.querySelector('.pane')!.textContent='New'}),restore=vi.fn();
  const done=transitionPage(update,{page:'videos',video:null,ids:[]},restore);
  expect(update).toHaveBeenCalledOnce();expect(restore).toHaveBeenCalledOnce();expect(animations).toHaveLength(3);
- expect(animations[2].options.duration).toBe(100);expect(animations[2].frames[1].transform).toBe('translateY(-8px)');
+ expect(animations[2].options.duration).toBe(80);expect(animations[2].frames[1].transform).toBe('translateY(-8px)');
  expect(animations[0].options).toEqual(animations[1].options);expect(animations[0].startTime).toBe(animations[1].startTime);
  animations.forEach(a=>a.finish());await done;expect(document.querySelector('.s-route-snapshot')).toBeNull();
 });

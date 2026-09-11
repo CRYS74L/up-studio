@@ -342,3 +342,21 @@ html,body{overflow-x:clip}
 .s-sync-records-panel .s-sync-plot{margin-inline:0}
 .s-sync-records-panel .s-sync-key{padding-inline:0}
 .s-decoded-cover:not([data-decoded=true]){visibility:hidden}
+
+/* Glass edges carry highlights while the center remains clear. */
+:root{--floating-glass:color-mix(in srgb,var(--surface) 32%,transparent);--floating-glass-hover:color-mix(in srgb,var(--surface) 48%,transparent);--glass-edge:color-mix(in srgb,var(--surface) 58%,transparent)}
+.s-mobile-dock>.s-mobile-nav,.s-mobile-dock>.s-mobile-account,.s-back-top,.s-floating-toast{background:linear-gradient(155deg,color-mix(in srgb,var(--surface) 17%,transparent),transparent 42%,color-mix(in srgb,var(--surface) 8%,transparent)),var(--floating-glass);border-color:var(--glass-edge);-webkit-backdrop-filter:blur(18px) saturate(165%);backdrop-filter:blur(18px) saturate(165%);box-shadow:inset 0 1px 0 #ffffff88,inset 1px 0 0 #ffffff22,inset 0 -1px 0 #00000012,0 6px 24px #00000012}
+.studio .ui-segments:not(.s-theme-switch){--segment-padding:1px}
+.studio .ui-segments:not(.s-theme-switch)>button{min-height:40px}
+.studio .ui-segments.s-theme-switch[data-size=header]{flex:0 0 auto;width:max-content;height:var(--header-control-height);padding:1px;align-items:center}
+.studio .ui-segments.s-theme-switch[data-size=header]>button{flex:0 0 calc(var(--header-control-height) - 4px);width:calc(var(--header-control-height) - 4px);height:calc(var(--header-control-height) - 4px);min-height:calc(var(--header-control-height) - 4px);aspect-ratio:1}
+.s-theme-anchor{flex:none}.s-theme-switch .ui-segment-thumb{border-radius:50%;aspect-ratio:1}
+.s-sync-plot>svg{overflow:hidden}
+.s-run-quality>.s-run-meta{display:block;color:var(--muted);font-size:12px;line-height:1.7;white-space:nowrap}
+@media(prefers-reduced-motion:no-preference){
+ .studio button,.studio a,.studio input,.studio textarea,.studio .ui-segments>button,.s-select-menu button{transition:background-color 440ms cubic-bezier(.12,.8,.16,1),color 360ms cubic-bezier(.12,.8,.16,1),border-color 440ms cubic-bezier(.12,.8,.16,1),box-shadow 520ms cubic-bezier(.12,.8,.16,1),transform 320ms cubic-bezier(.12,.8,.16,1)!important}
+ .studio .s-sidebar nav>button,.s-mobile-dock>.s-mobile-nav>button{transition:background-color 440ms cubic-bezier(.12,.8,.16,1),color 360ms cubic-bezier(.12,.8,.16,1)!important}
+}
+@media(prefers-reduced-transparency:reduce){.s-mobile-dock>.s-mobile-nav,.s-mobile-dock>.s-mobile-account,.s-back-top,.s-floating-toast{background:var(--surface);backdrop-filter:none}}
+:root{--liquid-sheen:linear-gradient(155deg,color-mix(in srgb,var(--surface) 17%,transparent),transparent 42%,color-mix(in srgb,var(--surface) 8%,transparent))}
+.s-mobile-dock>.s-mobile-account:hover,.s-mobile-dock>.s-mobile-account[aria-expanded=true],.s-back-top:hover{background:var(--liquid-sheen),var(--floating-glass-hover)}
