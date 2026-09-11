@@ -160,6 +160,18 @@ B站封面播放与弹幕图标的实际SVG路径保存在src/studio/BiliIcons.t
 - DeepSeek：首次调用 https://api-docs.deepseek.com/zh-cn/ ，思考模式 https://api-docs.deepseek.com/zh-cn/guides/thinking_mode/ ，图像理解 https://api-docs.deepseek.com/zh-cn/guides/vision/ ，JSON输出 https://api-docs.deepseek.com/zh-cn/guides/json_mode/ 。
 - Apple HIG：按钮 https://developer.apple.com/design/human-interface-guidelines/buttons ，动效 https://developer.apple.com/design/human-interface-guidelines/motion 。网页使用相应的圆角、反馈、响应式与减少动态效果原则；不是嵌入原生UIKit组件。
 
+## v0.1.0-dev.29 — 就绪后转场、共享控件与对话重构
+
+- 页面切换保留旧画面，待新页面首屏查询、图片解码和可见图表准备后再交接。通过原生View Transition快照交叉淡化，去掉硬切后继续加载的呈现。首屏资源异常时有等待上限。
+- 深浅色从切换控件中心向外扩散，使用40–96px柔和渐变边缘和520ms非线性缓动。新主题快照先完成颜色更新，避免截取白底白字的中间态；滑块使用单独的过渡分组保持移动。
+- 共享 `controls.tsx / controls.css` 提供分段控件、可拖动的分档滑块和浮层。尺寸可参数化，按下反馈保留dev.28的轻微缩放。参考实测ChatGPT：280px浮层、24px轨道、28px白色滑块、4px刻度。
+- AI对话基于DeepSeek Harness固定提交的ui-conversation/ui-chat布局重新组织；消息正文与输入框共用宽度轴，输入框比正文宽32px，保留14px正文、22px输入框圆角。来源与MIT许可见 `THIRD_PARTY_NOTICES.md`。
+- 增加会话搜索、重命名、归档与恢复、消息分支、编辑后新建分支、重新回答、图片附件与预览、消息时间和用量。归档和分支保留原记录，接口按账号校验。图片仅在支持视觉的模型下发送。
+- 竖屏手机和平板均隐藏侧栏，不再提供汉堡按钮；Dock新增“我的”，直接打开账号/版本弹窗。桌面品牌区完全静态；UP主资料具有非线性悬停反馈。稿件和数据源使用播放框与链接图标。
+- 同步格悬停和点击共享同一激活态及详情浮层：绿色由 `#24c19a` 变为 `#1fa382`，透明度1、无描边；不再增加黑色选框或切换到另一套详情样式。
+- 图表根据真实绘图区和标签数量决定最小宽度；时间轴自动安排日期标签。360/390/768/1024/1440宽度下，四个主页面均无多余卡片滚动条及横向页面溢出；消息历史、长表格等确需滚动的内容继续可滚动。
+- 验证：35项单元测试、147项浏览器用例、构建通过；延迟图片测试确认快照会等待首屏图片；检查了渐变蒙版、圆心、拖动吸附、悬停/选中一致性以及归档/恢复/分支/图片附件。
+
 ## v0.1.0-dev.28 — 保留轻微下拉按压反馈
 
 - 按用户进一步澄清，恢复下拉按钮的轻微按压缩放，采用稿件排序原有的2.5%缩放作为上限；宽按钮的横向收缩同时限制为3px，避免更新频率等宽控件收缩过大。

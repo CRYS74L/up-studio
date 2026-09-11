@@ -8,7 +8,7 @@ import {createD1} from '../runtime/d1.mjs';
 afterEach(()=>vi.unstubAllGlobals());
 function setup(){
  const db=createD1(':memory:');db.database.exec(`CREATE TABLE videos(id TEXT,bvid TEXT,title TEXT,published_at TEXT,duration_seconds REAL,cover_url TEXT);CREATE TABLE video_snapshots(id INTEGER PRIMARY KEY,video_id TEXT,captured_at TEXT,views REAL,avg_watch_seconds REAL,avg_watch_percent REAL,followers_gained REAL,metrics_json TEXT,dimensions_json TEXT DEFAULT '{}');CREATE TABLE account_trends(day TEXT,followers REAL,follows REAL,unfollows REAL,views REAL);CREATE TABLE video_trend_points(video_id TEXT,type TEXT,window TEXT,date_key INTEGER,total_inc REAL);CREATE TABLE settings(key TEXT,value_json TEXT);CREATE TABLE ai_cache(snapshot_key TEXT PRIMARY KEY,model TEXT,prompt_version TEXT,response_json TEXT,cost_cny REAL,created_at TEXT);INSERT INTO videos VALUES('1','BV_TEST','测试稿件','2026-09-01',60,NULL);INSERT INTO video_snapshots VALUES(1,'1','2026-09-10',100,30,50,2,'{}','{}');`);
- db.database.exec(fs.readFileSync('migrations/0006_ai_conversations.sql','utf8'));
+ db.database.exec(fs.readFileSync('migrations/0006_ai_conversations.sql','utf8'));db.database.exec(fs.readFileSync('migrations/0007_chat_archive.sql','utf8'));
  const app=new Hono();registerChat(app,async()=> 'test-key');
  const env={DB:db,DEEPSEEK_MODEL:'deepseek-v4-flash',AI_DAILY_CNY_LIMIT:'5',AI_MONTHLY_CNY_LIMIT:'10'};
  return {db,app,env};
@@ -55,4 +55,24 @@ it('stops an upstream stream and saves the partial answer without holding the co
  const response=await app.request('/api/ai/chat',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({message:'请分析',ids:['1']})},env);
  const reader=response.body!.getReader();let content='';while(!content.includes('event: delta')){content+=new TextDecoder().decode((await reader.read()).value)}await reader.cancel();
  await vi.waitFor(()=>{const row=db.database.prepare('SELECT * FROM ai_conversations').get();expect(row.busy_until).toBe(0);const message=JSON.parse(row.messages_json).at(-1);expect(message.status).toBe('stopped');expect(message.content).toBe('已经生成的部分');});db.database.close();
+});
+
+it('renames, archives, restores and branches conversations without losing the original',async()=>{
+ const {db,app,env}=setup();vi.stubGlobal('fetch',vi.fn(async()=>response()));
+ await(await app.request('/api/ai/chat',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({message:'原始问题',ids:['1']})},env)).text();
+ const row=db.database.prepare('SELECT * FROM ai_conversations').get(),messages=JSON.parse(row.messages_json);
+ const patch=(body:any,e:any=env)=>app.request('/api/ai/conversations/'+row.id,{method:'PATCH',headers:{'content-type':'application/json'},body:JSON.stringify(body)},e);
+ expect((await patch({title:'重新命名',archived:true})).status).toBe(200);
+ const active:any=await(await app.request('/api/ai/conversations',{},env)).json();expect(active.conversations).toHaveLength(0);
+ const archived:any=await(await app.request('/api/ai/conversations?archived=1',{},env)).json();expect(archived.conversations[0].title).toBe('重新命名');
+ await patch({archived:false});const fork:any=await(await app.request('/api/ai/conversations/'+row.id+'/fork',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({messageId:messages[0].id})},env)).json();expect(fork.conversation.messages).toHaveLength(1);expect(fork.conversation.id).not.toBe(row.id);expect(JSON.parse(db.database.prepare('SELECT messages_json FROM ai_conversations WHERE id=?').get(row.id).messages_json)).toHaveLength(2);
+ expect((await patch({title:'越权'},{...env,DB:{...db,accountUid:'other'}})).status).toBe(404);db.database.close();
+});
+
+it('attaches images only to user messages and reports usage on saved replies',async()=>{
+ const {db,app,env}=setup();let body:any;vi.stubGlobal('fetch',vi.fn(async(_url,init)=>{body=JSON.parse(init.body);return response()}));
+ const attachment={name:'参考.png',dataUrl:'data:image/png;base64,aGVsbG8='};
+ await(await app.request('/api/ai/chat',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({message:'分析图片',ids:['1'],attachments:[attachment]})},env)).text();
+ expect(body.messages.at(-1).role).toBe('user');expect(body.messages.at(-1).content[1].image_url.url).toBe(attachment.dataUrl);
+ const messages=JSON.parse(db.database.prepare('SELECT messages_json FROM ai_conversations').get().messages_json);expect(messages[0].attachments[0].name).toBe('参考.png');expect(messages[1].usage.outputTokens).toBe(20);expect(messages[1].elapsedMs).toBeGreaterThanOrEqual(0);db.database.close();
 });

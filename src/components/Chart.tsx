@@ -32,8 +32,8 @@ export function Chart({ option, className, events }: { option: any; className: s
     const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
     const current = latest.current;
     const resolved=themedOption(current.option,element.current);
-    const x=resolved.xAxis;if(x?.type==='category'&&x.axisLabel?.interval===0&&x.data?.length){const width=(element.current?.clientWidth??800)-110;const tight=width/x.data.length<30;x.axisLabel={...x.axisLabel,hideOverlap:false,showMinLabel:true,showMaxLabel:true,rotate:tight?-90:x.axisLabel.rotate};}
-    chart.setOption({ ...resolved, animation: !reduced && current.option.animation !== false, animationDurationUpdate: reduced ? 0 : 300 }, { notMerge: true });
+    const x=resolved.xAxis;if(x?.type==='category'&&x.axisLabel?.interval===0&&x.data?.length){const width=(element.current?.clientWidth??800)-110;const tight=width/x.data.length<30;x.axisLabel={...x.axisLabel,hideOverlap:false,showMinLabel:true,showMaxLabel:true,rotate:tight?-90:x.axisLabel.rotate,...(tight?{fontSize:10,lineHeight:10}:{})};}
+    chart.setOption({ ...resolved, animation: !reduced && !document.documentElement.dataset.transitionKind && current.option.animation !== false, animationDurationUpdate: reduced ? 0 : 300 }, { notMerge: true });
     dirty.current=false;
     for (const [name, callback] of Object.entries(bound.current)) chart.off(name, callback);
     bound.current = current.events ?? {};
@@ -64,13 +64,14 @@ export function Chart({ option, className, events }: { option: any; className: s
     loadFonts(chartFont).then(() => { fontsReady = true; queueRender(element,resize); }).catch(() => {
       if (live && element.current) element.current.textContent = '图表字体加载失败，请刷新页面。';
     });
+    const prepare=()=>{const r=element.current?.getBoundingClientRect();if(r&&r.bottom>0&&r.top<innerHeight){visible=true;settled=true;dirty.current=true;cancelRender(element);resize();}};document.addEventListener('up:prepare-view',prepare);
     const refresh=()=>schedule.current();
     reduced.addEventListener('change', refresh);
     const themeObserver=new MutationObserver(refresh);
     themeObserver.observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
-    return () => { live = false; clearTimeout(enterTimer);cancelRender(element);intersection.disconnect();observer.disconnect(); themeObserver.disconnect(); reduced.removeEventListener('change', refresh); instance.current?.dispose(); instance.current = null; bound.current = {}; };
+    return () => { live = false; document.removeEventListener('up:prepare-view',prepare);clearTimeout(enterTimer);cancelRender(element);intersection.disconnect();observer.disconnect(); themeObserver.disconnect(); reduced.removeEventListener('change', refresh); instance.current?.dispose(); instance.current = null; bound.current = {}; };
   }, []);
   useEffect(()=>schedule.current(), [option, events]);
-  const category=option.xAxis?.type==='category'&&option.xAxis?.axisLabel?.interval===0;const count=category?option.xAxis.data?.length??0:0;
-  return <div className={'s-chart-viewport'+(className==='s-rank-chart'?' s-chart-no-scroll':'')}><div ref={element} style={count>10?{minWidth:count*30}:undefined} className={className} role="img" aria-label={option.accessibleLabel ?? '交互数据图表，详细数值可在对应稿件中查看'} /></div>;
+  const category=option.xAxis?.type==='category'&&option.xAxis?.axisLabel?.interval===0;const count=category?option.xAxis.data?.length??0:0;const minimum=count*9+(Number(option.grid?.left)||50)+(Number(option.grid?.right)||25);
+  return <div className={'s-chart-viewport'+(className==='s-rank-chart'?' s-chart-no-scroll':'')}><div ref={element} style={count>10?{minWidth:minimum}:undefined} className={className} role="img" aria-label={option.accessibleLabel ?? '交互数据图表，详细数值可在对应稿件中查看'} /></div>;
 }

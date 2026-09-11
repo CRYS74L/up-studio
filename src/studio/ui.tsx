@@ -1,15 +1,11 @@
+import {SegmentedControl} from './controls';
 import { useEffect,useLayoutEffect,useRef,useState,type ReactNode } from 'react';
 import { AnimatePresence,motion,useReducedMotion } from 'motion/react';
 import { Check,ChevronRight,Search,X,ImageOff } from 'lucide-react';
 import type { Video } from '../types';
 import { coverSrc,compact } from '../format';
 export const spring={type:'spring' as const,stiffness:420,damping:38};
-export function Segments({items,value,onChange,label}:{items:string[];value:string;onChange:(v:string)=>void;label:string}){
-  const ref=useRef<HTMLDivElement>(null),reduced=useReducedMotion();
-  const [thumb,setThumb]=useState<{x:number;y:number;width:number;height:number}|null>(null);
-  useLayoutEffect(()=>{const root=ref.current;if(!root)return;const measure=()=>{const selected=root.querySelector<HTMLButtonElement>('button[aria-pressed="true"]');setThumb(selected?{x:selected.offsetLeft,y:selected.offsetTop-4,width:selected.offsetWidth,height:selected.offsetHeight}:null);};measure();const observer=new ResizeObserver(measure);observer.observe(root);for(const button of root.querySelectorAll('button'))observer.observe(button);return()=>observer.disconnect();},[value,items.join('\u0000')]);
-  return <div ref={ref} className="s-segments" role="group" aria-label={label}>{thumb&&<motion.span aria-hidden="true" className="s-segment-thumb" initial={false} animate={{x:thumb.x,y:thumb.y,width:thumb.width,height:thumb.height}} transition={reduced?{duration:0}:{type:'spring',stiffness:520,damping:44}}/>} {items.map(item=><button type="button" key={item} aria-pressed={value===item} onClick={()=>onChange(item)}><span>{item}</span></button>)}</div>;
-}
+export function Segments({items,value,onChange,label}:{items:string[];value:string;onChange:(v:string)=>void;label:string}){return <SegmentedControl items={items.map(v=>({value:v,label:v}))} value={value} onChange={onChange} label={label}/>;}
 const decodedCovers = new Set<string>();
 export function Cover({video,className=''}:{video:Video;className?:string}){
   const src=coverSrc(video),ref=useRef<HTMLImageElement>(null);

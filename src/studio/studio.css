@@ -177,3 +177,37 @@ html{scrollbar-gutter:stable}.studio{width:100%}.s-header h1{font-size:32px}.s-k
 .s-select-menu button{transition:background-color .15s cubic-bezier(.4,0,.2,1),color .15s cubic-bezier(.4,0,.2,1),transform .15s cubic-bezier(.4,0,.2,1)}
 .s-select-menu button:active:not(:disabled){transform:scale(.995,.985)!important}
 @media(prefers-reduced-motion:reduce){.s-select:active:not(:disabled),.s-select-menu button:active:not(:disabled){transform:none!important}}
+/* dev.29 shared-control and prepared-view integration. */
+:root{--ease-out:cubic-bezier(.16,1,.3,1);--ease-in-out:cubic-bezier(.65,0,.35,1);--ui-ease:cubic-bezier(.23,1,.32,1)}
+html[data-transition-kind=page] .s-main{view-transition-name:studio-page}
+html[data-transition-kind=page]::view-transition-group(studio-page){animation:none}
+html[data-transition-kind=page]::view-transition-old(root),html[data-transition-kind=page]::view-transition-new(root){animation:none;mix-blend-mode:normal}
+html[data-transition-kind=page]::view-transition-old(studio-page){animation:studio-page-out 240ms cubic-bezier(.23,1,.32,1) both;mix-blend-mode:normal;object-fit:none;object-position:top left}
+html[data-transition-kind=page]::view-transition-new(studio-page){animation:studio-page-in 280ms cubic-bezier(.23,1,.32,1) both;mix-blend-mode:normal;object-fit:none;object-position:top left}
+html[data-transition-kind=page] .s-content-enter{animation:none}
+@keyframes studio-page-out{to{opacity:0}}@keyframes studio-page-in{from{opacity:0}to{opacity:1}}
+html[data-transition-kind=theme]::view-transition-old(root),html[data-transition-kind=theme]::view-transition-new(root){animation:none;mix-blend-mode:normal}
+html[data-transition-kind=theme]::view-transition-new(root){z-index:2}html[data-transition-kind=theme]::view-transition-old(root){z-index:1}
+.studio .s-brand,.studio .s-brand:hover,.studio .s-brand:active{background:transparent!important;box-shadow:none!important;opacity:1!important;outline:0!important}
+.studio .s-sidebar-footer{background:transparent;transition:background-color 260ms var(--ease-out),box-shadow 260ms var(--ease-out),transform 260ms var(--ease-out)}
+.studio .s-sidebar-footer:hover{background:var(--surface-2);box-shadow:0 3px 12px #00000006;transform:translateY(-1px)}
+.studio button,.studio a,.studio input,.studio textarea{transition-timing-function:var(--ease-out)}
+.studio .s-theme-switch{height:34px;border:1px solid var(--line);padding:2px;background:var(--surface-2)}.studio .s-theme-switch>button{width:30px;height:28px;min-height:28px;padding:0}.studio .s-theme-switch svg{width:16px;height:16px}.studio .s-theme-switch .s-segment-thumb{height:auto;border-radius:50%}
+.ui-popover{animation:none}.ui-popover .s-select-menu{position:static;box-shadow:none;padding:0;border:0;border-radius:12px;background:transparent;min-width:0;max-height:248px;overflow-y:auto}
+.s-reasoning-trigger{background:transparent;gap:5px;padding:4px 7px;min-height:28px;font-size:12px;color:var(--text)}.s-reasoning-trigger small{font-size:11px;color:var(--muted)}.s-reasoning-trigger svg{width:13px;height:13px}
+.s-sync-plot rect:hover,.s-sync-plot rect:focus-visible,.s-sync-plot rect[aria-pressed=true],.s-sync-plot rect[data-active=true]{opacity:1;stroke:none!important;fill:#1fa382}
+.s-sync-plot rect[data-status=partial][data-active=true]{fill:#d5a21f}.s-sync-plot rect[data-status=failed][data-active=true]{fill:#c9586b}
+.s-sync-tooltip{top:24px;border-radius:10px;padding:12px;box-shadow:0 3px 16px #00000016;font-size:12px}.s-sync-tooltip header{margin-bottom:12px}.s-sync-tooltip p{display:flex;align-items:center;gap:7px;margin:6px 0}.s-sync-tooltip small{font-size:11px;color:var(--muted)}
+.s-chart-viewport{overflow:visible;height:auto}.s-chart-viewport:has(>[style*="min-width"]){overflow:auto hidden}.s-chart-viewport:has(>.s-combo-chart){height:100%}.s-panel{overflow:visible}.s-table-wrap{overflow:auto hidden}.s-detail-all-metrics{overflow:visible}
+.s-mobile-account{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
+@media(max-width:699px),(orientation:portrait){.studio{display:block!important}.studio .s-sidebar{display:none!important}.s-main{grid-column:auto;width:100%;padding:24px 16px calc(105px + env(safe-area-inset-bottom))}.s-mobile-nav{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));position:fixed;bottom:calc(12px + env(safe-area-inset-bottom));left:12px;right:12px;padding:5px;border-radius:25px;background:var(--glass);backdrop-filter:blur(24px);z-index:38;border:1px solid var(--line)}.s-mobile-nav>button{display:flex;align-items:center;justify-content:center;flex-direction:column;gap:3px;min-height:54px;font-size:12px;border-radius:19px;position:relative}.s-mobile-nav svg{width:20px;height:20px}.s-back-top{bottom:96px}.s-chat-header>.s-icon:first-child{display:grid}}
+@media(prefers-reduced-motion:reduce){.studio .s-sidebar-footer:hover{transform:none}::view-transition-group(*),::view-transition-old(*),::view-transition-new(*){animation:none!important}}
+html[data-transition-kind=theme] .s-theme-switch .ui-segment-thumb{view-transition-name:theme-thumb;transform:translate(var(--segment-x),var(--segment-y))!important}
+html[data-transition-kind=theme]::view-transition-group(theme-thumb){animation-duration:320ms;animation-timing-function:cubic-bezier(.23,1,.32,1)}
+html[data-transition-kind=theme]::view-transition-old(theme-thumb){animation:none;opacity:0}html[data-transition-kind=theme]::view-transition-new(theme-thumb){animation:none;mix-blend-mode:normal}
+.s-sync-tooltip{animation:ui-popover-in 160ms cubic-bezier(.23,1,.32,1)}
+.studio button span,.studio a span,.studio button svg,.studio .s-media h2,.studio .s-recent-item h3,.studio .s-panel,.studio .s-media-cover{transition-timing-function:var(--ease-out)}
+.s-sidebar nav button:hover .s-nav-icon,.s-sync:hover>span{transform:none}
+@property --reveal-radius{syntax:'<length>';inherits:false;initial-value:0px}
+html[data-transition-kind=theme]::view-transition-new(root){mask-image:radial-gradient(circle at var(--reveal-x) var(--reveal-y),#000 max(0px,calc(var(--reveal-radius) - var(--reveal-feather))),transparent var(--reveal-radius));mask-repeat:no-repeat;clip-path:none}
+html[data-transition-kind=theme] .studio,html[data-transition-kind=theme] .studio *{transition:none!important}
