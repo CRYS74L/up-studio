@@ -159,9 +159,9 @@ test('sources exposes independent runtime, metric coverage and expandable runs',
  await page.goto('/#sources');
  await expect(page.getByRole('heading',{name:'数据更新'})).toBeVisible();
  await expect(page.getByText('独立运行',{exact:true})).toBeVisible();
- await expect(page.locator('.s-coverage-grid>div')).toHaveCount(16);
+ await expect(page.locator('.s-coverage-grid')).toHaveCount(0);
  await expect(page.locator('.s-sync-plot rect')).toHaveCount(1);await page.locator('.s-sync-plot rect').click();
- await expect(page.getByRole('tooltip')).toBeVisible();
+ await expect(page.getByRole('tooltip')).toBeVisible();await expect(page.getByRole('tooltip')).toContainText('封标吸引力');await expect(page.getByRole('tooltip')).not.toContainText('3 / 3');
  await expect(page.locator('.s-unavailable')).toHaveCount(0);
 });
 
@@ -421,8 +421,33 @@ test('chat history can be renamed archived restored and branched and accepts ima
 });
 
 test('route snapshot waits for first-screen images and theme reveal starts at its control',async({page})=>{
- await page.emulateMedia({reducedMotion:'no-preference'});await page.addInitScript(()=>{const original=document.startViewTransition?.bind(document);if(original)document.startViewTransition=(update:any)=>{(window as any).viewReady=false;const v=original(update);v.ready.then(()=>(window as any).viewReady=true);return v}});
+ await page.emulateMedia({reducedMotion:'no-preference'});await page.addInitScript(()=>{(window as any).viewReady=false;const original=document.startViewTransition?.bind(document);if(original)document.startViewTransition=(update:any)=>{(window as any).viewReady=false;const v=original(update);v.ready.then(()=>(window as any).viewReady=true);return v}});
  let release!:()=>void;const gate=new Promise<void>(r=>{release=r});await page.route('**/api/covers/**',async route=>{await gate;await route.fallback()});
  await page.goto('/#sources');await expect(page.locator('.s-sources')).toHaveAttribute('data-page-pending','false');await (await navigationButton(page,'稿件')).click();await page.waitForTimeout(100);expect(await page.evaluate(()=>(window as any).viewReady)).toBe(false);release();await expect.poll(()=>page.evaluate(()=>(window as any).viewReady)).toBe(true);await expect(page.locator('.s-media-cover img').first()).toHaveAttribute('data-decoded','true');
  await page.waitForTimeout(350);const control=await page.locator('.s-theme-anchor').boundingBox();await page.getByRole('button',{name:'深色模式',exact:true}).click();await expect.poll(()=>page.evaluate(()=>document.getAnimations().some(a=>(a.effect as any)?.pseudoElement==='::view-transition-new(root)'))).toBe(true);const reveal=await page.evaluate(()=>{const effect=document.getAnimations().find(a=>(a.effect as any)?.pseudoElement==='::view-transition-new(root)')?.effect as KeyframeEffect;return {frames:effect.getKeyframes(),timing:effect.getTiming()}});expect(reveal.timing.easing).toBe('cubic-bezier(0.23, 1, 0.32, 1)');expect(reveal.frames[0]['--reveal-radius']).toBe('0px');const mask=await page.evaluate(()=>({image:getComputedStyle(document.documentElement,'::view-transition-new(root)').maskImage,x:parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--reveal-x')),y:parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--reveal-y')),feather:parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--reveal-feather'))}));expect(mask.image).toContain('radial-gradient');expect(mask.feather).toBeGreaterThanOrEqual(40);expect(mask.x).toBeCloseTo(control!.x+control!.width/2,0);expect(mask.y).toBeCloseTo(control!.y+control!.height/2,0);
+});
+
+test('header controls align, segment labels fit, and profile hover never floats',async({page})=>{
+ await page.emulateMedia({reducedMotion:'no-preference'});await page.goto('/#videos');await expect(page.locator('.s-library')).toBeVisible();const theme=await page.locator('.s-theme-switch').boundingBox(),sync=await page.locator('.s-header-actions>.s-sync').boundingBox();expect(theme!.height).toBeCloseTo(sync!.height,1);expect(theme!.y).toBeCloseTo(sync!.y,1);
+ const fit=await page.locator('.ui-segments>button').evaluateAll(buttons=>buttons.every(b=>{const r=b.getBoundingClientRect();const label=b.querySelector('span,svg');if(!label)return true;const t=label.getBoundingClientRect();return t.width<=r.width-8&&t.height<=r.height-6}));expect(fit).toBe(true);
+ if(await page.locator('.s-sidebar').isVisible()){const profile=page.locator('.s-sidebar-footer'),before=await profile.boundingBox();await profile.hover();await page.waitForTimeout(280);expect((await profile.boundingBox())!.y).toBeCloseTo(before!.y,1)}
+});
+
+test('sheet and backdrop disappear together, without a lingering shaded page',async({page})=>{
+ await page.emulateMedia({reducedMotion:'no-preference'});await openAccount(page);const sheet=page.getByRole('dialog',{name:'UP主账号',exact:true});await expect(sheet).toHaveCSS('opacity','1');await page.evaluate(()=>{(window as any).closingFrames=[];const stop=performance.now()+600;function sample(){const d=document.querySelector('dialog[open]');if(d)(window as any).closingFrames.push({panel:Number(getComputedStyle(d).opacity),backdrop:Number(getComputedStyle(d,'::backdrop').opacity)});if(performance.now()<stop)requestAnimationFrame(sample)}sample()});await page.getByRole('button',{name:'关闭',exact:true}).click();await expect(sheet).toHaveCount(0);const frames=await page.evaluate(()=>(window as any).closingFrames);expect(frames.some((f:any)=>f.panel<.8&&f.backdrop<.8)).toBe(true);expect(frames.some((f:any)=>f.panel<.15&&f.backdrop>.45)).toBe(false);
+});
+
+test('returning from a scrolled detail restores the list once and does not replay a fade',async({page})=>{
+ await page.emulateMedia({reducedMotion:'no-preference'});await page.route('**/api/videos*',r=>r.fulfill({json:{ok:true,videos:Array.from({length:18},(_,i)=>({...videos[i%3],id:String(i+1)}))}}));await page.goto('/#videos');await page.locator('.s-media').nth(4).scrollIntoViewIfNeeded();const original=await page.evaluate(()=>scrollY);await page.locator('.s-media').nth(4).getByRole('button',{name:/查看/}).click();await expect(page.locator('.s-detail')).toBeVisible();await page.evaluate(()=>scrollTo(0,700));await page.goBack();await expect(page.locator('.s-library')).toBeVisible();await expect.poll(()=>page.evaluate(()=>document.documentElement.dataset.transitionKind??'')).toBe('');await expect.poll(()=>page.evaluate(()=>scrollY)).toBeCloseTo(original,0);const nav=page.locator('.s-mobile-nav');if(await nav.isVisible()){const selected=await nav.locator('[aria-current=page]').boundingBox(),indicator=await nav.locator('.s-nav-indicator').boundingBox();expect(indicator!.y).toBeCloseTo(selected!.y,0);expect(indicator!.x).toBeCloseTo(selected!.x,0);await expect(nav.locator('.s-nav-indicator')).toHaveCSS('opacity','1')}const left=page.viewportSize()!.width>page.viewportSize()!.height?240:0;const clip={x:left,y:100,width:page.viewportSize()!.width-left-16,height:250};const first=await page.screenshot({clip,path:'.local-runtime/qa30/return-first-'+page.viewportSize()!.width+'.png'});await page.waitForTimeout(350);const last=await page.screenshot({clip,path:'.local-runtime/qa30/return-last-'+page.viewportSize()!.width+'.png'});expect(last.equals(first),'Page changed after transition finished').toBe(true);expect(await page.evaluate(()=>scrollY)).toBeCloseTo(original,0);
+});
+
+test('sync cells show only issues from that run and have no black focus outline',async({page})=>{
+ const old={id:'old',status:'partial',started_at:'2026-09-01T00:00:00Z',request_count:20,details:{totalVideos:7,metricCounts:{views:2,likes:7}}};
+ const success={...old,id:'complete',status:'success',started_at:'2026-09-03T00:00:00Z',details:{totalVideos:17,metricCounts:{views:17,likes:17}}};
+ const failed={id:'failed',status:'failed',started_at:'2026-09-02T00:00:00Z',error_code:'session_expired'};
+ await page.route('**/api/acquisition/runs',r=>r.fulfill({json:{ok:true,runs:[success,failed,old]}}));await page.goto('/#sources');await expect(page.getByRole('heading',{name:'数据质量',exact:true})).toHaveCount(0);
+ const cells=page.locator('.s-sync-plot rect');await cells.first().click();const tip=page.getByRole('tooltip');await expect(tip).toContainText('5 篇未返回');await expect(tip).not.toContainText('点赞');await expect(tip).not.toContainText('2 / 7');
+ expect(await cells.first().evaluate(e=>getComputedStyle(e).outlineWidth)).toBe('0px');expect(await page.locator('.s-sync-plot svg').evaluate(e=>getComputedStyle(e).outlineWidth)).toBe('0px');
+ await cells.nth(1).click();await expect(tip).toContainText('登录已过期');await expect(tip).not.toContainText('播放量');
+ await cells.last().click();await expect(tip).toContainText('同步完成');await expect(tip.locator('.s-run-issues')).toHaveCount(0);await expect(tip).not.toContainText('17');await expect(tip).not.toContainText('数据质量');
 });
