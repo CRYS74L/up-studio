@@ -186,10 +186,10 @@ test('theme changes are persistent and mobile navigation reaches every page',asy
 });
 
 test('sync errors are actionable and preserve the prior snapshot',async({page})=>{
- await page.goto('/');
- await page.getByRole('button',{name:'同步',exact:true}).click();
+ await page.goto('/#sources');
+ await page.getByRole('button',{name:'立即同步',exact:true}).click();
  await expect(page.getByRole('status')).toContainText('B 站登录已失效');
- await expect(page.locator('.s-overview-kpis')).toContainText('6000');
+ await (await navigationButton(page,'概览')).click();await expect(page.locator('.s-overview-kpis')).toContainText('6000');
 });
 
 test('empty responses offer an actual connection path',async({page})=>{
@@ -291,7 +291,7 @@ test('freshness is in the header and relation points have a visible manuscript k
 });
 
 test('sync toast disappears without a close button',async({page})=>{
- await page.clock.install();await page.route('**/api/bilibili/collect-now',r=>r.fulfill({json:{ok:true,run:{status:'success'}}}));await page.goto('/#videos');await expect(page.locator('.s-header-freshness')).toBeVisible();await page.getByRole('button',{name:'同步',exact:true}).click();await expect(page.locator('.s-floating-toast')).toContainText('同步完成');await expect(page.getByRole('button',{name:'关闭同步提示'})).toHaveCount(0);await page.clock.fastForward(4000);await expect(page.locator('.s-floating-toast')).toHaveCount(0);
+ await page.clock.install();await page.route('**/api/bilibili/collect-now',r=>r.fulfill({json:{ok:true,run:{status:'success'}}}));await page.goto('/#sources');await expect(page.locator('.s-header-freshness')).toBeVisible();await page.getByRole('button',{name:'立即同步',exact:true}).click();await expect(page.locator('.s-floating-toast')).toContainText('同步完成');await expect(page.getByRole('button',{name:'关闭同步提示'})).toHaveCount(0);await page.clock.fastForward(4000);await expect(page.locator('.s-floating-toast')).toHaveCount(0);
 });
 test('settings uses current model and effort names and has no export action',async({page})=>{
  await page.goto('/#analysis?tab=ai');await page.getByRole('button',{name:'AI模型设置'}).click();await choose(page,'DeepSeek分析模型','DeepSeek V4 Pro');await expect(page.getByRole('combobox',{name:'DeepSeek分析模型'})).toContainText('V4 Pro');
@@ -313,7 +313,7 @@ test('automatic update frequency can be changed',async({page})=>{
 });
 
 test('sync icon settles while the pointer remains on the button',async({page})=>{
- await page.emulateMedia({reducedMotion:'no-preference'});await page.goto('/');const button=page.getByRole('button',{name:'同步',exact:true});const icon=button.locator('svg');await button.hover();await expect(icon).toHaveAttribute('data-motion-state','resting');await expect(icon).toHaveAttribute('data-motion-state','resting',{timeout:2500});await page.waitForTimeout(650);await expect(icon).toHaveAttribute('data-motion-state','resting');await expect(button.locator('.spin')).toHaveCount(0);
+ await page.emulateMedia({reducedMotion:'no-preference'});await page.goto('/#sources');const button=page.getByRole('button',{name:'刷新同步记录',exact:true});const icon=button.locator('svg');await button.hover();await expect(icon).toHaveAttribute('data-motion-state','resting');await expect(icon).toHaveAttribute('data-motion-state','resting',{timeout:2500});await page.waitForTimeout(650);await expect(icon).toHaveAttribute('data-motion-state','resting');await expect(button.locator('.spin')).toHaveCount(0);
 });
 
 test('reordering has real positional animation without scaling',async({page})=>{
@@ -420,15 +420,15 @@ test('chat history can be renamed archived restored and branched and accepts ima
  await page.getByLabel('上传分析图片').setInputFiles({name:'reference.png',mimeType:'image/png',buffer:Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Wl6X1cAAAAASUVORK5CYII=','base64')});await expect(page.locator('.ai-attachments img')).toHaveCount(1);await page.getByRole('textbox',{name:'AI对话消息'}).fill('分析附图');await page.getByRole('button',{name:'发送消息',exact:true}).click();await expect.poll(()=>sent?.attachments?.length).toBe(1);expect(sent.attachments[0].dataUrl).toContain('data:image/png;base64,');
 });
 
-test('route snapshot waits for first-screen images and theme reveal starts at its control',async({page})=>{
- await page.emulateMedia({reducedMotion:'no-preference'});await page.addInitScript(()=>{(window as any).viewReady=false;const original=document.startViewTransition?.bind(document);if(original)document.startViewTransition=(update:any)=>{(window as any).viewReady=false;const v=original(update);v.ready.then(()=>(window as any).viewReady=true);return v}});
+test('page motion prepares first-screen images and theme reveal starts at its control',async({page})=>{
+ await page.emulateMedia({reducedMotion:'no-preference'});
  let release!:()=>void;const gate=new Promise<void>(r=>{release=r});await page.route('**/api/covers/**',async route=>{await gate;await route.fallback()});
- await page.goto('/#sources');await expect(page.locator('.s-sources')).toHaveAttribute('data-page-pending','false');await (await navigationButton(page,'稿件')).click();await page.waitForTimeout(100);expect(await page.evaluate(()=>(window as any).viewReady)).toBe(false);release();await expect.poll(()=>page.evaluate(()=>(window as any).viewReady)).toBe(true);await expect(page.locator('.s-media-cover img').first()).toHaveAttribute('data-decoded','true');
- await page.waitForTimeout(350);const control=await page.locator('.s-theme-anchor').boundingBox();await page.getByRole('button',{name:'深色模式',exact:true}).click();await expect.poll(()=>page.evaluate(()=>document.getAnimations().some(a=>(a.effect as any)?.pseudoElement==='::view-transition-new(root)'))).toBe(true);const reveal=await page.evaluate(()=>{const effect=document.getAnimations().find(a=>(a.effect as any)?.pseudoElement==='::view-transition-new(root)')?.effect as KeyframeEffect;return {frames:effect.getKeyframes(),timing:effect.getTiming()}});expect(reveal.timing.easing).toBe('cubic-bezier(0.23, 1, 0.32, 1)');expect(reveal.frames[0]['--reveal-radius']).toBe('0px');const mask=await page.evaluate(()=>({image:getComputedStyle(document.documentElement,'::view-transition-new(root)').maskImage,x:parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--reveal-x')),y:parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--reveal-y')),feather:parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--reveal-feather'))}));expect(mask.image).toContain('radial-gradient');expect(mask.feather).toBeGreaterThanOrEqual(40);expect(mask.x).toBeCloseTo(control!.x+control!.width/2,0);expect(mask.y).toBeCloseTo(control!.y+control!.height/2,0);
+ await page.goto('/#sources');await expect(page.locator('.s-sources')).toHaveAttribute('data-page-pending','false');await (await navigationButton(page,'稿件')).click();release();await expect(page.locator('.s-media-cover img').first()).toHaveAttribute('data-decoded','true');await expect.poll(()=>page.evaluate(()=>document.documentElement.dataset.transitionKind??'')).toBe('');
+ const control=await page.locator('.s-theme-anchor').boundingBox();await page.getByRole('button',{name:'深色模式',exact:true}).click();await expect.poll(()=>page.evaluate(()=>document.getAnimations().some(a=>(a.effect as any)?.pseudoElement==='::view-transition-new(root)'))).toBe(true);const reveal=await page.evaluate(()=>{const effect=document.getAnimations().find(a=>(a.effect as any)?.pseudoElement==='::view-transition-new(root)')?.effect as KeyframeEffect;return {frames:effect.getKeyframes(),timing:effect.getTiming()}});expect(reveal.timing.easing).toBe('cubic-bezier(0.23, 1, 0.32, 1)');expect(reveal.frames[0]['--reveal-radius']).toBe('0px');const mask=await page.evaluate(()=>({image:getComputedStyle(document.documentElement,'::view-transition-new(root)').maskImage,x:parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--reveal-x')),y:parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--reveal-y')),feather:parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--reveal-feather'))}));expect(mask.image).toContain('radial-gradient');expect(mask.feather).toBeGreaterThanOrEqual(40);expect(mask.x).toBeCloseTo(control!.x+control!.width/2,0);expect(mask.y).toBeCloseTo(control!.y+control!.height/2,0);
 });
 
 test('header controls align, segment labels fit, and profile hover never floats',async({page})=>{
- await page.emulateMedia({reducedMotion:'no-preference'});await page.goto('/#videos');await expect(page.locator('.s-library')).toBeVisible();const theme=await page.locator('.s-theme-switch').boundingBox(),sync=await page.locator('.s-header-actions>.s-sync').boundingBox();expect(theme!.height).toBeCloseTo(sync!.height,1);expect(theme!.y).toBeCloseTo(sync!.y,1);
+ await page.emulateMedia({reducedMotion:'no-preference'});await page.goto('/#videos');await expect(page.locator('.s-library')).toBeVisible();await expect(page.locator('.s-header-actions>.s-sync')).toHaveCount(0);await expect(page.locator('.s-theme-switch')).toBeVisible();
  const fit=await page.locator('.ui-segments>button').evaluateAll(buttons=>buttons.every(b=>{const r=b.getBoundingClientRect();const label=b.querySelector('span,svg');if(!label)return true;const t=label.getBoundingClientRect();return t.width<=r.width-8&&t.height<=r.height-6}));expect(fit).toBe(true);
  if(await page.locator('.s-sidebar').isVisible()){const profile=page.locator('.s-sidebar-footer'),before=await profile.boundingBox();await profile.hover();await page.waitForTimeout(280);expect((await profile.boundingBox())!.y).toBeCloseTo(before!.y,1)}
 });

@@ -253,11 +253,30 @@ html[data-transition-kind=theme]::view-transition-new(theme-sun),html[data-trans
 
 
 
-html[data-transition-kind=page]{view-transition-name:root}
-html[data-transition-kind=page] .s-main,html[data-transition-kind=page] .s-mobile-nav,html[data-transition-kind=page] .s-back-top{view-transition-name:none}
-html[data-transition-kind=page]::view-transition-group(root){animation:none}
-html[data-transition-kind=page]::view-transition-old(root){animation:studio-page-out 240ms cubic-bezier(.23,1,.32,1) both;mix-blend-mode:normal}
-html[data-transition-kind=page]::view-transition-new(root){animation:studio-page-in 280ms cubic-bezier(.23,1,.32,1) both;mix-blend-mode:normal}
-html[data-transition-kind=page] .s-main *{transition:none!important}
-html[data-transition-kind=page] .s-nav-indicator{transform:translate(var(--nav-x),var(--nav-y))!important}
-html[data-transition-kind=page] .s-back-top[data-present=true]{opacity:1!important}html[data-transition-kind=page] .s-back-top[data-present=false]{opacity:0!important}
+
+
+
+
+
+
+
+
+
+/* dev.31: dev.27 typography/geometry, with shared measured-thumb behavior. */
+.studio .ui-segments:not(.s-theme-switch){--segment-font:13px;--segment-inset:22px;--segment-height:44px;--segment-padding:4px;width:auto;border:1px solid var(--line);align-items:stretch}
+.studio .ui-segments:not(.s-theme-switch)>button{flex:1 1 0;min-height:34px;font-size:var(--segment-font);font-weight:500;line-height:normal;padding:0 var(--segment-inset)!important}
+.s-watch-control .ui-segments,.s-video-history .ui-segments{--segment-inset:10px!important}.s-video-history .ui-segments{--segment-font:12px!important}
+@media(max-width:699px){.s-library-toolbar .ui-segments{--segment-inset:10px!important;--segment-font:12px!important}}
+:root{--ease-out:cubic-bezier(.16,1,.3,1);--ui-ease:cubic-bezier(.16,1,.3,1)}
+.studio button,.studio a,.studio input,.studio textarea,.studio .ui-segments>button,.s-select-menu button{transition:background-color 300ms var(--ease-out),color 240ms var(--ease-out),border-color 280ms var(--ease-out),box-shadow 320ms var(--ease-out),transform 260ms var(--ease-out)!important}
+.studio button:active:not(:disabled){transition-duration:100ms!important}.studio .ui-segments>button:active{transform:none}
+.s-sidebar nav button[aria-current=page],.s-sidebar nav button[aria-current=page]:hover,.s-mobile-nav>button[aria-current=page],.s-mobile-nav>button[aria-current=page]:hover{background:transparent!important;color:var(--pink-text)}
+.s-sidebar nav button:not([aria-current=page]):hover{background:var(--surface-2);color:var(--text)}
+.s-kpi-change>b[data-direction=up]{color:#FF765F}
+html[data-route-phase=preparing] .studio>.s-main{pointer-events:none}
+@media(prefers-reduced-motion:reduce){.studio button,.studio a,.studio input,.studio textarea,.studio .ui-segments>button,.s-select-menu button{transition:none!important}}
+
+.studio .ui-segments:not(.s-theme-switch){min-height:0}.studio .ui-segments:not(.s-theme-switch)>button{line-height:1.5}.studio .ui-segments:not(.s-theme-switch)>button[aria-pressed=true]{font-weight:600}
+html[data-transition-kind=theme] .studio button,html[data-transition-kind=theme] .studio .ui-segments>button{transition:none!important}
+
+.studio>.s-main{position:relative}
