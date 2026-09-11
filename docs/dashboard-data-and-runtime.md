@@ -160,6 +160,13 @@ B站封面播放与弹幕图标的实际SVG路径保存在src/studio/BiliIcons.t
 - DeepSeek：首次调用 https://api-docs.deepseek.com/zh-cn/ ，思考模式 https://api-docs.deepseek.com/zh-cn/guides/thinking_mode/ ，图像理解 https://api-docs.deepseek.com/zh-cn/guides/vision/ ，JSON输出 https://api-docs.deepseek.com/zh-cn/guides/json_mode/ 。
 - Apple HIG：按钮 https://developer.apple.com/design/human-interface-guidelines/buttons ，动效 https://developer.apple.com/design/human-interface-guidelines/motion 。网页使用相应的圆角、反馈、响应式与减少动态效果原则；不是嵌入原生UIKit组件。
 
+## v0.1.0-dev.28 — 保留轻微下拉按压反馈
+
+- 按用户进一步澄清，恢复下拉按钮的轻微按压缩放，采用稿件排序原有的2.5%缩放作为上限；宽按钮的横向收缩同时限制为3px，避免更新频率等宽控件收缩过大。
+- 按下和松开均使用150ms非线性缓动；选项保留更轻的按压反馈，浮层本身不做夸张缩放。减少动态效果偏好下停止缩放。
+- 桌面、手机和平板均实测窄排序和宽频率触发器：宽度确实缩小，且收缩不超过3px。三个定向用例及构建通过。
+- dev.27未单独部署；本次部署dev.28，同时包含dev.27全部页面和AI设置调整。
+
 ## v0.1.0-dev.27 — 连贯转场与上下文设置
 
 - 页面切换取消先退出再进入的等待，改为内容直接衔接、72%至100%的短淡入；取消整页纵向滑入。逐帧验证内容节点始终存在、没有全透明阶段。

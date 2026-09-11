@@ -171,3 +171,9 @@ html{scrollbar-gutter:stable}.studio{width:100%}.s-header h1{font-size:32px}.s-k
 @media(max-width:699px){.s-header h1{font-size:29px}.s-back-top{bottom:96px;right:18px}.s-chat{height:calc(100dvh - 350px)}.s-chat-compose-tools{gap:6px}.s-reasoning-trigger{padding:0 8px}.s-chat-compose-tools label{gap:3px}}
 .s-select-menu{z-index:1200}
 @media(max-width:699px){.s-chat-welcome{min-height:0;align-content:start;padding:16px 0}.s-chat-welcome>img{width:40px;height:40px}}
+/* Keep the manuscript-sort press response, capped to 3px for wider triggers. */
+.studio .s-select{transition:background-color .15s cubic-bezier(.4,0,.2,1),border-color .15s cubic-bezier(.4,0,.2,1),transform .15s cubic-bezier(.4,0,.2,1)}
+.s-select:active:not(:disabled){transform:scale(var(--select-press-x,.975),.975)!important}
+.s-select-menu button{transition:background-color .15s cubic-bezier(.4,0,.2,1),color .15s cubic-bezier(.4,0,.2,1),transform .15s cubic-bezier(.4,0,.2,1)}
+.s-select-menu button:active:not(:disabled){transform:scale(.995,.985)!important}
+@media(prefers-reduced-motion:reduce){.s-select:active:not(:disabled),.s-select-menu button:active:not(:disabled){transform:none!important}}
