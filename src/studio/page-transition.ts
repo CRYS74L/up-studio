@@ -4,6 +4,7 @@ import {request,coverSrc} from '../format';
 import {client} from './query-client';
 import {capturePage,warmSnapshotStyles} from './page-snapshot';
 import type {StudioRoute} from './route';
+import {animateSwap,type SlideDirection} from './transition-motion';
 let revision=0;
 let cleanup:(()=>void)|undefined;
 let preparing:AbortController|undefined;
@@ -33,7 +34,7 @@ async function prefetch(route:StudioRoute,signal:AbortSignal){
  };
  await bounded(work(),signal,2000);
 }
-export async function transitionPage(update:()=>void,route?:StudioRoute,restore?:()=>void,axis:'x'|'y'='y',selector?:string){
+export async function transitionPage(update:()=>void,route?:StudioRoute,restore?:()=>void,axis:'x'|'y'='y',selector?:string,direction:SlideDirection=1){
  cancelPageTransition();const token=revision,controller=new AbortController();preparing=controller;
  if(route)void prefetch(route,controller.signal);
  if(controller.signal.aborted||token!==revision)return;
@@ -52,11 +53,7 @@ export async function transitionPage(update:()=>void,route?:StudioRoute,restore?
  document.documentElement.dataset.routePhase='animating';
  // No network, decode timer, or extra frame is awaited on the click path.
  flushSync(()=>document.dispatchEvent(new Event('up:route-motion')));
- const timing={duration:360,easing:'cubic-bezier(.22,1,.36,1)',fill:'both' as const};
- const enter=target.animate([{opacity:0,transform:axis==='x'?'translateX(18px)':'translateY(12px)'},{opacity:1,transform:'translate(0,0)'}],timing);
- animations.push(enter);
- if(old)animations.push(old.animate([{opacity:1,transform:'translate(0,0)'},{opacity:0,transform:axis==='x'?'translateX(-9px)':'translateY(-6px)'}],timing));
- const start=document.timeline.currentTime;for(const animation of animations)animation.startTime=start;
+ animations.push(...animateSwap(target,old,axis,direction));
  await Promise.allSettled(animations.map(a=>a.finished));
  if(token===revision){cleanup?.();cleanup=undefined;preparing=undefined;delete document.documentElement.dataset.transitionKind;delete document.documentElement.dataset.routePhase;}
 }

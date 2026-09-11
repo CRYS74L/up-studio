@@ -287,3 +287,21 @@ html[data-transition-kind=theme] .studio button,html[data-transition-kind=theme]
 .s-account-action>svg{width:20px;height:20px;flex:0 0 20px}
 
 .s-analysis-topic-body,.s-detail{position:relative}
+
+/* Navigation labels never scale or change weight while their selection moves. */
+.studio .s-sidebar nav>button,.studio .s-sidebar nav>button[aria-current=page]{font-weight:550;transform:none!important;transition:background-color 240ms var(--ease-out),color 240ms var(--ease-out)}
+.studio .s-sidebar nav>button>span{transform:none!important;transition:none!important}
+.s-mobile-dock{display:none}
+@media(max-width:699px),(orientation:portrait){
+ .s-mobile-dock{display:flex;align-items:center;gap:10px;position:fixed;z-index:38;bottom:calc(12px + env(safe-area-inset-bottom));left:12px;right:12px;max-width:640px;margin-inline:auto;pointer-events:none}
+ .s-mobile-dock>.s-mobile-nav,.s-mobile-dock>.s-mobile-account{pointer-events:auto;height:64px;border:1px solid color-mix(in srgb,var(--text) 10%,transparent);background:color-mix(in srgb,var(--surface) 68%,transparent);backdrop-filter:blur(24px) saturate(150%);-webkit-backdrop-filter:blur(24px) saturate(150%);box-shadow:0 5px 24px #0000000c,inset 0 1px 0 #ffffff55}
+ .s-mobile-dock>.s-mobile-nav{position:relative;inset:auto;flex:1;min-width:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));padding:4px;border-radius:999px;isolation:isolate}
+ .s-mobile-dock>.s-mobile-nav>button{min-height:54px;height:54px;padding:0;gap:2px;border-radius:999px;font-size:11px;font-weight:550;line-height:14px;transform:none!important;transition:color 240ms var(--ease-out)}
+ .s-mobile-dock>.s-mobile-nav>button>.s-nav-icon{display:flex;align-items:center;justify-content:center;height:26px;width:26px;flex:0 0 26px}
+ .s-mobile-dock>.s-mobile-nav>button svg,.s-mobile-dock>.s-mobile-account>svg{width:25px;height:25px}
+ .s-mobile-dock>.s-mobile-nav .s-nav-indicator{border-radius:999px;background:color-mix(in srgb,var(--text) 9%,transparent);box-shadow:none}
+ .s-mobile-dock>.s-mobile-account{display:flex;flex:0 0 64px;width:64px;padding:0;border-radius:50%;gap:2px;font-size:11px;font-weight:550;line-height:14px;aspect-ratio:1;transform:none!important}
+ .s-mobile-dock>.s-mobile-account:hover,.s-mobile-dock>.s-mobile-account[aria-expanded=true]{background:color-mix(in srgb,var(--surface) 86%,transparent)}
+}
+/* Let the layout use the available width after the stable scrollbar gutter. */
+body{min-width:0}

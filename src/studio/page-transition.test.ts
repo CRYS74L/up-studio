@@ -24,7 +24,10 @@ it('commits and starts motion in the click task even when every data request is 
 });
 it('switches nested content from the right and cleans only its own animation styles',async()=>{
  const done=transitionPage(()=>{document.querySelector('.pane')!.innerHTML='Nested'},undefined,undefined,'x','.pane');
- expect(animations[0].frames[0].transform).toMatch(/^translateX\([1-9]/);expect(animations[1].frames[1].transform).toMatch(/^translateX\(-/);
+ expect(animations[0].frames[0].transform).toMatch(/^translateX\([1-9]/);
+ expect(animations[0].frames[1].offset).toBe(animations[1].frames[1].offset);
+ expect(animations[0].frames[1].opacity).toBe(0);expect(animations[1].frames[1].opacity).toBe(0);
+ expect(animations[0].frames[2].opacity).toBe(1);
  animations.forEach(a=>a.finish());await done;expect((document.querySelector('.pane') as HTMLElement).style.willChange).toBe('');expect(document.documentElement.dataset.routePhase).toBeUndefined();
 });
 it('a cancelled transition cannot remove the replacement transition or restore stale content',async()=>{

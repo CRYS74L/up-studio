@@ -1,13 +1,21 @@
 import {flushSync} from 'react-dom';
 import {cancelPageTransition} from './page-transition';
-const active=new WeakMap<HTMLElement,Animation>();
-export function changeContent(update:()=>void,resolve:()=>HTMLElement|null){
+import {capturePage} from './page-snapshot';
+import {animateSwap,type SlideDirection} from './transition-motion';
+let cleanup:(()=>void)|undefined;
+export function cancelContentMotion(){cleanup?.();cleanup=undefined;}
+export function changeContent(update:()=>void,resolve:()=>HTMLElement|null,direction:SlideDirection=1){
  if(document.documentElement.dataset.transitionKind==='page')cancelPageTransition();
- const previous=resolve();if(previous){active.get(previous)?.cancel();previous.querySelectorAll('[data-reorder]').forEach(e=>e.getAnimations().forEach(a=>a.cancel()))}
+ cancelContentMotion();
+ const previous=resolve(),reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+ // A main-page snapshot cannot represent content inside the native dialog layer.
+ const old=previous&&!reduced&&!previous.closest('dialog')?capturePage(previous):null;
+ if(previous)previous.querySelectorAll('[data-reorder]').forEach(e=>e.getAnimations().forEach(a=>a.cancel()));
  document.documentElement.dataset.contentSwitch='true';
  try{flushSync(update)}finally{delete document.documentElement.dataset.contentSwitch}
- const target=resolve();if(!target||matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+ const target=resolve();if(!target||reduced){old?.remove();return;}
  target.dataset.contentMotion='true';
- const animation=target.animate([{opacity:.6,transform:'translateX(18px)'},{opacity:1,transform:'translateX(0)'}],{duration:320,easing:'cubic-bezier(.22,1,.36,1)'});
- active.set(target,animation);animation.finished.catch(()=>{}).finally(()=>{if(active.get(target)===animation){active.delete(target);delete target.dataset.contentMotion}});
+ const animations=animateSwap(target,old,'x',direction);
+ const finish=()=>{animations.forEach(a=>a.cancel());old?.remove();delete target.dataset.contentMotion};cleanup=finish;
+ void Promise.allSettled(animations.map(a=>a.finished)).then(()=>{if(cleanup===finish){finish();cleanup=undefined;}});
 }
