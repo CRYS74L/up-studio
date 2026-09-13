@@ -1,3 +1,4 @@
+import {GlassMaterial} from './glass/GlassMaterial';
 import {flushSync} from 'react-dom';
 import {SegmentedControl} from './controls';
 import {useEffect,useState} from 'react';
@@ -12,5 +13,5 @@ export function BackToTop(){
  useEffect(()=>{const update=()=>setVisible(scrollY>240);update();addEventListener('scroll',update,{passive:true});const prepare=()=>flushSync(update);document.addEventListener('up:prepare-view',prepare);return()=>{removeEventListener('scroll',update);document.removeEventListener('up:prepare-view',prepare)}},[]);
  return <AnimatePresence>{visible&&<TopButton/>}</AnimatePresence>;
 }
-function TopButton(){const present=useIsPresent();return <motion.button data-present={present} className="s-icon s-back-top" aria-label="回到顶部" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} transition={{type:'tween',duration:.2}} onClick={()=>scrollTo({top:0,behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'})}><ArrowUp/></motion.button>;
+function TopButton(){const present=useIsPresent();return <motion.button data-present={present} className="s-icon s-back-top s-liquid" aria-label="回到顶部" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} transition={{type:'tween',duration:.2}} onClick={()=>scrollTo({top:0,behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'})}><GlassMaterial/><ArrowUp/></motion.button>;
 }

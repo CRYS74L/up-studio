@@ -21,15 +21,15 @@ it('commits and starts motion in the click task even when every data request is 
  const update=vi.fn(()=>{document.querySelector('.pane')!.textContent='New'}),restore=vi.fn();
  const done=transitionPage(update,{page:'videos',video:null,ids:[]},restore);
  expect(update).toHaveBeenCalledOnce();expect(restore).toHaveBeenCalledOnce();expect(animations).toHaveLength(2);
- expect(animations[0].options.duration).toBe(380);
+ expect(animations[0].options.duration).toBe(480);
  expect(animations[0].options).toEqual(animations[1].options);expect(animations[0].startTime).toBe(animations[1].startTime);
  animations.forEach(a=>a.finish());await done;expect(document.querySelector('.s-route-snapshot')).toBeNull();
 });
 it('switches nested content from the right and cleans only its own animation styles',async()=>{
  const done=transitionPage(()=>{document.querySelector('.pane')!.innerHTML='Nested'},undefined,undefined,'x','.pane');
  expect(animations[0].frames[0].transform).toMatch(/^translateX\([1-9]/);
- expect(animations[0].frames[0].opacity).toBe(1);expect(animations[1].frames[1].opacity).toBe(1);
- expect(animations[1].frames[1].transform).toMatch(/^translateX\(-/);
+ expect(animations[0].frames[0].opacity).toBe(1);expect(animations[1].frames.at(-1)!.opacity).toBe(1);
+ expect(animations[1].frames.at(-1)!.transform).toMatch(/^translateX\(-/);
  animations.forEach(a=>a.finish());await done;expect((document.querySelector('.pane') as HTMLElement).style.willChange).toBe('');expect(document.documentElement.dataset.routePhase).toBeUndefined();
 });
 it('a cancelled transition cannot remove the replacement transition or restore stale content',async()=>{
@@ -39,7 +39,7 @@ it('a cancelled transition cannot remove the replacement transition or restore s
  animations.slice(2).forEach(a=>a.finish());await second;expect(document.querySelector('.s-route-snapshot')).toBeNull();
 });
 it.each(['x','y'] as const)('applies the editable curve and duration on the %s axis',async(axis)=>{
- setLabSettings({duration:450,curve:[.2,.2,.8,.8]});
+ setLabSettings({timing:'bezier',duration:450,curve:[.2,.2,.8,.8]});
  const done=transitionPage(()=>{},undefined,undefined,axis);
  expect(animations[0].options).toMatchObject({duration:450,easing:'cubic-bezier(0.2,0.2,0.8,0.8)'});
  animations.forEach(a=>a.finish());await done;

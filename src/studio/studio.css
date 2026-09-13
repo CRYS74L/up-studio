@@ -202,9 +202,6 @@ html[data-transition-kind=theme]::view-transition-new(root){z-index:2}html[data-
 .s-mobile-account{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
 @media(max-width:699px),(orientation:portrait){.studio{display:block!important}.studio .s-sidebar{display:none!important}.s-main{grid-column:auto;width:100%;padding:24px 16px calc(105px + env(safe-area-inset-bottom))}.s-mobile-nav{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));position:fixed;bottom:calc(12px + env(safe-area-inset-bottom));left:12px;right:12px;padding:5px;border-radius:25px;background:var(--glass);backdrop-filter:blur(24px);z-index:38;border:1px solid var(--line)}.s-mobile-nav>button{display:flex;align-items:center;justify-content:center;flex-direction:column;gap:3px;min-height:54px;font-size:12px;border-radius:19px;position:relative}.s-mobile-nav>button svg{width:20px;height:20px}.s-back-top{bottom:96px}.s-chat-header>.s-icon:first-child{display:grid}}
 @media(prefers-reduced-motion:reduce){.studio .s-sidebar-footer:hover{transform:none}::view-transition-group(*),::view-transition-old(*),::view-transition-new(*){animation:none!important}}
-html[data-transition-kind=theme] .s-theme-switch .ui-segment-thumb{view-transition-name:theme-thumb;transform:translate(var(--segment-x),var(--segment-y))!important}
-html[data-transition-kind=theme]::view-transition-group(theme-thumb){animation-duration:320ms;animation-timing-function:cubic-bezier(.23,1,.32,1)}
-html[data-transition-kind=theme]::view-transition-old(theme-thumb){animation:none;opacity:0}html[data-transition-kind=theme]::view-transition-new(theme-thumb){animation:none;mix-blend-mode:normal}
 .s-sync-tooltip{animation:ui-popover-in 160ms cubic-bezier(.23,1,.32,1)}
 .studio button span,.studio a span,.studio button svg,.studio .s-media h2,.studio .s-recent-item h3,.studio .s-panel,.studio .s-media-cover{transition-timing-function:var(--ease-out)}
 .s-sidebar nav button:hover .s-nav-icon,.s-sync:hover>span{transform:none}
@@ -227,11 +224,6 @@ html[data-transition-kind=theme] .studio,html[data-transition-kind=theme] .studi
 .studio .ui-segments.s-theme-switch[data-size=header]{--segment-height:var(--header-control-height);height:var(--header-control-height);min-height:var(--header-control-height);padding:3px;flex-wrap:nowrap;border:1px solid var(--line)}
 .studio .ui-segments.s-theme-switch[data-size=header]>button{width:36px;height:calc(var(--header-control-height) - 8px);min-height:calc(var(--header-control-height) - 8px);padding:0!important;z-index:2}
 .studio .s-theme-switch svg{width:18px;height:18px}.s-header-actions>.s-sync{height:var(--header-control-height);min-height:var(--header-control-height)}
-html[data-transition-kind=theme] .theme-sun{view-transition-name:theme-sun}html[data-transition-kind=theme] .theme-moon{view-transition-name:theme-moon}
-html[data-transition-kind=theme]::view-transition-group(theme-sun),html[data-transition-kind=theme]::view-transition-group(theme-moon){animation:none;z-index:4}
-html[data-transition-kind=theme]::view-transition-group(theme-thumb){z-index:3}
-html[data-transition-kind=theme]::view-transition-old(theme-sun),html[data-transition-kind=theme]::view-transition-old(theme-moon){animation:none;opacity:0}
-html[data-transition-kind=theme]::view-transition-new(theme-sun),html[data-transition-kind=theme]::view-transition-new(theme-moon){animation:none;mix-blend-mode:normal}
 .ui-popover[role=tooltip]{border-radius:12px;padding:16px;max-height:calc(100dvh - 24px);overflow-y:auto}
 .s-run-quality{font-size:13px;line-height:1.5}.s-run-quality header{margin-bottom:10px}.s-run-quality p{display:flex;align-items:center;gap:7px;margin:5px 0}.s-run-quality>small{display:block;color:var(--muted);font-size:12px}
 @media(max-width:699px){:root{--header-control-height:40px}.s-library-toolbar .ui-segments{--segment-inset:12px;--segment-font:13px}}
@@ -397,3 +389,5 @@ html{text-autospace:no-autospace}
 @media(prefers-reduced-motion:no-preference){.studio button,.studio a,.studio input,.studio textarea,.studio .ui-segments>button,.s-select-menu button{transition:background-color 560ms cubic-bezier(.18,.75,.25,1),color 420ms cubic-bezier(.18,.75,.25,1),border-color 560ms cubic-bezier(.18,.75,.25,1),box-shadow 640ms cubic-bezier(.18,.75,.25,1),transform 360ms cubic-bezier(.18,.75,.25,1)!important}}
 .studio .s-brand,.studio .s-sidebar-footer{transition:none!important;transform:none!important}
 @media(prefers-reduced-motion:no-preference){.studio .s-sidebar nav>button{transition:background-color 560ms cubic-bezier(.18,.75,.25,1),color 420ms cubic-bezier(.18,.75,.25,1)!important}}
+/* Every snapshot layer is visual-only. Named control snapshots must not intercept input. */
+::view-transition,::view-transition-group(*),::view-transition-image-pair(*),::view-transition-old(*),::view-transition-new(*){pointer-events:none!important}
