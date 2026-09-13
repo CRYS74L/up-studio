@@ -1,16 +1,9 @@
-/* Do not isolate the optical plane with an extra stacking context: its backdrop
-   must include the page behind the control. Foreground labels stay above it. */
-.studio .s-liquid,:root .s-liquid.s-lab-glass-surface{isolation:auto;background:transparent!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;border:0!important;box-shadow:none!important;color:#171719}
-.s-glass-material{position:absolute;inset:0;z-index:auto;pointer-events:none;border-radius:inherit;overflow:visible}.s-glass-material *{pointer-events:none}.s-glass-tint{position:absolute;inset:0;border-radius:inherit;pointer-events:none}
-.s-glass-material .glass{box-shadow:none!important}.s-glass-shadow{position:absolute;inset:0;border-radius:inherit;pointer-events:none;box-shadow:0 12px 40px rgba(0,0,0,var(--liquid-shadow,.25))}.s-glass-material .bg-black{background:#000}.s-glass-material .opacity-0{opacity:0}.s-glass-material .opacity-20{opacity:.2}.s-glass-material .opacity-100{opacity:1}.s-glass-material .mix-blend-overlay{mix-blend-mode:overlay}
-.s-liquid>:not(.s-glass-material):not(.s-nav-indicator){position:relative;z-index:2}.s-liquid>.s-nav-indicator{z-index:1}.s-lab-glass-surface{z-index:auto}.studio .s-sidebar.s-liquid{color:var(--text)}.studio .s-liquid.s-version-toast>span{color:#111}
-@media(prefers-reduced-transparency:reduce){.s-glass-material>div,.s-glass-material>span:not(.s-glass-tint){display:none}.s-glass-tint{background:#f8f8fa!important}}
-/* Foreground contrast follows the theme; optical parameters remain shared. */
-.studio .s-liquid{color:var(--glass-content-color,var(--text))}.studio .s-liquid.s-version-toast>span{color:#111}:root[data-theme=dark] .studio .s-liquid.s-version-toast>span{color:var(--glass-content-color,var(--text))}
-.studio .s-sidebar.s-liquid{color:var(--glass-content-color,var(--text))}.studio .s-mobile-nav.s-liquid>button:not([aria-current=page]){color:inherit}
-/* The sidebar keeps its pre-glass surface and shadow. Only its background optics
-   are replaced; no cursor-driven masks or mixed-blend border layers are mounted. */
-.s-sidebar-refraction{position:absolute;inset:0;border-radius:inherit;pointer-events:none}
-.studio .s-sidebar.s-liquid{border:1px solid var(--glass-border)!important;color:var(--sidebar-foreground,var(--text))}
-.studio .s-sidebar>.s-glass-material>.s-glass-tint{background:var(--sidebar-glass-fill,var(--glass))!important}
-.studio .s-sidebar>.s-glass-material>.s-glass-shadow{box-shadow:var(--sidebar-glass-shadow,var(--shadow))}
+/* All four floating surfaces share a single optical/tint layer, including in dark mode. */
+.studio .s-liquid,:root .s-liquid.s-lab-glass-surface{isolation:isolate;background:transparent!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;border:0!important;box-shadow:0 4px 18px #00000012!important;color:#171719}
+.s-glass-material{position:absolute;inset:0;z-index:-2;pointer-events:none;border-radius:inherit;overflow:hidden;contain:paint}
+.s-glass-material>svg{pointer-events:none}
+.s-glass-optics,.s-glass-tint{position:absolute;inset:0;pointer-events:none;border-radius:inherit}
+.s-glass-material::after{content:'';position:absolute;inset:0;border-radius:inherit;box-shadow:inset 0 1px 0 #ffffff80,inset 0 0 0 .65px #0000000b;pointer-events:none}
+.s-liquid>.s-nav-selection-track{z-index:-1}
+.studio .s-liquid.s-version-toast>span{color:#111}
+@media(prefers-reduced-transparency:reduce){.s-glass-optics{display:none}.s-glass-tint{background:#f8f8fa!important}}

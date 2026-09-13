@@ -25,7 +25,7 @@ export function animateSwap(target:HTMLElement,old:HTMLElement|null,axis:'x'|'y'
  const outgoing=samples.map(({offset,progress:p})=>({offset,transform:settings.motion==='stack'?`${move(-direction*distance*.12*p)} scale(${1-.035*p})`:move(-direction*exitDistance*p*(settings.motion==='cover'?0:settings.motion==='parallax'?.25:1)),opacity:settings.motion==='shared'?Math.max(0,1-p):1}));
  const animations=[target.animate(incoming,timing)];if(outgoingLayer)animations.push(outgoingLayer.animate(outgoing,timing));
  const start=document.timeline.currentTime;animations.forEach(a=>{a.startTime=start});
- void Promise.allSettled(animations.map(a=>a.finished)).then(()=>{if(cleanup.get(target)===finish)releaseSwap(target)});
+ void Promise.allSettled(animations.map(a=>a.finished)).then(()=>{if(cleanup.get(target)===finish){old?.remove();releaseSwap(target)}});
  return animations;
 }
 export function orderedDirection(previous:number,next:number):SlideDirection{return next<previous?-1:1;}
