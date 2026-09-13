@@ -88,3 +88,11 @@ it('deletes only the owned idle conversation',async()=>{
  expect((await app.request('/api/ai/conversations/'+row.id,{method:'DELETE'},env)).status).toBe(200);
  expect(db.database.prepare('SELECT * FROM ai_conversations').all()).toHaveLength(0);db.database.close();
 });
+
+it('previews full model context without a model call and enforces ownership',async()=>{
+ const {db,app,env}=setup();const fetcher=vi.fn(async()=>response());vi.stubGlobal('fetch',fetcher);
+ await(await app.request('/api/ai/chat',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({message:'问题',ids:['1']})},env)).text();const row=db.database.prepare('SELECT * FROM ai_conversations').get();fetcher.mockClear();
+ const input={method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({conversationId:row.id,message:'草稿',ids:['1']})};
+ const result:any=await(await app.request('/api/ai/context',input,env)).json();expect(result.request.messages[0].role).toBe('system');expect(result.request.messages.at(-1).content).toBe('草稿');expect(result.includesDraft).toBe(true);expect(JSON.stringify(result)).not.toContain('test-key');expect(fetcher).not.toHaveBeenCalled();
+ expect((await app.request('/api/ai/context',input,{...env,DB:{...db,accountUid:'other'}})).status).toBe(404);db.database.close();
+});

@@ -38,6 +38,15 @@ export function chatRequest(model:string,effort:string,data:any,messages:Message
 
 export function registerChat(app:any,readKey:(env:any)=>Promise<string|undefined>){
   const fail=(c:any,status:number,message:string)=>c.json({ok:false,error:{message}},status);
+  app.post('/api/ai/context',async(c:any)=>{
+    const parsed=inputSchema.extend({message:z.string().max(4000).default('')}).safeParse(await c.req.json().catch(()=>null));if(!parsed.success)return fail(c,400,'上下文参数无效');
+    const input=parsed.data,row=input.conversationId?await c.env.DB.prepare('SELECT * FROM ai_conversations WHERE id=? AND account_id=?').bind(input.conversationId,owner(c.env)).first():null;
+    if(input.conversationId&&!row)return fail(c,404,'会话不存在');
+    const previous:Message[]=row?decode(row).messages:[],ids=input.ids??(row?JSON.parse(row.video_ids_json):[]);
+    let data:any;try{data=await packet(c.env,{ids,question:input.message})}catch{return fail(c,400,'请先同步稿件数据')}
+    const messages=input.message||input.attachments?.length?[...previous,{id:'draft',role:'user' as const,content:input.message,attachments:input.attachments,createdAt:new Date().toISOString()}]:previous;
+    return c.json({ok:true,generatedAt:new Date().toISOString(),includesDraft:messages.length>previous.length,request:chatRequest(input.model??await aiModel(c.env),input.effort??await aiEffort(c.env),data,messages,!!input.includeCovers)});
+  });
   app.get('/api/ai/conversations',async(c:any)=>{
     await importReports(c.env);
     const rows=(await c.env.DB.prepare('SELECT id,title,created_at,updated_at,video_ids_json,busy_until,json_array_length(messages_json) AS message_count FROM ai_conversations WHERE account_id=? AND archived=? ORDER BY updated_at DESC LIMIT 100').bind(owner(c.env),c.req.query('archived')==='1'?1:0).all()).results;

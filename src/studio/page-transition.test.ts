@@ -66,3 +66,10 @@ it('does not crop tall page content at the initial viewport bottom during a slid
  expect(String(animations[0].frames[0].clipPath)).toMatch(/^inset\(-[0-9.]+px [0-9.]+px -[0-9.]+px/);
  animations.forEach(a=>a.finish());await done;
 });
+
+it('clips the entering vertical page to its first viewport instead of exposing later rows',async()=>{
+ const main=document.querySelector('.s-main') as HTMLElement;main.getBoundingClientRect=()=>({top:32,left:220,right:1280,bottom:2432,width:1060,height:2400,x:220,y:32,toJSON:()=>({})});
+ const done=transitionPage(()=>{},undefined,undefined,'y',undefined,-1);
+ expect(main.style.clipPath).toBe('inset(-32px 0 '+Math.max(0,2432-innerHeight)+'px 0)');
+ animations.forEach(a=>a.finish());await done;expect(main.style.clipPath).toBe('');
+});

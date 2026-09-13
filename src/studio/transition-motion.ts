@@ -13,7 +13,7 @@ export function animateSwap(target:HTMLElement,old:HTMLElement|null,axis:'x'|'y'
  const move=(n:number)=>vertical?`translateY(${n}px)`:`translateX(${n}px)`;
  const original={backgroundColor:target.style.backgroundColor,clipPath:target.style.clipPath,willChange:target.style.willChange,boxShadow:target.style.boxShadow,zIndex:target.style.zIndex};
  target.style.willChange='transform,opacity';
- target.style.clipPath=page||pane?`inset(${-verticalBleed}px 0 ${-verticalBleed}px 0)`:`inset(${Math.max(0,-rect.top)}px 0 ${Math.max(0,rect.bottom-innerHeight)}px 0)`;
+ target.style.clipPath=page&&vertical?`inset(${-rect.top}px 0 ${Math.max(0,rect.bottom-innerHeight)}px 0)` :page||pane?`inset(${-verticalBleed}px 0 ${-verticalBleed}px 0)`:`inset(${Math.max(0,-rect.top)}px 0 ${Math.max(0,rect.bottom-innerHeight)}px 0)`;
  const computed=getComputedStyle(target),ownBackground=computed.backgroundColor;const surface=ownBackground&&ownBackground!=='rgba(0, 0, 0, 0)'&&ownBackground!=='transparent'?ownBackground:computed.getPropertyValue(target.closest('.s-panel')?'--surface':'--bg').trim();
  if(settings.motion!=='shared'){target.style.backgroundColor=surface;}
  const outgoingLayer=old?snapshotMotionLayer(old):null;
