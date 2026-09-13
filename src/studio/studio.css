@@ -393,3 +393,5 @@ html{text-autospace:no-autospace}
 ::view-transition,::view-transition-group(*),::view-transition-image-pair(*),::view-transition-old(*),::view-transition-new(*){pointer-events:none!important}
 /* Navigation hit areas and selection share the same capsule outline. */
 .studio .s-sidebar nav>button,.studio .s-sidebar nav>.s-nav-indicator{border-radius:999px!important}
+/* Root ECharts SVG owns its measured viewport; interface-icon sizing must not apply. */
+.s-chart-viewport svg[data-chart-renderer=svg]{width:100%!important;height:100%!important;max-width:none}

@@ -1,3 +1,4 @@
+import {opticalKey} from './optical-key';
 import {useLayoutEffect,useRef,useState,useId,useMemo,type CSSProperties} from 'react';
 import {useLabSettings,type GlassParameters} from '../lab-settings';
 import LiquidGlass,{GlassFilter,generateShaderDisplacementMap} from './LiquidGlass';
@@ -20,7 +21,7 @@ export function GlassMaterial({sidebar=false}:{sidebar?:boolean}){
 }
 
 function SidebarOptics({p,size}:{p:GlassParameters;size:{width:number;height:number}}){
- const id='sidebar-optics-'+useId().replace(/:/g,''),map=useMemo(()=>p.mode==='shader'?generateShaderDisplacementMap(size.width,size.height):undefined,[p.mode,size.width,size.height]);
+ const id='sidebar-optics-'+useId().replace(/:/g,'')+'-'+opticalKey([p.displacementScale,p.aberrationIntensity,p.overLight,p.mode,size.width,size.height]),map=useMemo(()=>p.mode==='shader'?generateShaderDisplacementMap(size.width,size.height):undefined,[p.mode,size.width,size.height]);
  const chromium=/(?:Chrome|Chromium|Edg)\//.test(navigator.userAgent);
  return <><GlassFilter id={id} mode={p.mode} displacementScale={p.displacementScale*(p.overLight?.5:1)} aberrationIntensity={p.aberrationIntensity} width={size.width} height={size.height} shaderMapUrl={map}/><span className="s-sidebar-refraction" style={{backdropFilter:`blur(${(p.overLight?12:4)+p.blurAmount*32}px) saturate(${p.saturation}%)${chromium?' url(#'+id+')':''}`}}/></>;
 }

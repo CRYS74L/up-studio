@@ -11,6 +11,6 @@
 /* The sidebar keeps its pre-glass surface and shadow. Only its background optics
    are replaced; no cursor-driven masks or mixed-blend border layers are mounted. */
 .s-sidebar-refraction{position:absolute;inset:0;border-radius:inherit;pointer-events:none}
-.studio .s-sidebar.s-liquid{border:1px solid var(--glass-border)!important;color:var(--text)}
-.studio .s-sidebar>.s-glass-material>.s-glass-tint{background:var(--glass)!important}
-.studio .s-sidebar>.s-glass-material>.s-glass-shadow{box-shadow:var(--shadow)}
+.studio .s-sidebar.s-liquid{border:1px solid var(--glass-border)!important;color:var(--sidebar-foreground,var(--text))}
+.studio .s-sidebar>.s-glass-material>.s-glass-tint{background:var(--sidebar-glass-fill,var(--glass))!important}
+.studio .s-sidebar>.s-glass-material>.s-glass-shadow{box-shadow:var(--sidebar-glass-shadow,var(--shadow))}

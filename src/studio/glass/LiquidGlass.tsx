@@ -1,4 +1,5 @@
-import { type CSSProperties, forwardRef, useCallback, useEffect, useId, useRef, useState } from "react"
+import {opticalKey} from './optical-key';
+import { type CSSProperties, forwardRef, useCallback, useEffect, useId, useMemo, useRef, useState } from "react"
 import { ShaderDisplacementGenerator, fragmentShaders } from "./shader-utils"
 import { displacementMap, polarDisplacementMap, prominentDisplacementMap } from "./maps"
 
@@ -176,8 +177,9 @@ const GlassContainer = forwardRef<
     },
     ref,
   ) => {
-    const filterId = useId()
+    const baseFilterId = useId()
     const [shaderMapUrl, setShaderMapUrl] = useState<string>("")
+    const filterId=useMemo(()=>baseFilterId+"-"+opticalKey([displacementScale,aberrationIntensity,glassSize.width,glassSize.height,mode,shaderMapUrl]),[baseFilterId,displacementScale,aberrationIntensity,glassSize.width,glassSize.height,mode,shaderMapUrl])
 
     const supportsBackdropSvg = /(?:Chrome|Chromium|Edg)\//.test(navigator.userAgent)
 

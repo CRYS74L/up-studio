@@ -59,7 +59,7 @@ export function Chart({ option, className, events }: { option: any; className: s
     let width = 0, height = 0;
     const resize = () => {
       if (!live || !fontsReady || !visible || !element.current?.clientWidth || !element.current.clientHeight) return;
-      if (!instance.current) { instance.current = echarts.init(element.current); update(); }
+      if (!instance.current) { instance.current = echarts.init(element.current,undefined,{renderer:'svg'});element.current.querySelector('svg')?.setAttribute('data-chart-renderer','svg'); update(); }
       else if(width!==element.current.clientWidth||height!==element.current.clientHeight) { instance.current.resize(); update(); }
       else if(dirty.current)update();
       width=element.current.clientWidth;height=element.current.clientHeight;

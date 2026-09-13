@@ -56,6 +56,6 @@ it('lets a page slide behind the sidebar and clips only at the viewport edge',as
  Object.defineProperty(document.documentElement,'clientWidth',{configurable:true,value:1280});
  const done=transitionPage(()=>{(document.querySelector('.s-route-snapshot') as HTMLElement).dataset.viewportSlide='true'},undefined,undefined,'x','.pane',-1);
  const positions=animations[0].frames.map(frame=>({x:252+Number(String(frame.transform).match(/\(([-\d.]+)px/)![1]),left:Number(String(frame.clipPath).match(/ ([\d.]+)px\)$/)![1])}));
- expect(positions.some(p=>p.x>=0&&p.x<200&&p.left===0)).toBe(true);expect(positions.every(p=>p.x+p.left>=-.001)).toBe(true);
+ expect(Math.abs(Number(String(animations[1].frames.at(-1)!.transform).match(/\(([-\d.]+)px/)![1]))).toBeGreaterThanOrEqual(1280);expect(positions.some(p=>p.x>=0&&p.x<200&&p.left===0)).toBe(true);expect(positions.every(p=>p.x+p.left>=-.001)).toBe(true);
  animations.forEach(a=>a.finish());await done;
 });
