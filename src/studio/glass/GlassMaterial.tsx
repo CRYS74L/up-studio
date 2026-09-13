@@ -13,6 +13,7 @@ export function GlassMaterial(){
  useLayoutEffect(()=>{const el=ref.current!;parent.current=el.parentElement;const measure=()=>{const r=el.getBoundingClientRect(),radius=parseFloat(getComputedStyle(el.parentElement!).borderTopLeftRadius)||30;setSize(old=>Math.abs(old.width-r.width)<1&&Math.abs(old.height-r.height)<1&&old.radius===radius?old:{width:r.width,height:r.height,radius})};measure();const observer=new ResizeObserver(measure);observer.observe(el);return()=>observer.disconnect()},[]);
  return <span ref={ref} className="s-glass-material" aria-hidden="true" data-material={settings.glass} style={{'--liquid-shadow':p.shadow} as CSSProperties}>
   {size.width>0&&size.height>0&&<LiquidGlass overLight={p.overLight} mode={p.mode} displacementScale={p.displacementScale} blurAmount={p.blurAmount} saturation={p.saturation} aberrationIntensity={p.aberrationIntensity} elasticity={0} cornerRadius={size.radius} padding="0px" mouseContainer={parent} style={{position:'absolute',left:'50%',top:'50%',width:size.width,height:size.height}}><span style={{display:'block',width:size.width,height:size.height}}/></LiquidGlass>}
+  <span className="s-glass-shadow"/>
   <span className="s-glass-tint" style={{background:`rgba(255,255,255,${p.tint})`}}/>
  </span>;
 }
