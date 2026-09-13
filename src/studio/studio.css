@@ -364,7 +364,7 @@ html,body{overflow-x:clip}
 :root{--liquid-sheen:linear-gradient(#ffffff0f,#ffffff0f),linear-gradient(155deg,color-mix(in srgb,var(--surface) 17%,transparent),transparent 42%,color-mix(in srgb,var(--surface) 8%,transparent))}
 .s-mobile-dock>.s-mobile-nav,.s-back-top,.s-floating-toast{background:var(--liquid-sheen),var(--floating-glass)}
 .s-back-top:hover{background:var(--liquid-sheen),var(--floating-glass-hover)}
-.s-version-toast{gap:10px;font-size:13px}.s-version-toast img{width:24px;height:24px;object-fit:contain}.s-version-toast b{font-weight:600}.s-version-toast>span{color:var(--muted)}
+.s-version-toast{gap:10px;font-size:13px}.s-version-toast img{width:24px;height:24px;object-fit:contain}.s-version-toast b{font-weight:600}.s-version-toast>span{color:#111}
 .s-run-quality{max-width:320px;overflow-wrap:anywhere}
 .s-library .s-media-stats .s-stat>strong{font-weight:550}
 .s-kpi-change small,.s-kpi-change>b{font-size:14px;font-weight:550}
