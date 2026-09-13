@@ -11,3 +11,6 @@
 /* The sidebar uses the same optical plane as the Dock, with its established tint and shadow. */
 .studio .s-sidebar.s-liquid{color:var(--text);box-shadow:var(--shadow)!important;border:1px solid var(--glass-border)!important}.s-sidebar .s-glass-tint{background:var(--glass)!important}.s-sidebar .s-glass-material::after{box-shadow:none}
 
+
+.s-sidebar-painted-backdrop{position:absolute;inset:0;display:block;overflow:hidden;background:var(--bg);border-radius:inherit;pointer-events:none}
+.s-sidebar .s-sidebar-painted-backdrop{inset:-40px;border-radius:0}

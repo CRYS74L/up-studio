@@ -55,7 +55,7 @@ export function Chart({ option, className, events }: { option: any; className: s
   useLayoutEffect(() => {
     if (!element.current) return;
     const pictureKey=className+':'+(document.documentElement.dataset.theme??'light')+':'+JSON.stringify({...latest.current.option,tooltip:undefined});
-    const picture=chartPictures.get(pictureKey);if(picture){element.current.innerHTML=picture;element.current.dataset.chartPreview="true";}
+    const picture=chartPictures.get(pictureKey);if(picture){element.current.innerHTML='<div style="position:relative;width:100%;height:100%;overflow:hidden">'+picture+'</div>';element.current.dataset.chartPreview="true";}
     let live = true;
     let fontsReady = false;
     let visible = false;
