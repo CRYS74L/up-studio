@@ -50,7 +50,7 @@ export function registerAi(app:any,readKey:(env:any)=>Promise<string|undefined>)
    const cached=(await c.env.DB.prepare('SELECT response_json FROM ai_cache WHERE snapshot_key LIKE ? ORDER BY created_at DESC LIMIT 10').bind(hash+':%').all()).results.map((r:any)=>JSON.parse(r.response_json)).find((r:any)=>r.report);
    if(cached&&!input.refresh)return c.json({ok:true,...cached,cached:true});
    // Conservative CNY budget estimates, not provider invoices. Peak prices checked 2026-09-08.
-   const rates=model.endsWith('pro')?{input:12,output:35}:{input:4,output:12};
+   const rates=model.endsWith('pro')?{input:9,output:27}:{input:2,output:8};
    reserve=(new TextEncoder().encode(SYSTEM_PROMPT+body).length*rates.input+covers.length*4096*rates.input+maxTokens*rates.output)/1e6;
    const now=new Date().toISOString(),day=new Date(Date.now()+28800000).toISOString().slice(0,10),month=day.slice(0,7);cacheKey=hash+':'+crypto.randomUUID();
    const claim=await c.env.DB.prepare(`INSERT INTO ai_cache(snapshot_key,model,prompt_version,response_json,cost_cny,created_at) SELECT ?,?,?,'{"pending":true}',?,? WHERE COALESCE((SELECT SUM(cost_cny) FROM ai_cache WHERE date(created_at,'+8 hours')=?),0)+?<=? AND COALESCE((SELECT SUM(cost_cny) FROM ai_cache WHERE substr(datetime(created_at,'+8 hours'),1,7)=?),0)+?<=?`).bind(cacheKey,model,PROMPT_VERSION,reserve,now,day,reserve,Number(c.env.AI_DAILY_CNY_LIMIT)||1,month,reserve,Number(c.env.AI_MONTHLY_CNY_LIMIT)||5).run();

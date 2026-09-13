@@ -5,7 +5,7 @@ import {request,coverSrc} from '../format';
 import {client} from './query-client';
 import {capturePage,warmSnapshotStyles} from './page-snapshot';
 import type {StudioRoute} from './route';
-import {animateSwap,type SlideDirection} from './transition-motion';
+import {animateSwap,releaseSwap,type SlideDirection} from './transition-motion';
 let revision=0;
 let cleanup:(()=>void)|undefined;
 let preparing:AbortController|undefined;
@@ -45,7 +45,7 @@ export async function transitionPage(update:()=>void,route?:StudioRoute,restore?
  flushSync(update);restore?.();
  const target=(selector?main.querySelector<HTMLElement>(selector):main)??main;
  target.style.zIndex='21';target.style.willChange='transform,opacity';
- cleanup=()=>{for(const a of animations)a.cancel();old?.remove();target.style.removeProperty('opacity');target.style.removeProperty('transform');target.style.removeProperty('will-change');target.style.removeProperty('z-index')};
+ cleanup=()=>{for(const a of animations)a.cancel();old?.remove();releaseSwap(target);target.style.removeProperty('opacity');target.style.removeProperty('transform');target.style.removeProperty('will-change');target.style.removeProperty('z-index')};
  if(controller.signal.aborted||token!==revision)return;
  document.documentElement.dataset.routePhase='animating';
  // No network, decode timer, or extra frame is awaited on the click path.

@@ -5,6 +5,6 @@ export function currentModel(value: string) {
   return value === 'deepseek-v4-pro' ? value : 'deepseek-flash';
 }
 export function modelLabel(value: string) {
-  return value === 'deepseek-v4-pro' ? 'DeepSeek V4 Pro' : 'DeepSeek V4.1 Flash';
+  return value === 'deepseek-v4-pro' ? 'DeepSeek V4 Pro 0813' : 'DeepSeek V4.1 Flash';
 }
 export function supportsVision(value: string) { return currentModel(value) === 'deepseek-flash'; }

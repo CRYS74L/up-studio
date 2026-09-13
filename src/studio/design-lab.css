@@ -1,0 +1,35 @@
+.s-design-entry{display:flex;align-items:center;gap:10px;border-radius:14px;padding:10px 14px;margin-top:18px;text-align:left;font-size:13px;color:var(--muted)}.s-design-entry small{font-size:10px;margin-left:auto}.s-design-entry:hover{background:var(--surface-2);color:var(--text)}.s-lab-mobile{display:none}
+.s-lab-body{display:grid;gap:18px;padding-top:22px}.s-lab-options{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.s-lab-options>button{border:1px solid var(--line);border-radius:16px;padding:16px;text-align:left;display:flex;flex-direction:column;gap:8px;align-items:flex-start}.s-lab-options>button[aria-pressed=true]{border-color:var(--pink);background:var(--pink-soft)}.s-lab-options b{font-size:14px}.s-lab-options small{font-size:12px;color:var(--muted);line-height:1.6}.s-lab-options>p{grid-column:1/-1}
+.s-lab-range{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center}.s-lab-range input{grid-column:1/-1;width:100%;accent-color:var(--pink-text)}.s-lab-range output{font-variant-numeric:tabular-nums;color:var(--muted)}
+.s-lab-curve{display:grid;grid-template-columns:200px 1fr;align-items:center;gap:24px}.s-lab-curve svg{width:200px;height:150px}.s-lab-curve>div{display:grid;grid-template-columns:1fr 1fr;gap:10px}.s-lab-curve label{display:grid;grid-template-columns:26px 1fr;align-items:center;gap:6px;font-size:12px}.s-lab-curve input[type=number]{min-width:0;width:100%;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--text);padding:5px 8px}.s-lab-curve input[type=range]{grid-column:1/-1;width:100%;accent-color:var(--pink-text)}
+.s-lab-demo{height:90px;border:1px solid var(--line);border-radius:16px;overflow:hidden;position:relative}.s-lab-demo-pane{position:absolute;inset:0;padding:16px;background:var(--surface)}.s-lab-demo-pane>div{display:flex;gap:8px;margin-top:10px}.s-lab-demo-pane i{height:16px;flex:1;border-radius:8px;background:var(--pink-soft)}.s-lab-demo-pane i:nth-child(2){background:var(--blue)}.s-lab-preview-actions{display:flex;gap:10px;justify-content:center}.s-lab-note{font-size:12px;line-height:1.7;color:var(--muted)}.s-lab-note a{color:var(--pink-text)}
+.s-lab-glass-scene{height:200px;border-radius:20px;overflow:hidden;display:grid;place-items:center;background:conic-gradient(from 40deg,#ff7daf,#ffcb67,#6bd8cf,#6d94f9,#d695f6,#ff7daf);position:relative}.s-lab-glass-scene>span{position:absolute;inset:22px;font-size:26px;color:#223348}.s-lab-glass-surface{padding:24px;border-radius:24px;position:relative}.s-lab-glass-surface p{margin-top:8px;font-size:13px}
+:root{--lab-glass-fill:color-mix(in srgb,var(--surface) 88%,transparent);--lab-glass-blur:8px;--lab-glass-saturation:110%;--lab-glass-edge:color-mix(in srgb,var(--surface) 65%,transparent)}
+:root[data-lab-glass=clear]{--lab-glass-fill:color-mix(in srgb,var(--surface) 65%,transparent);--lab-glass-blur:5px;--lab-glass-saturation:125%}
+/* Material parameters adapted from dpawlikowski/liquid-glass (MIT). */
+:root[data-lab-glass=open-source]{--lab-glass-fill:color-mix(in srgb,var(--surface) 58%,transparent);--lab-glass-blur:8px;--lab-glass-saturation:180%;--lab-glass-edge:color-mix(in srgb,var(--surface) 45%,transparent)}
+:root[data-lab-glass] .s-mobile-dock>.s-mobile-nav,:root[data-lab-glass] .s-back-top,:root[data-lab-glass] .s-floating-toast,:root[data-lab-glass] .s-lab-glass-surface{background:var(--lab-glass-fill);-webkit-backdrop-filter:blur(var(--lab-glass-blur)) saturate(var(--lab-glass-saturation));backdrop-filter:blur(var(--lab-glass-blur)) saturate(var(--lab-glass-saturation));border:1px solid transparent;border-top-color:var(--lab-glass-edge);box-shadow:inset 0 1px 0 #ffffff28,0 4px 18px #00000012}
+:root[data-lab-glass] .s-version-toast{background:#fffffff0!important;color:#111!important}.s-version-toast>span{color:#111!important}
+.studio .ui-segments.s-theme-switch[data-size=header]{gap:var(--theme-option-gap,6px)}
+:root[data-lab-chat] .studio .ai-workspace.s-chat{border:0;border-radius:0;background:transparent;box-shadow:none;overflow:visible;gap:22px;--chat-reading-width:min(100%,860px)}
+:root[data-lab-chat] .ai-workspace .s-chat-history{background:transparent;border-right:1px solid var(--line);padding:0 14px 0 0}
+:root[data-lab-chat] .ai-workspace .s-chat-main{background:transparent;min-width:0}
+:root[data-lab-chat] .ai-workspace .s-chat-header{padding:0 0 14px;border-bottom:0;min-height:42px}
+:root[data-lab-chat] .ai-workspace .s-chat-messages{padding:18px 12px}
+:root[data-lab-chat] .ai-workspace .s-chat-message-body{font-size:15px}
+:root[data-lab-chat] .ai-workspace .s-chat-compose{border:1px solid var(--line);border-radius:22px;background:var(--surface);margin:12px 0 0;box-shadow:0 4px 20px #00000008}
+:root[data-lab-chat=reading] .ai-workspace{--chat-reading-width:720px!important}
+@media(min-width:900px){:root[data-lab-chat=reading] .ai-workspace:not(.history-hidden){grid-template-columns:180px minmax(0,1fr)}
+:root[data-lab-chat=top] .ai-workspace:not(.history-hidden){grid-template-columns:1fr;grid-template-rows:132px minmax(0,1fr);gap:18px}
+:root[data-lab-chat=top] .ai-workspace:not(.history-hidden)>.s-chat-history{display:grid;grid-template-columns:130px minmax(0,1fr) auto;grid-template-rows:38px 74px;gap:8px;padding:0 0 10px;border-right:0;border-bottom:1px solid var(--line)}
+:root[data-lab-chat=top] .ai-workspace .s-chat-history-list{grid-row:2;grid-column:1/-1;display:flex;overflow:auto;gap:8px}
+:root[data-lab-chat=top] .ai-workspace .ai-session-row{flex:0 0 200px;margin:0}
+:root[data-lab-chat=top] .ai-workspace .ai-archive-switch{grid-column:3;grid-row:1}
+}
+@media(max-width:899px){:root[data-lab-chat] .ai-workspace.history-open>.s-chat-history{background:var(--surface);padding:16px}}
+@media(max-width:699px),(orientation:portrait){.s-lab-mobile{display:inline-grid!important;width:28px!important;height:28px!important;min-height:28px;flex:0 0 28px!important;border:0;background:transparent}.s-lab-mobile svg{width:17px;height:17px}.s-lab-options{grid-template-columns:1fr}.s-lab-curve{grid-template-columns:1fr;gap:10px}.s-lab-curve svg{justify-self:center}.s-lab-preview-actions{flex-wrap:wrap}.s-sheet-wide .s-lab-body{padding-top:16px}}
+@media(prefers-reduced-transparency:reduce){:root[data-lab-glass] .s-mobile-nav,:root[data-lab-glass] .s-back-top,:root[data-lab-glass] .s-floating-toast{background:var(--surface);backdrop-filter:none}}
+.s-service-states{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}.s-local-service>.s-field{margin-top:24px}.s-sources>.s-two-col{align-items:start}
+.studio .s-header-actions .s-lab-mobile{display:none}
+@media(max-width:699px),(orientation:portrait){.studio .s-header-actions .s-lab-mobile{display:inline-grid!important}}
+:root[data-lab-chat] .ai-workspace .s-chat-header{background:transparent}

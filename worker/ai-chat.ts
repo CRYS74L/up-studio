@@ -95,7 +95,7 @@ export function registerChat(app:any,readKey:(env:any)=>Promise<string|undefined
     const lease=await db.prepare('UPDATE ai_conversations SET busy_until=? WHERE id=? AND account_id=? AND busy_until<?').bind(Date.now()+190000,id,uid,Date.now()).run();
     if(!lease.meta.changes)return fail(c,409,'这个会话正在生成，请稍候');
     // Conservative shared budget reservation; final cost is an estimate, not an invoice.
-    const rates=model.endsWith('pro')?{input:12,output:35}:{input:4,output:12};
+    const rates=model.endsWith('pro')?{input:9,output:27}:{input:2,output:8};
     const images=body.messages.flatMap((m:any)=>Array.isArray(m.content)?m.content:[]).filter((p:any)=>p.type==='image_url').length;
     const reserve=((new TextEncoder().encode(textBudget).length+images*1024)*rates.input+16000*rates.output)/1e6;
     const day=new Date(Date.now()+28800000).toISOString().slice(0,10),costId='chat:'+crypto.randomUUID();

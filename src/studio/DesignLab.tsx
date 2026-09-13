@@ -1,0 +1,26 @@
+import {useEffect,useRef,useState} from 'react';
+import {flushSync} from 'react-dom';
+import {Sheet,Segments} from './ui';
+import {LAB_DEFAULTS,MOTION_PRESETS,setLabSettings,useLabSettings,type LabSettings} from './lab-settings';
+import {animateSwap,releaseSwap} from './transition-motion';
+import './design-lab.css';
+export function DesignLab({close}:{close:()=>void}){
+ const value=useLabSettings(),[tab,setTab]=useState('转场'),[demo,setDemo]=useState(0),pane=useRef<HTMLDivElement>(null),animations=useRef<Animation[]>([]),oldPane=useRef<HTMLElement|null>(null);
+ useEffect(()=>()=>{animations.current.forEach(a=>a.cancel());oldPane.current?.remove()},[]);
+ const changeCurve=(index:number,n:number)=>{const curve=[...value.curve] as LabSettings['curve'];curve[index]=n;setLabSettings({curve})};
+ const preview=(axis:'x'|'y',direction:1|-1)=>{animations.current.forEach(a=>a.cancel());oldPane.current?.remove();releaseSwap(pane.current!);const old=pane.current!.cloneNode(true) as HTMLElement;pane.current!.parentElement!.insertBefore(old,pane.current);old.setAttribute("aria-hidden","true");old.inert=true;oldPane.current=old;flushSync(()=>setDemo(n=>n+1));const active=animateSwap(pane.current!,old,axis,direction);animations.current=active;void Promise.allSettled(active.map(a=>a.finished)).then(()=>old.remove())};
+ return <Sheet title="界面试验" close={close} wide footer={<><span className="s-muted">即时应用并保存在此浏览器，确定后再固化。</span><button className="s-secondary" onClick={()=>setLabSettings(LAB_DEFAULTS)}>恢复默认</button></>}>
+  <Segments label="试验分类" items={['转场','玻璃','AI布局','控件']} value={tab} onChange={setTab}/>
+  <div className="s-lab-body">
+   {tab==='转场'&&<><div className="s-lab-options">{MOTION_PRESETS.map(p=><button key={p.value} aria-pressed={value.motion===p.value} onClick={()=>setLabSettings({motion:p.value,curve:[...p.curve],duration:p.duration})}><b>{p.label}</b><small>{p.description}</small></button>)}</div>
+    <label className="s-lab-range">总时长 <output>{value.duration} ms</output><input aria-label="转场总时长" type="range" min="180" max="1000" step="10" value={value.duration} onChange={e=>setLabSettings({duration:Number(e.target.value)})}/></label>
+    <div className="s-lab-curve"><svg viewBox="0 0 200 150" aria-label="当前动画速率曲线"><path d="M20 20V125H185" fill="none" stroke="var(--line)"/><path d={`M20 125 C${20+value.curve[0]*160} ${125-value.curve[1]*105},${20+value.curve[2]*160} ${125-value.curve[3]*105},180 20`} fill="none" stroke="var(--pink)" strokeWidth="3"/><path d={`M20 125L${20+value.curve[0]*160} ${125-value.curve[1]*105}M180 20L${20+value.curve[2]*160} ${125-value.curve[3]*105}`} stroke="var(--muted)" strokeDasharray="3 3"/>{[0,2].map(i=><circle key={i} cx={20+value.curve[i]*160} cy={125-value.curve[i+1]*105} r="5" fill="var(--pink)"/>)}</svg><div>{['X1','Y1','X2','Y2'].map((label,i)=><label key={label}>{label}<input aria-label={'曲线 '+label} type="number" min="0" max="1" step="0.01" value={value.curve[i]} onChange={e=>changeCurve(i,Number(e.target.value))}/><input aria-label={'拖动 '+label} type="range" min="0" max="1" step="0.01" value={value.curve[i]} onChange={e=>changeCurve(i,Number(e.target.value))}/></label>)}</div></div>
+    <div className="s-lab-demo"><div className="s-lab-demo-pane" ref={pane}><b>{demo%2?'下一页':'当前页'}</b><div><i/><i/><i/></div></div></div><div className="s-lab-preview-actions">{[['向左','x',1],['向右','x',-1],['向上','y',1],['向下','y',-1]].map(([label,axis,d])=><button className="s-secondary" key={label} onClick={()=>preview(axis as 'x'|'y',d as 1|-1)}>{label}</button>)}</div>
+    <p className="s-lab-note">参考：<a href="https://motion.dev/docs/react-transitions" target="_blank" rel="noreferrer">Motion 缓动与 Tween</a>、<a href="https://m2.material.io/design/motion/the-motion-system.html#shared-axis" target="_blank" rel="noreferrer">Material 共享轴</a>。推入方案为本项目重新实现。</p>
+   </>}
+   {tab==='玻璃'&&<><div className="s-lab-options">{[['reading','清晰阅读','较高遮罩与低模糊，复杂背景下优先保证文字可读。'],['clear','清透薄层','较轻的遮罩和柔和边缘，保留更多背景。'],['open-source','开源磨砂','采用 liquid-glass 的白色遮罩、8px 模糊与饱和度组合。']].map(([id,label,desc])=><button key={id} aria-pressed={value.glass===id} onClick={()=>setLabSettings({glass:id as LabSettings['glass']})}><b>{label}</b><small>{desc}</small></button>)}</div><div className="s-lab-glass-scene"><span>作品 / 影像 / 灵感</span><div className="s-lab-glass-surface"><b>玻璃可读性预览</b><p>把注意力留给内容</p></div></div><p className="s-lab-note">开源材料参数来自 <a href="https://github.com/dpawlikowski/liquid-glass" target="_blank" rel="noreferrer">dpawlikowski/liquid-glass（MIT）</a>；这里使用材质层，不宣称系统原生折射。</p></>}
+   {tab==='AI布局'&&<div className="s-lab-options">{[['open','融入页面','移除外框，记录与对话直接布局在页面上。'],['reading','居中阅读','较窄的消息阅读区域，保留左侧对话记录。'],['top','横向记录','记录置于顶部，对话使用完整横向空间。']].map(([id,label,desc])=><button key={id} aria-pressed={value.chat===id} onClick={()=>setLabSettings({chat:id as LabSettings['chat']})}><b>{label}</b><small>{desc}</small></button>)}<p className="s-lab-note">关闭窗口后进入“分析 → AI对话”查看。切换布局不会清空消息或草稿。</p></div>}
+   {tab==='控件'&&<><label className="s-lab-range">主题选项间距 <output>{value.themeGap} px</output><input aria-label="主题选项间距" type="range" min="0" max="20" step="1" value={value.themeGap} onChange={e=>setLabSettings({themeGap:Number(e.target.value)})}/></label><p className="s-lab-note">只调整圆形选项之间的距离，圆形宽高保持一致。</p></>}
+  </div>
+ </Sheet>;
+}

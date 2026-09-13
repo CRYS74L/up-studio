@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import {afterEach,beforeEach,expect,it,vi} from 'vitest';
 import {transitionPage,cancelPageTransition} from './page-transition';
+import {LAB_DEFAULTS,setLabSettings} from './lab-settings';
 vi.mock('../fonts',()=>({chartFont:'test',loadFonts:()=>Promise.resolve()}));
 vi.mock('./query-client',()=>({client:{getQueryData:()=>undefined,fetchQuery:()=>new Promise(()=>{}),prefetchQuery:()=>Promise.resolve()}}));
 vi.mock('./page-snapshot',()=>({warmSnapshotStyles:()=>{},capturePage:()=>{const old=document.createElement('div');old.className='s-route-snapshot';document.body.append(old);return old}}));
@@ -8,6 +9,7 @@ type Recorded={frames:Keyframe[];options:KeyframeAnimationOptions;startTime:numb
 let animations:Recorded[]=[];
 beforeEach(()=>{
  vi.useFakeTimers();animations=[];
+ setLabSettings(LAB_DEFAULTS);
  document.body.innerHTML='<div class="studio"><main class="s-main"><section class="pane">Old</section></main></div>';
  vi.stubGlobal('matchMedia',()=>({matches:false}));
  Object.defineProperty(document,'timeline',{configurable:true,value:{currentTime:20}});
@@ -18,32 +20,27 @@ afterEach(()=>{cancelPageTransition();vi.clearAllTimers();vi.useRealTimers();vi.
 it('commits and starts motion in the click task even when every data request is pending',async()=>{
  const update=vi.fn(()=>{document.querySelector('.pane')!.textContent='New'}),restore=vi.fn();
  const done=transitionPage(update,{page:'videos',video:null,ids:[]},restore);
- expect(update).toHaveBeenCalledOnce();expect(restore).toHaveBeenCalledOnce();expect(animations).toHaveLength(3);
- expect(animations[2].options.duration).toBe(80);expect(animations[2].frames[1].transform).toBe('translateY(-8px)');
+ expect(update).toHaveBeenCalledOnce();expect(restore).toHaveBeenCalledOnce();expect(animations).toHaveLength(2);
+ expect(animations[0].options.duration).toBe(380);
  expect(animations[0].options).toEqual(animations[1].options);expect(animations[0].startTime).toBe(animations[1].startTime);
  animations.forEach(a=>a.finish());await done;expect(document.querySelector('.s-route-snapshot')).toBeNull();
 });
 it('switches nested content from the right and cleans only its own animation styles',async()=>{
  const done=transitionPage(()=>{document.querySelector('.pane')!.innerHTML='Nested'},undefined,undefined,'x','.pane');
  expect(animations[0].frames[0].transform).toMatch(/^translateX\([1-9]/);
- expect(animations[0].frames[1].offset).toBe(animations[1].frames[1].offset);
- expect(animations[0].frames[1].opacity).toBe(1);expect(animations[1].frames[1].opacity).toBe(0);
- expect(animations[0].frames[0].easing).toBe('steps(1,end)');expect(animations[1].frames[0].easing).toBe('steps(1,end)');
- expect(animations[0].frames[2].opacity).toBe(1);
+ expect(animations[0].frames[0].opacity).toBe(1);expect(animations[1].frames[1].opacity).toBe(1);
+ expect(animations[1].frames[1].transform).toMatch(/^translateX\(-/);
  animations.forEach(a=>a.finish());await done;expect((document.querySelector('.pane') as HTMLElement).style.willChange).toBe('');expect(document.documentElement.dataset.routePhase).toBeUndefined();
 });
 it('a cancelled transition cannot remove the replacement transition or restore stale content',async()=>{
  const first=transitionPage(()=>{document.querySelector('.pane')!.textContent='First'});
  const second=transitionPage(()=>{document.querySelector('.pane')!.textContent='Latest'});
  await first;expect(document.querySelectorAll('.s-route-snapshot')).toHaveLength(1);expect(document.querySelector('.pane')!.textContent).toBe('Latest');
- animations.slice(3).forEach(a=>a.finish());await second;expect(document.querySelector('.s-route-snapshot')).toBeNull();
+ animations.slice(2).forEach(a=>a.finish());await second;expect(document.querySelector('.s-route-snapshot')).toBeNull();
 });
-it.each(['x','y'] as const)('matches outgoing and incoming velocity at the %s handoff',async(axis)=>{
+it.each(['x','y'] as const)('applies the editable curve and duration on the %s axis',async(axis)=>{
+ setLabSettings({duration:450,curve:[.2,.2,.8,.8]});
  const done=transitionPage(()=>{},undefined,undefined,axis);
- const bezier=(value:string)=>value.match(/[\d.]+/g)!.map(Number);
- const incoming=bezier(String(animations[0].frames[1].easing)),outgoing=bezier(String(animations[2].options.easing));
- const inputDistance=axis==='x'?18:12,outputDistance=axis==='x'?10:8;
- const exitMs=Number(animations[2].options.duration),enterMs=Number(animations[0].options.duration)-exitMs;
- expect(inputDistance/enterMs*incoming[1]/incoming[0]).toBeCloseTo(outputDistance/exitMs*(1-outgoing[3])/(1-outgoing[2]),6);
+ expect(animations[0].options).toMatchObject({duration:450,easing:'cubic-bezier(0.2,0.2,0.8,0.8)'});
  animations.forEach(a=>a.finish());await done;
 });
