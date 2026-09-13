@@ -7,3 +7,6 @@
 .s-liquid>.s-nav-selection-track{z-index:-1}
 .studio .s-liquid.s-version-toast>span{color:#111}
 @media(prefers-reduced-transparency:reduce){.s-glass-optics{display:none}.s-glass-tint{background:#f8f8fa!important}}
+
+/* The sidebar uses the same optical plane as the Dock, with its established tint and shadow. */
+.studio .s-sidebar.s-liquid{color:var(--text);box-shadow:var(--shadow)!important;border:1px solid var(--glass-border)!important}.s-sidebar .s-glass-tint{background:var(--glass)!important}.s-sidebar .s-glass-material::after{box-shadow:none}

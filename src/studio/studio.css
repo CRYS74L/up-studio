@@ -395,3 +395,9 @@ html{text-autospace:no-autospace}
 .studio .s-sidebar nav>button,.studio .s-sidebar nav>.s-nav-indicator{border-radius:999px!important}
 /* Root ECharts SVG owns its measured viewport; interface-icon sizing must not apply. */
 .s-chart-viewport svg[data-chart-renderer=svg]{width:100%!important;height:100%!important;max-width:none}
+
+/* Confirmed shared alignment and selector metrics. */
+.studio .s-analysis-topic{display:flex!important;justify-content:center!important;width:100%}.studio .s-analysis-topic>.ui-segments{margin-inline:auto}.studio .s-detail>.ui-segments{justify-self:center;margin-inline:auto;width:max-content;max-width:100%}
+.studio .s-list-meta .s-select{font-size:14px;font-weight:400;line-height:21px;padding:9px 12px;min-height:40px;border:1px solid var(--line);border-radius:999px;background:var(--surface);color:var(--text)}
+.s-history-dots{display:flex;align-items:center;justify-content:center;gap:16px;margin:14px auto 0;width:max-content;max-width:100%;flex-wrap:wrap}.studio .s-history-dots button{position:relative;width:8px;height:32px;min-height:32px;padding:0;display:grid;align-items:center;flex:none;transition:width 420ms cubic-bezier(.25,.1,.25,1)!important}.s-history-dots button span{height:8px;width:100%;border-radius:10px;background:color-mix(in srgb,var(--text) 48%,transparent);transition:background-color 250ms linear!important}.s-history-dots button[aria-current=page]{width:48px}.s-history-dots button:hover span{background:color-mix(in srgb,var(--text) 68%,transparent)}.s-history-dots button::before{content:'';position:absolute;inset:0 -8px}.s-history-footer{justify-content:center}
+@media(prefers-reduced-motion:reduce){.studio .s-history-dots button{transition:none!important}}

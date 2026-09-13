@@ -21,7 +21,7 @@ it('commits and starts motion in the click task even when every data request is 
  const update=vi.fn(()=>{document.querySelector('.pane')!.textContent='New'}),restore=vi.fn();
  const done=transitionPage(update,{page:'videos',video:null,ids:[]},restore);
  expect(update).toHaveBeenCalledOnce();expect(restore).toHaveBeenCalledOnce();expect(animations).toHaveLength(2);
- expect(animations[0].options.duration).toBe(480);
+ expect(animations[0].options.duration).toBe(520);
  expect(animations[0].options).toEqual(animations[1].options);expect(animations[0].startTime).toBe(animations[1].startTime);
  animations.forEach(a=>a.finish());await done;expect(document.querySelector('.s-route-snapshot')).toBeNull();
 });
@@ -48,7 +48,7 @@ it.each(['x','y'] as const)('applies the editable curve and duration on the %s a
 it.each([1,-1] as const)('keeps incoming horizontal content inside its stationary bounds (%s)',async(direction)=>{
  const pane=document.querySelector('.pane') as HTMLElement;pane.getBoundingClientRect=()=>({left:252,top:160,width:900,height:1000,right:1152,bottom:1160,x:252,y:160,toJSON:()=>{}});
  const done=transitionPage(()=>{},undefined,undefined,'x','.pane',direction);
- for(const frame of animations[0].frames){const dx=Number(String(frame.transform).match(/\(([-\d.]+)px/)![1]);const clip=String(frame.clipPath),insets=clip.match(/^inset\([^ ]+ ([\d.]+)px calc\([^)]+\) ([\d.]+)px\)$/);expect(insets).not.toBeNull();expect(dx+Number(insets![2])).toBeGreaterThanOrEqual(-.001);expect(dx+900-Number(insets![1])).toBeLessThanOrEqual(900.001)}
+ for(const frame of animations[0].frames){const dx=Number(String(frame.transform).match(/\(([-\d.]+)px/)![1]);const clip=String(frame.clipPath),insets=clip.match(/^inset\([^ ]+ ([\d.]+)px [-\d.]+px ([\d.]+)px\)$/);expect(insets).not.toBeNull();expect(dx+Number(insets![2])).toBeGreaterThanOrEqual(-.001);expect(dx+900-Number(insets![1])).toBeLessThanOrEqual(900.001)}
  animations.forEach(a=>a.finish());await done;
 });
 it('lets a page slide behind the sidebar and clips only at the viewport edge',async()=>{
@@ -57,5 +57,12 @@ it('lets a page slide behind the sidebar and clips only at the viewport edge',as
  const done=transitionPage(()=>{(document.querySelector('.s-route-snapshot') as HTMLElement).dataset.viewportSlide='true'},undefined,undefined,'x','.pane',-1);
  const positions=animations[0].frames.map(frame=>({x:252+Number(String(frame.transform).match(/\(([-\d.]+)px/)![1]),left:Number(String(frame.clipPath).match(/ ([\d.]+)px\)$/)![1])}));
  expect(Math.abs(Number(String(animations[1].frames.at(-1)!.transform).match(/\(([-\d.]+)px/)![1]))).toBeGreaterThanOrEqual(1280);expect(positions.some(p=>p.x>=0&&p.x<200&&p.left===0)).toBe(true);expect(positions.every(p=>p.x+p.left>=-.001)).toBe(true);
+ animations.forEach(a=>a.finish());await done;
+});
+
+it('does not crop tall page content at the initial viewport bottom during a slide',async()=>{
+ const main=document.querySelector('.s-main') as HTMLElement;main.getBoundingClientRect=()=>({top:32,left:220,right:1280,bottom:2432,width:1060,height:2400,x:220,y:32,toJSON:()=>({})});
+ const done=transitionPage(()=>{},undefined,undefined,'x');
+ expect(String(animations[0].frames[0].clipPath)).toMatch(/^inset\(-[0-9.]+px [0-9.]+px -[0-9.]+px/);
  animations.forEach(a=>a.finish());await done;
 });

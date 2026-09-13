@@ -1,6 +1,6 @@
 import {Popover} from './controls';
 import {useLayoutEffect,useRef,useState} from 'react';
-import {ChevronLeft,ChevronRight} from 'lucide-react';
+
 import {AnimatePresence,motion} from 'motion/react';
 import {date} from '../format';
 import {syncSlots,incomingSlots} from './sync-strip';
@@ -39,7 +39,7 @@ export function SyncHistory({runs}:{runs:any[]}){
 
   </div>
 
-  <footer className="s-history-footer"><time>{slice.length?date(slice[0].started_at)+' — '+date(slice.at(-1).started_at):'暂无记录'}</time>{pages>1&&<div className="s-history-pager"><button aria-label="更早的同步记录" disabled={current+1>=pages} onClick={()=>{setPage(current+1);setHover(null);setSelected('')}}><ChevronLeft/></button><span>{current+1} / {pages}</span><button aria-label="更新的同步记录" disabled={current===0} onClick={()=>{setPage(current-1);setHover(null);setSelected('')}}><ChevronRight/></button></div>}</footer>
+  <footer className="s-history-footer"><time>{slice.length?date(slice[0].started_at)+' — '+date(slice.at(-1).started_at):'暂无记录'}</time></footer>{pages>1&&<nav className="s-history-dots" aria-label="同步记录分页">{Array.from({length:pages},(_,i)=><button key={i} aria-label={'第 '+(i+1)+' 页同步记录'} aria-current={current===i?'page':undefined} onClick={()=>{setPage(i);setHover(null);setSelected('')}}><span/></button>)}</nav>}
  </div>;
 }
 

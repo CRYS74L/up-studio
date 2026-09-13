@@ -1,7 +1,7 @@
 export type GlassParameters={mode:'standard'|'polar'|'prominent'|'shader';displacementScale:number;blurAmount:number;saturation:number;aberrationIntensity:number;tint:number;shadow:number;overLight:boolean};
 import {useSyncExternalStore} from 'react';
 export type LabSettings={motion:'push'|'parallax'|'shared'|'cover'|'reveal'|'stack';duration:number;curve:[number,number,number,number];timing:'spring'|'bezier';damping:number;glass:'reading'|'clear'|'open-source'|'demo';chat:'open'|'reading'|'top';themeGap:number;glassParameters?:GlassParameters;sidebarTint?:number;sidebarShadow?:number};
-export const LAB_DEFAULTS:LabSettings={motion:'push',duration:480,curve:[.32,.12,.4,1],timing:'spring',damping:1,glass:'reading',chat:'open',themeGap:6,glassParameters:undefined,sidebarTint:undefined,sidebarShadow:undefined};
+export const LAB_DEFAULTS:LabSettings={motion:'push',duration:520,curve:[.32,.12,.4,1],timing:'spring',damping:1,glass:'open-source',chat:'open',themeGap:2,glassParameters:undefined,sidebarTint:undefined,sidebarShadow:undefined};
 export const MOTION_PRESETS=[
  {value:'push',label:'连续推移',description:'新旧页面沿同一条轴线移动，保持空间连续。'},
  {value:'parallax',label:'导航视差',description:'前景页面滑入，背景页面以四分之一速度退后。'},
@@ -27,9 +27,10 @@ export function normalizeLab(value:any):LabSettings{
  const clamp=(v:any,min:number,max:number,fallback:number)=>typeof v==='number'&&Number.isFinite(v)?Math.max(min,Math.min(max,v)):fallback;
   const raw=value?.glassParameters;
  const glassParameters=raw?{mode:(['standard','polar','prominent','shader'].includes(raw.mode)?raw.mode:'standard') as GlassParameters['mode'],displacementScale:clamp(raw.displacementScale,0,120,70),blurAmount:clamp(raw.blurAmount,0,1,.0625),saturation:clamp(raw.saturation,50,220,140),aberrationIntensity:clamp(raw.aberrationIntensity,0,5,2),tint:clamp(raw.tint,0,.85,0),shadow:clamp(raw.shadow,0,.4,.25),overLight:raw.overLight===true}:undefined;
- return {sidebarTint:typeof value?.sidebarTint==='number'?clamp(value.sidebarTint,0,1,.82):undefined,sidebarShadow:typeof value?.sidebarShadow==='number'?clamp(value.sidebarShadow,0,.3,.027):undefined,glassParameters,motion:MOTION_PRESETS.some(p=>p.value===value?.motion)?value.motion:LAB_DEFAULTS.motion,duration:clamp(value?.duration,180,1000,480),timing:value?.timing==='bezier'?'bezier':'spring',damping:clamp(value?.damping,.6,1,1),curve:Array.isArray(value?.curve)&&value.curve.length===4?value.curve.map((v:any,i:number)=>clamp(v,0,1,LAB_DEFAULTS.curve[i])) as LabSettings['curve']:[...LAB_DEFAULTS.curve],glass:['reading','clear','open-source'].includes(value?.glass)?value.glass:LAB_DEFAULTS.glass,chat:['open','reading','top'].includes(value?.chat)?value.chat:LAB_DEFAULTS.chat,themeGap:clamp(value?.themeGap,0,20,6)};
+ return {sidebarTint:typeof value?.sidebarTint==='number'?clamp(value.sidebarTint,0,1,.82):undefined,sidebarShadow:typeof value?.sidebarShadow==='number'?clamp(value.sidebarShadow,0,.3,.027):undefined,glassParameters,motion:MOTION_PRESETS.some(p=>p.value===value?.motion)?value.motion:LAB_DEFAULTS.motion,duration:clamp(value?.duration,180,1000,LAB_DEFAULTS.duration),timing:value?.timing==='bezier'?'bezier':'spring',damping:clamp(value?.damping,.6,1,1),curve:Array.isArray(value?.curve)&&value.curve.length===4?value.curve.map((v:any,i:number)=>clamp(v,0,1,LAB_DEFAULTS.curve[i])) as LabSettings['curve']:[...LAB_DEFAULTS.curve],glass:['reading','clear','open-source'].includes(value?.glass)?value.glass:LAB_DEFAULTS.glass,chat:['open','reading','top'].includes(value?.chat)?value.chat:LAB_DEFAULTS.chat,themeGap:clamp(value?.themeGap,0,20,LAB_DEFAULTS.themeGap)};
 }
-let current:LabSettings;try{current=normalizeLab(JSON.parse(localStorage.getItem(key)||'null'))}catch{current=normalizeLab(null)}
+// Confirmed on 2026-09-14: push, 520ms, damping 1, prominent glass, 2px gap.
+let current:LabSettings={...LAB_DEFAULTS};
 const listeners=new Set<()=>void>();
 export const getLabSettings=()=>current;
 export function setLabSettings(change:Partial<LabSettings>){current=normalizeLab({...current,...change});try{localStorage.setItem(key,JSON.stringify(current))}catch{}listeners.forEach(fn=>fn());}
