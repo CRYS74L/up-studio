@@ -9,10 +9,10 @@ export const GLASS_PRESETS={
 } as const;
 /** One material plane shared by Dock, toast, version capsule and back-to-top. */
 export function GlassMaterial(){
- const {glass}=useLabSettings(),p=GLASS_PRESETS[glass==='demo'?'open-source':glass],id='liquid-'+useId().replace(/:/g,''),ref=useRef<HTMLSpanElement>(null),[size,setSize]=useState({width:300,height:60});
- useLayoutEffect(()=>{const el=ref.current!;const observer=new ResizeObserver(([entry])=>{const {width,height}=entry.contentRect;setSize(old=>Math.abs(old.width-width)<1&&Math.abs(old.height-height)<1?old:{width,height})});observer.observe(el);return()=>observer.disconnect()},[]);
+ const {glass}=useLabSettings(),p=GLASS_PRESETS[glass==='demo'?'open-source':glass],id='liquid-'+useId().replace(/:/g,''),ref=useRef<HTMLSpanElement>(null),[size,setSize]=useState({width:0,height:0});
+ useLayoutEffect(()=>{const el=ref.current!;const bounds=el.getBoundingClientRect();setSize({width:bounds.width,height:bounds.height});const observer=new ResizeObserver(([entry])=>{const {width,height}=entry.contentRect;setSize(old=>Math.abs(old.width-width)<1&&Math.abs(old.height-height)<1?old:{width,height})});observer.observe(el);return()=>observer.disconnect()},[]);
  return <span ref={ref} className="s-glass-material" aria-hidden="true" data-material={glass}>
-  <GlassFilter id={id} mode={p.mode} displacementScale={Math.min(p.scale,size.height*.4)} aberrationIntensity={.25} width={size.width} height={size.height}/>
+  {size.width>0&&size.height>0&&<GlassFilter id={id} mode={p.mode} displacementScale={Math.min(p.scale,size.height*.4)} aberrationIntensity={.25} width={size.width} height={size.height}/>}
   <span className="s-glass-optics" style={{filter:`url(#${id})`,backdropFilter:`blur(${p.blur}px) saturate(${p.saturation}%)`}}/>
   <span className="s-glass-tint" style={{background:`rgba(255,255,255,${p.tint})`}}/>
  </span>;

@@ -1,9 +1,10 @@
 import {spaceNumbers} from '../typography/spacing';
-import { useEffect, useRef } from 'react';
+import { useEffect, useLayoutEffect, useRef } from 'react';
 import { echarts } from '../charts';
 import { chartFont, loadFonts } from '../fonts';
 import {queueRender,cancelRender} from '../studio/render-queue';
 
+const chartPictures=new Map<string,string>();
 // Theme only chart typography and chrome; series/item colors carry metric identity.
 function themedOption(option: any, element: HTMLElement | null) {
   const style=getComputedStyle(element??document.documentElement);
@@ -51,15 +52,18 @@ export function Chart({ option, className, events }: { option: any; className: s
     bound.current = current.events ?? {};
     for (const [name, callback] of Object.entries(bound.current)) chart.on(name, callback);
   };
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!element.current) return;
+    const pictureKey=className+':'+(document.documentElement.dataset.theme??'light')+':'+JSON.stringify({...latest.current.option,tooltip:undefined});
+    const picture=chartPictures.get(pictureKey);if(picture){element.current.innerHTML=picture;element.current.dataset.chartPreview="true";}
     let live = true;
     let fontsReady = false;
     let visible = false;
     let width = 0, height = 0;
     const resize = () => {
       if (!live || !fontsReady || !visible || !element.current?.clientWidth || !element.current.clientHeight) return;
-      if (!instance.current) { instance.current = echarts.init(element.current,undefined,{renderer:'svg'});element.current.querySelector('svg')?.setAttribute('data-chart-renderer','svg'); update(); }
+      if(picture&&!instance.current&&document.documentElement.dataset.transitionKind==='page')return;
+      if (!instance.current) { element.current.innerHTML='';delete element.current.dataset.chartPreview;instance.current = echarts.init(element.current,undefined,{renderer:'svg'});element.current.querySelector('svg')?.setAttribute('data-chart-renderer','svg'); update(); }
       else if(width!==element.current.clientWidth||height!==element.current.clientHeight) { instance.current.resize(); update(); }
       else if(dirty.current)update();
       width=element.current.clientWidth;height=element.current.clientHeight;
@@ -74,11 +78,12 @@ export function Chart({ option, className, events }: { option: any; className: s
       if (live && element.current) element.current.textContent = '图表字体加载失败，请刷新页面。';
     });
     const prepare=()=>{const r=element.current?.getBoundingClientRect();if(r&&r.bottom>0&&r.top<innerHeight){visible=true;dirty.current=true;cancelRender(element);resize();}};document.addEventListener('up:prepare-view',prepare);
+    const settled=()=>queueRender(element,resize);document.addEventListener('up:route-settled',settled);
     const refresh=()=>schedule.current();
     reduced.addEventListener('change', refresh);
     const themeObserver=new MutationObserver(refresh);
     themeObserver.observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
-    return () => { live = false; document.removeEventListener('up:prepare-view',prepare);cancelRender(element);intersection.disconnect();observer.disconnect(); themeObserver.disconnect(); reduced.removeEventListener('change', refresh); instance.current?.dispose(); instance.current = null; signature.current=""; bound.current = {}; };
+    return () => { const svg=element.current?.querySelector('svg[data-chart-renderer]');if(svg){chartPictures.set(className+':'+(document.documentElement.dataset.theme??'light')+':'+JSON.stringify({...latest.current.option,tooltip:undefined}),svg.outerHTML);if(chartPictures.size>24)chartPictures.delete(chartPictures.keys().next().value!);}document.removeEventListener('up:route-settled',settled);live = false; document.removeEventListener('up:prepare-view',prepare);cancelRender(element);intersection.disconnect();observer.disconnect(); themeObserver.disconnect(); reduced.removeEventListener('change', refresh); instance.current?.dispose(); instance.current = null; signature.current=""; bound.current = {}; };
   }, []);
   useEffect(()=>schedule.current(), [option, events]);
   const category=option.xAxis?.type==='category'&&option.xAxis?.axisLabel?.interval===0;const count=category?option.xAxis.data?.length??0:0;const minimum=count*9+(Number(option.grid?.left)||50)+(Number(option.grid?.right)||25);

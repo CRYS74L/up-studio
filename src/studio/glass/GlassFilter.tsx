@@ -18,8 +18,8 @@ const getMap=(mode:string,shaderMapUrl?:string)=>mode==='polar'?polarDisplacemen
         <stop offset={`${Math.max(30, 80 - aberrationIntensity * 2)}%`} stopColor="black" stopOpacity="0" />
         <stop offset="100%" stopColor="white" stopOpacity="1" />
       </radialGradient>
-      <filter id={id} x="-35%" y="-35%" width="170%" height="170%" colorInterpolationFilters="sRGB">
-        <feImage id="feimage" x="0" y="0" width="100%" height="100%" result="DISPLACEMENT_MAP" href={getMap(mode, shaderMapUrl)} preserveAspectRatio="xMidYMid slice" />
+      <filter id={id} filterUnits="userSpaceOnUse" primitiveUnits="userSpaceOnUse" x={-Math.abs(displacementScale)-2} y={-Math.abs(displacementScale)-2} width={width+2*Math.abs(displacementScale)+4} height={height+2*Math.abs(displacementScale)+4} colorInterpolationFilters="sRGB">
+        <feImage id={`${id}-image`} x="0" y="0" width={width} height={height} result="DISPLACEMENT_MAP" href={getMap(mode, shaderMapUrl)} preserveAspectRatio="none" />
 
         {/* Create edge mask using the displacement map itself */}
         <feColorMatrix

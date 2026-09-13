@@ -10,3 +10,4 @@
 
 /* The sidebar uses the same optical plane as the Dock, with its established tint and shadow. */
 .studio .s-sidebar.s-liquid{color:var(--text);box-shadow:var(--shadow)!important;border:1px solid var(--glass-border)!important}.s-sidebar .s-glass-tint{background:var(--glass)!important}.s-sidebar .s-glass-material::after{box-shadow:none}
+

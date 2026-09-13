@@ -52,7 +52,7 @@ export async function transitionPage(update:()=>void,route?:StudioRoute,restore?
  flushSync(()=>document.dispatchEvent(new Event('up:route-motion')));
  animations.push(...animateSwap(target,old,axis,direction));
  await Promise.allSettled(animations.map(a=>a.finished));
- if(token===revision){cleanup?.();cleanup=undefined;preparing=undefined;delete document.documentElement.dataset.transitionKind;delete document.documentElement.dataset.routePhase;}
+ if(token===revision){cleanup?.();cleanup=undefined;preparing=undefined;delete document.documentElement.dataset.transitionKind;delete document.documentElement.dataset.routePhase;document.dispatchEvent(new Event('up:route-settled'));}
 }
 
 export function warmRoute(page:string){warmSnapshotStyles();void prefetch({page,video:null,ids:[]},new AbortController().signal)}
