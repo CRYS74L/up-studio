@@ -391,3 +391,5 @@ html{text-autospace:no-autospace}
 @media(prefers-reduced-motion:no-preference){.studio .s-sidebar nav>button{transition:background-color 560ms cubic-bezier(.18,.75,.25,1),color 420ms cubic-bezier(.18,.75,.25,1)!important}}
 /* Every snapshot layer is visual-only. Named control snapshots must not intercept input. */
 ::view-transition,::view-transition-group(*),::view-transition-image-pair(*),::view-transition-old(*),::view-transition-new(*){pointer-events:none!important}
+/* Navigation hit areas and selection share the same capsule outline. */
+.studio .s-sidebar nav>button,.studio .s-sidebar nav>.s-nav-indicator{border-radius:999px!important}

@@ -13,9 +13,14 @@ export function SyncHistory({runs}:{runs:any[]}){
  const complete=runs.filter(r=>r.status!=='running');
  const {capacity:count,pages,current,step,offset}=syncSlots(width,complete.length,page);
  const slice=complete.slice(current*count,(current+1)*count).reverse();
- const previous=useRef<{ids:string[];runs:any[];width:number;page:number}|null>(null),stop=useRef<(()=>void)|null>(null);
+ const previous=useRef<{ids:string[];runs:any[];width:number;page:number;step:number;offset:number}|null>(null),stop=useRef<(()=>void)|null>(null);
  useLayoutEffect(()=>{
-  stop.current?.();const before=previous.current,ids=slice.map(r=>r.id);previous.current={ids,runs:slice,width,page:current};
+  stop.current?.();const before=previous.current,ids=slice.map(r=>r.id);previous.current={ids,runs:slice,width,page:current,step,offset};
+  if(before&&before.page!==current&&!matchMedia('(prefers-reduced-motion: reduce)').matches){
+   const svg=plot.current!.querySelector('svg')!,group=svg.querySelector('g')!,ghost=document.createElementNS('http://www.w3.org/2000/svg','g');ghost.setAttribute('aria-hidden','true');ghost.style.pointerEvents='none';
+   before.runs.forEach((run,i)=>{const rect=document.createElementNS('http://www.w3.org/2000/svg','rect');Object.entries({x:String(before.offset+i*before.step),y:'0',width:'5',height:'16',rx:'1','data-status':run.status}).forEach(([key,value])=>rect.setAttribute(key,value));ghost.append(rect)});svg.append(ghost);
+   const direction=current>before.page?-1:1,timing={duration:340,easing:'cubic-bezier(.3,.15,.35,1)'};const animations=[group.animate([{transform:`translateX(${direction*width}px)`,opacity:0},{transform:'translateX(0)',opacity:1}],timing),ghost.animate([{transform:'translateX(0)',opacity:1},{transform:`translateX(${-direction*width}px)`,opacity:0}],timing)];const start=document.timeline.currentTime;animations.forEach(a=>a.startTime=start);const clean=()=>{animations.forEach(a=>a.cancel());ghost.remove()};stop.current=clean;void Promise.allSettled(animations.map(a=>a.finished)).then(()=>{if(stop.current===clean){clean();stop.current=null}});return;
+  }
   if(!before||current!==0||before.page!==0||before.width!==width||matchMedia('(prefers-reduced-motion: reduce)').matches)return;
   const added=incomingSlots(before.ids,ids),svg=plot.current?.querySelector('svg'),group=svg?.querySelector('g');if(!added||!svg||!group)return;
   const distance=added*step,timing={duration:520,easing:'cubic-bezier(.18,.85,.22,1)'};
@@ -28,14 +33,13 @@ export function SyncHistory({runs}:{runs:any[]}){
  useLayoutEffect(()=>()=>stop.current?.(),[]);
  const active=hover??(selected?{run:runs.find(r=>r.id===selected),x:offset+Math.max(0,slice.findIndex(r=>r.id===selected))*step}:null);
  const activeId=active?.run?.id;
- return <div className="s-sync-history s-sync-grid-history"><div className="s-sync-summary"><b><span className={`s-run-dot ${runs[0]?.status}`}/>{names[runs[0]?.status]??'暂无同步'}</b><span>{complete.length} 次同步 · {Math.round(complete.filter(r=>r.status==='success').length/Math.max(1,complete.length)*100)}% 完成</span></div>
-  <div className="s-sync-range"><span>{slice.length?date(slice[0].started_at)+' — '+date(slice.at(-1).started_at):'暂无记录'}</span>{pages>1&&<div><button className="s-icon" aria-label="更早的同步记录" disabled={current+1>=pages} onClick={()=>{setPage(current+1);setHover(null);setSelected('')}}><ChevronLeft/></button><button className="s-icon" aria-label="更新的同步记录" disabled={current===0} onClick={()=>{setPage(current-1);setHover(null);setSelected('')}}><ChevronRight/></button></div>}</div>
-  <div className="s-sync-plot" ref={plot} onPointerLeave={()=>setHover(null)}><svg width="100%" height="16" viewBox={`0 0 ${width} 16`} role="group" aria-label="同步状态历史"><g>{slice.map((run,i)=><rect key={run.id} role="button" tabIndex={0} data-status={run.status} data-active={run.id===activeId} aria-label={date(run.started_at)+' · '+(names[run.status]??run.status)} aria-pressed={run.id===selected} x={offset+i*step} y={0} width={5} height={16} rx={1} ry={1} onPointerEnter={()=>setHover({run,x:offset+i*step})} onFocus={()=>setHover({run,x:offset+i*step})} onBlur={()=>setHover(null)} onClick={()=>setSelected(run.id===selected?'':run.id)} onKeyDown={e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();setSelected(run.id===selected?'':run.id)}}}/>)}</g></svg>
+ return <div className="s-sync-history s-sync-grid-history"><header className="s-history-heading"><div><h2>同步记录</h2><span className="s-history-status"><i className={`s-run-dot ${runs[0]?.status}`}/>{names[runs[0]?.status]??'暂无同步'}</span></div><div className="s-history-totals"><span><b>{complete.length}</b> 次同步</span><span><b>{Math.round(complete.filter(r=>r.status==='success').length/Math.max(1,complete.length)*100)}%</b> 完成</span></div></header>  <div className="s-sync-plot" ref={plot} onPointerLeave={()=>setHover(null)}><svg width="100%" height="16" viewBox={`0 0 ${width} 16`} role="group" aria-label="同步状态历史"><g>{slice.map((run,i)=><rect key={run.id} role="button" tabIndex={0} data-status={run.status} data-active={run.id===activeId} aria-label={date(run.started_at)+' · '+(names[run.status]??run.status)} aria-pressed={run.id===selected} x={offset+i*step} y={0} width={5} height={16} rx={1} ry={1} onPointerEnter={()=>setHover({run,x:offset+i*step})} onFocus={()=>setHover({run,x:offset+i*step})} onBlur={()=>setHover(null)} onClick={()=>setSelected(run.id===selected?'':run.id)} onKeyDown={e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();setSelected(run.id===selected?'':run.id)}}}/>)}</g></svg>
    <Popover open={!!active?.run} close={()=>{setSelected('');setHover(null)}} anchor={plot} anchorOffset={active?.x??0} role="tooltip" label="同步记录详情" width="content">{active?.run&&<RunDetails run={active.run}/>}</Popover>
 
 
   </div>
 
+  <footer className="s-history-footer"><time>{slice.length?date(slice[0].started_at)+' — '+date(slice.at(-1).started_at):'暂无记录'}</time>{pages>1&&<div className="s-history-pager"><button aria-label="更早的同步记录" disabled={current+1>=pages} onClick={()=>{setPage(current+1);setHover(null);setSelected('')}}><ChevronLeft/></button><span>{current+1} / {pages}</span><button aria-label="更新的同步记录" disabled={current===0} onClick={()=>{setPage(current-1);setHover(null);setSelected('')}}><ChevronRight/></button></div>}</footer>
  </div>;
 }
 

@@ -10,7 +10,7 @@ export function captureTheme(){
  for(const [key,value] of Object.entries(document.documentElement.dataset))host.dataset[key]=value;
  const rootStyle=getComputedStyle(document.documentElement);for(const name of rootStyle)if(name.startsWith('--'))host.style.setProperty(name,rootStyle.getPropertyValue(name));
  const root=host.attachShadow({mode:'closed'});root.adoptedStyleSheets=[sheet];const copy=studio.cloneNode(true) as HTMLElement;
- Object.assign(copy.style,{position:'absolute',top:-scrollY+'px',left:'0',width:innerWidth+'px',minHeight:studio.scrollHeight+'px'});
+ Object.assign(copy.style,{position:'absolute',top:-scrollY+'px',left:'0',width:studio.getBoundingClientRect().width+'px',minHeight:studio.scrollHeight+'px'});
  copy.querySelectorAll('.s-theme-snapshot,.s-route-snapshot,dialog').forEach(e=>e.remove());
  const originals=[...studio.querySelectorAll('canvas')],copies=[...copy.querySelectorAll('canvas')];
  originals.forEach((c,i)=>{const r=c.getBoundingClientRect();if(r.bottom>0&&r.top<innerHeight&&c.width&&c.height)copies[i]?.getContext('2d')?.drawImage(c,0,0)});

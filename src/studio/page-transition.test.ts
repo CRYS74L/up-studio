@@ -4,7 +4,7 @@ import {transitionPage,cancelPageTransition} from './page-transition';
 import {LAB_DEFAULTS,setLabSettings} from './lab-settings';
 vi.mock('../fonts',()=>({chartFont:'test',loadFonts:()=>Promise.resolve()}));
 vi.mock('./query-client',()=>({client:{getQueryData:()=>undefined,fetchQuery:()=>new Promise(()=>{}),prefetchQuery:()=>Promise.resolve()}}));
-vi.mock('./page-snapshot',()=>({warmSnapshotStyles:()=>{},capturePage:()=>{const old=document.createElement('div');old.className='s-route-snapshot';document.body.append(old);return old}}));
+vi.mock('./page-snapshot',()=>({warmSnapshotStyles:()=>{},snapshotMotionLayer:(e:HTMLElement)=>e,capturePage:()=>{const old=document.createElement('div');old.className='s-route-snapshot';document.body.append(old);return old}}));
 type Recorded={frames:Keyframe[];options:KeyframeAnimationOptions;startTime:number|null;finished:Promise<void>;cancel:()=>void;finish:()=>void};
 let animations:Recorded[]=[];
 beforeEach(()=>{
@@ -42,5 +42,12 @@ it.each(['x','y'] as const)('applies the editable curve and duration on the %s a
  setLabSettings({timing:'bezier',duration:450,curve:[.2,.2,.8,.8]});
  const done=transitionPage(()=>{},undefined,undefined,axis);
  expect(animations[0].options).toMatchObject({duration:450,easing:'cubic-bezier(0.2,0.2,0.8,0.8)'});
+ animations.forEach(a=>a.finish());await done;
+});
+
+it.each([1,-1] as const)('keeps incoming horizontal content inside its stationary bounds (%s)',async(direction)=>{
+ const pane=document.querySelector('.pane') as HTMLElement;pane.getBoundingClientRect=()=>({left:252,top:160,width:900,height:1000,right:1152,bottom:1160,x:252,y:160,toJSON:()=>{}});
+ const done=transitionPage(()=>{},undefined,undefined,'x','.pane',direction);
+ for(const frame of animations[0].frames){const dx=Number(String(frame.transform).match(/\(([-\d.]+)px/)![1]);const clip=String(frame.clipPath),insets=clip.match(/^inset\([^ ]+ ([\d.]+)px calc\([^)]+\) ([\d.]+)px\)$/);expect(insets).not.toBeNull();expect(dx+Number(insets![2])).toBeGreaterThanOrEqual(-.001);expect(dx+900-Number(insets![1])).toBeLessThanOrEqual(900.001)}
  animations.forEach(a=>a.finish());await done;
 });

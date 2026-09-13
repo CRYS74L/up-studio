@@ -1,3 +1,5 @@
+const motionLayers=new WeakMap<HTMLElement,HTMLElement>();
+export const snapshotMotionLayer=(host:HTMLElement)=>motionLayers.get(host)??host;
 let signature='',sheet:CSSStyleSheet|undefined;
 // A closed, inert shadow tree is only the outgoing visual. It has no React effects,
 // query observers, duplicate accessible controls, or IDs shared with the live page.
@@ -8,7 +10,7 @@ export function capturePage(clip?:HTMLElement|null){
  Object.assign(host.style,{position:'fixed',left:left+'px',top:top+'px',width:(region?.width??bounds.width)+'px',height:Math.max(0,(region?Math.min(innerHeight,region.bottom):innerHeight)-top)+'px',overflow:'clip',pointerEvents:'none',zIndex:'20'});
  warmSnapshotStyles();
  const root=host.attachShadow({mode:'closed'});root.adoptedStyleSheets=[sheet!];host.style.setProperty('--snapshot-top',(bounds.top-top)+'px');host.style.setProperty('--snapshot-left',(bounds.left-left)+'px');host.style.setProperty('--snapshot-width',bounds.width+'px');
- const wrapper=document.createElement('div');wrapper.className='studio';const copy=main.cloneNode(true) as HTMLElement;copy.removeAttribute('style');wrapper.append(copy);root.append(wrapper);
+ const wrapper=document.createElement('div');wrapper.className='studio';const copy=main.cloneNode(true) as HTMLElement;copy.removeAttribute('style');wrapper.append(copy);root.append(wrapper);wrapper.style.width='100%';wrapper.style.height='100%';motionLayers.set(host,wrapper);
  const copies=[...copy.querySelectorAll('canvas')];canvases.forEach((canvas,i)=>{if(visible[i]&&canvas.width&&canvas.height)copies[i]?.getContext('2d')?.drawImage(canvas,0,0)});
  main.closest('.studio')!.append(host);
  return host;
