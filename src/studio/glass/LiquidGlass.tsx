@@ -179,7 +179,7 @@ const GlassContainer = forwardRef<
     const filterId = useId()
     const [shaderMapUrl, setShaderMapUrl] = useState<string>("")
 
-    const isFirefox = navigator.userAgent.toLowerCase().includes("firefox")
+    const supportsBackdropSvg = /(?:Chrome|Chromium|Edg)\//.test(navigator.userAgent)
 
     // Generate shader displacement map when in shader mode
     useEffect(() => {
@@ -190,8 +190,8 @@ const GlassContainer = forwardRef<
     }, [mode, glassSize.width, glassSize.height])
 
     const backdropStyle = {
-      filter: isFirefox ? null : `url(#${filterId})`,
-      backdropFilter: `blur(${(overLight ? 12 : 4) + blurAmount * 32}px) saturate(${saturation}%)`,
+      filter: undefined,
+      backdropFilter: `blur(${(overLight ? 12 : 4) + blurAmount * 32}px) saturate(${saturation}%)${supportsBackdropSvg ? ` url(#${filterId})` : ""}`,
     }
 
     return (
@@ -342,7 +342,7 @@ export default function LiquidGlass({
 
   // Calculate directional scaling based on mouse position
   const calculateDirectionalScale = useCallback(() => {
-    if (!globalMousePos.x || !globalMousePos.y || !glassRef.current) {
+    if (elasticity === 0 || !globalMousePos.x || !globalMousePos.y || !glassRef.current) {
       return "scale(1)"
     }
 
@@ -450,7 +450,7 @@ export default function LiquidGlass({
   const baseStyle = {
     ...style,
     transform: transformStyle,
-    transition: "all ease-out 0.2s",
+    transition: elasticity === 0 ? "none" : "transform ease-out 0.2s",
   }
 
   const positionStyles = {
