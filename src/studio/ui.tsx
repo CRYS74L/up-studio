@@ -5,14 +5,14 @@ import { AnimatePresence,motion,useReducedMotion,useIsPresent,useMotionValue } f
 import { Check,ChevronRight,Search,X,ImageOff } from 'lucide-react';
 import type { Video } from '../types';
 import { coverSrc,compact } from '../format';
-import {queueCoverDecode} from './cover-loading';
+import {queueCoverDecode,isCoverReady} from './cover-loading';
 export const spring={type:'spring' as const,stiffness:420,damping:38};
 export function Segments({items,value,onChange,label,motionTarget}:{items:string[];value:string;onChange:(v:string)=>void;label:string;motionTarget?:string}){return <SegmentedControl items={items.map(v=>({value:v,label:v}))} value={value} onChange={onChange} label={label} contentTarget={motionTarget}/>;}
 export function Cover({video,className='',variant='card'}:{video:Video;className?:string;variant?:'card'|'preview'}){
   const src=coverSrc(video,variant),ref=useRef<HTMLImageElement>(null);
-  const [readySrc,setReadySrc]=useState<string|null>(null),[failed,setFailed]=useState(false);
+  const [readySrc,setReadySrc]=useState<string|null>(()=>isCoverReady(src)?src:null),[failed,setFailed]=useState(false);
   useLayoutEffect(()=>{setFailed(false);let live=true,queued=false;const img=ref.current;if(!img)return;const decode=()=>{if(queued)return;queued=true;void queueCoverDecode(async()=>{if(live)await img.decode()},true).then(()=>{if(live&&img.naturalWidth)setReadySrc(src)}).catch(()=>{if(live)setFailed(true)});};if(img.complete&&img.naturalWidth)decode();img.addEventListener('load',decode);return()=>{live=false;img.removeEventListener('load',decode)};},[src]);
-  return failed?<span className={`s-cover-fallback ${className}`}><ImageOff/></span>:<img ref={ref} className={'s-decoded-cover '+className} data-decoded={readySrc===src} src={src} alt="" loading="lazy" decoding="async" onError={()=>setFailed(true)}/>;
+  return failed?<span className={`s-cover-fallback ${className}`}><ImageOff/></span>:<img ref={ref} className={'s-decoded-cover '+className} data-decoded={readySrc===src||isCoverReady(src)} src={src} alt="" loading="eager" decoding="async" onError={()=>setFailed(true)}/>;
 }
 export function Empty({title,body,action}:{title:string;body:string;action?:ReactNode}){return <div className="s-empty"><span className="s-empty-symbol"><Search/></span><h2>{title}</h2><p>{body}</p>{action}</div>;}
 export function Stat({label,value,color}:{label:string;value:string;color?:string}){return <div className="s-stat"><span>{label}</span><strong style={{color}}>{value}</strong></div>;}

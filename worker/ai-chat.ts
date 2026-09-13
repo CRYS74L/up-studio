@@ -43,6 +43,14 @@ export function registerChat(app:any,readKey:(env:any)=>Promise<string|undefined
     const rows=(await c.env.DB.prepare('SELECT id,title,created_at,updated_at,video_ids_json,busy_until,json_array_length(messages_json) AS message_count FROM ai_conversations WHERE account_id=? AND archived=? ORDER BY updated_at DESC LIMIT 100').bind(owner(c.env),c.req.query('archived')==='1'?1:0).all()).results;
     return c.json({ok:true,conversations:rows.map((r:any)=>({id:r.id,title:r.title,createdAt:r.created_at,updatedAt:r.updated_at,videoIds:JSON.parse(r.video_ids_json),busy:r.busy_until>Date.now(),messageCount:r.message_count}))});
   });
+  app.delete('/api/ai/conversations/:id',async(c:any)=>{
+    const id=c.req.param('id'),row=await c.env.DB.prepare('SELECT * FROM ai_conversations WHERE id=? AND account_id=?').bind(id,owner(c.env)).first();
+    if(!row)return fail(c,404,'会话不存在');
+    if(row.busy_until>Date.now())return fail(c,409,'请先停止生成，再删除对话');
+    const jobs=[c.env.DB.prepare('DELETE FROM ai_conversations WHERE id=? AND account_id=?').bind(id,owner(c.env))];
+    if(id.startsWith('report:'))jobs.push(c.env.DB.prepare('DELETE FROM ai_cache WHERE snapshot_key=?').bind(id.slice(7)));
+    await c.env.DB.batch(jobs);return c.json({ok:true});
+  });
   app.patch('/api/ai/conversations/:id',async(c:any)=>{
     const value=z.object({title:z.string().trim().min(1).max(100).optional(),archived:z.boolean().optional()}).safeParse(await c.req.json().catch(()=>null));
     if(!value.success)return fail(c,400,'会话设置无效');

@@ -7,11 +7,13 @@ export function queueCoverDecode(work:()=>Promise<void>,urgent=false){
   if(urgent)jobs.unshift(start);else jobs.push(start);drain();
  });
 }
-const warmed=new Map<string,{image:HTMLImageElement;ready:Promise<void>}>();
+const warmed=new Map<string,{image:HTMLImageElement;ready:Promise<void>;decoded:boolean}>();
 export function warmCover(src:string){
  const cached=warmed.get(src);if(cached)return cached.ready;
- const image=new Image();image.decoding='async';
- const ready=queueCoverDecode(async()=>{image.src=src;await image.decode()}).catch(()=>{warmed.delete(src)});
- warmed.set(src,{image,ready});if(warmed.size>48)warmed.delete(warmed.keys().next().value!);
+ const image=new Image();image.decoding='async';image.src=src;
+ const ready=queueCoverDecode(async()=>{await image.decode();const entry=warmed.get(src);if(entry)entry.decoded=true}).catch(()=>{warmed.delete(src)});
+ warmed.set(src,{image,ready,decoded:false});if(warmed.size>48)warmed.delete(warmed.keys().next().value!);
  return ready;
 }
+
+export const isCoverReady=(src:string)=>warmed.get(src)?.decoded===true;

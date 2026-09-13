@@ -76,3 +76,15 @@ it('attaches images only to user messages and reports usage on saved replies',as
  expect(body.messages.at(-1).role).toBe('user');expect(body.messages.at(-1).content[1].image_url.url).toBe(attachment.dataUrl);
  const messages=JSON.parse(db.database.prepare('SELECT messages_json FROM ai_conversations').get().messages_json);expect(messages[0].attachments[0].name).toBe('参考.png');expect(messages[1].usage.outputTokens).toBe(20);expect(messages[1].elapsedMs).toBeGreaterThanOrEqual(0);db.database.close();
 });
+
+it('deletes only the owned idle conversation',async()=>{
+ const {db,app,env}=setup();vi.stubGlobal('fetch',vi.fn(async()=>response()));
+ await(await app.request('/api/ai/chat',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({message:'删除测试',ids:['1']})},env)).text();
+ const row=db.database.prepare('SELECT * FROM ai_conversations').get();
+ expect((await app.request('/api/ai/conversations/'+row.id,{method:'DELETE'},{...env,DB:{...db,accountUid:'other'}})).status).toBe(404);
+ db.database.prepare('UPDATE ai_conversations SET busy_until=? WHERE id=?').run(Date.now()+30000,row.id);
+ expect((await app.request('/api/ai/conversations/'+row.id,{method:'DELETE'},env)).status).toBe(409);
+ db.database.prepare('UPDATE ai_conversations SET busy_until=0 WHERE id=?').run(row.id);
+ expect((await app.request('/api/ai/conversations/'+row.id,{method:'DELETE'},env)).status).toBe(200);
+ expect(db.database.prepare('SELECT * FROM ai_conversations').all()).toHaveLength(0);db.database.close();
+});
