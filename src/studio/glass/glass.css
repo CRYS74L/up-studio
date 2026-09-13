@@ -8,3 +8,9 @@
 /* Foreground contrast follows the theme; optical parameters remain shared. */
 .studio .s-liquid{color:var(--glass-content-color,var(--text))}.studio .s-liquid.s-version-toast>span{color:#111}:root[data-theme=dark] .studio .s-liquid.s-version-toast>span{color:var(--glass-content-color,var(--text))}
 .studio .s-sidebar.s-liquid{color:var(--glass-content-color,var(--text))}.studio .s-mobile-nav.s-liquid>button:not([aria-current=page]){color:inherit}
+/* The sidebar keeps its pre-glass surface and shadow. Only its background optics
+   are replaced; no cursor-driven masks or mixed-blend border layers are mounted. */
+.s-sidebar-refraction{position:absolute;inset:0;border-radius:inherit;pointer-events:none}
+.studio .s-sidebar.s-liquid{border:1px solid var(--glass-border)!important;color:var(--text)}
+.studio .s-sidebar>.s-glass-material>.s-glass-tint{background:var(--glass)!important}
+.studio .s-sidebar>.s-glass-material>.s-glass-shadow{box-shadow:var(--shadow)}

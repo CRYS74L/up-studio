@@ -34,7 +34,7 @@ const getMap = (mode: "standard" | "polar" | "prominent" | "shader", shaderMapUr
 }
 
 /* ---------- SVG filter (edge-only displacement) ---------- */
-const GlassFilter: React.FC<{ id: string; displacementScale: number; aberrationIntensity: number; width: number; height: number; mode: "standard" | "polar" | "prominent" | "shader"; shaderMapUrl?: string }> = ({
+export const GlassFilter: React.FC<{ id: string; displacementScale: number; aberrationIntensity: number; width: number; height: number; mode: "standard" | "polar" | "prominent" | "shader"; shaderMapUrl?: string }> = ({
   id,
   displacementScale,
   aberrationIntensity,

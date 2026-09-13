@@ -51,3 +51,11 @@ it.each([1,-1] as const)('keeps incoming horizontal content inside its stationar
  for(const frame of animations[0].frames){const dx=Number(String(frame.transform).match(/\(([-\d.]+)px/)![1]);const clip=String(frame.clipPath),insets=clip.match(/^inset\([^ ]+ ([\d.]+)px calc\([^)]+\) ([\d.]+)px\)$/);expect(insets).not.toBeNull();expect(dx+Number(insets![2])).toBeGreaterThanOrEqual(-.001);expect(dx+900-Number(insets![1])).toBeLessThanOrEqual(900.001)}
  animations.forEach(a=>a.finish());await done;
 });
+it('lets a page slide behind the sidebar and clips only at the viewport edge',async()=>{
+ const pane=document.querySelector('.pane') as HTMLElement;pane.getBoundingClientRect=()=>({left:252,top:160,width:900,height:1000,right:1152,bottom:1160,x:252,y:160,toJSON:()=>{}});
+ Object.defineProperty(document.documentElement,'clientWidth',{configurable:true,value:1280});
+ const done=transitionPage(()=>{(document.querySelector('.s-route-snapshot') as HTMLElement).dataset.viewportSlide='true'},undefined,undefined,'x','.pane',-1);
+ const positions=animations[0].frames.map(frame=>({x:252+Number(String(frame.transform).match(/\(([-\d.]+)px/)![1]),left:Number(String(frame.clipPath).match(/ ([\d.]+)px\)$/)![1])}));
+ expect(positions.some(p=>p.x>=0&&p.x<200&&p.left===0)).toBe(true);expect(positions.every(p=>p.x+p.left>=-.001)).toBe(true);
+ animations.forEach(a=>a.finish());await done;
+});
