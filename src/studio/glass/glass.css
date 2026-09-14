@@ -14,3 +14,5 @@
 
 .s-sidebar-painted-backdrop{position:absolute;inset:0;display:block;overflow:hidden;background:var(--bg);border-radius:inherit;pointer-events:none}
 .s-sidebar .s-sidebar-painted-backdrop{inset:-40px;border-radius:0}
+
+.s-mobile-nav .s-sidebar-painted-backdrop{inset:-40px;border-radius:0}
