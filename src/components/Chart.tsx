@@ -61,6 +61,7 @@ export function Chart({ option, className, events }: { option: any; className: s
     let visible = false;
     let width = 0, height = 0;
     const resize = () => {
+      const bounds=element.current?.getBoundingClientRect();visible=!!bounds&&bounds.bottom>0&&bounds.top<innerHeight+120;
       if (!live || !fontsReady || !visible || !element.current?.clientWidth || !element.current.clientHeight) return;
       if(picture&&!instance.current&&document.documentElement.dataset.transitionKind==='page')return;
       if (!instance.current) { element.current.innerHTML='';delete element.current.dataset.chartPreview;instance.current = echarts.init(element.current,undefined,{renderer:'svg'});element.current.querySelector('svg')?.setAttribute('data-chart-renderer','svg'); update(); }
@@ -68,7 +69,7 @@ export function Chart({ option, className, events }: { option: any; className: s
       else if(dirty.current)update();
       width=element.current.clientWidth;height=element.current.clientHeight;
     };
-    schedule.current=()=>{dirty.current=true;queueRender(element,()=>{if(!live||!visible)return;if(instance.current)update();else resize();});};
+    schedule.current=()=>{dirty.current=true;queueRender(element,()=>{if(!live)return;resize();});};
     const observer = new ResizeObserver(()=>queueRender(element,resize));
     observer.observe(element.current);
     const intersection=new IntersectionObserver(entries=>{visible=entries[0].isIntersecting;if(visible)queueRender(element,resize);},{rootMargin:'120px'});
@@ -78,12 +79,12 @@ export function Chart({ option, className, events }: { option: any; className: s
       if (live && element.current) element.current.textContent = '图表字体加载失败，请刷新页面。';
     });
     const prepare=()=>{const r=element.current?.getBoundingClientRect();if(r&&r.bottom>0&&r.top<innerHeight){visible=true;dirty.current=true;cancelRender(element);resize();}};document.addEventListener('up:prepare-view',prepare);
-    const settled=()=>queueRender(element,resize);document.addEventListener('up:route-settled',settled);
+    const settled=()=>queueRender(element,resize);document.addEventListener('up:route-settled',settled);window.addEventListener('scroll',settled,{passive:true});
     const refresh=()=>schedule.current();
     reduced.addEventListener('change', refresh);
     const themeObserver=new MutationObserver(refresh);
     themeObserver.observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
-    return () => { const svg=element.current?.querySelector('svg[data-chart-renderer]');if(svg){chartPictures.set(className+':'+(document.documentElement.dataset.theme??'light')+':'+JSON.stringify({...latest.current.option,tooltip:undefined}),svg.outerHTML);if(chartPictures.size>24)chartPictures.delete(chartPictures.keys().next().value!);}document.removeEventListener('up:route-settled',settled);live = false; document.removeEventListener('up:prepare-view',prepare);cancelRender(element);intersection.disconnect();observer.disconnect(); themeObserver.disconnect(); reduced.removeEventListener('change', refresh); instance.current?.dispose(); instance.current = null; signature.current=""; bound.current = {}; };
+    return () => { const svg=element.current?.querySelector('svg[data-chart-renderer]');if(svg){chartPictures.set(className+':'+(document.documentElement.dataset.theme??'light')+':'+JSON.stringify({...latest.current.option,tooltip:undefined}),svg.outerHTML);if(chartPictures.size>24)chartPictures.delete(chartPictures.keys().next().value!);}document.removeEventListener('up:route-settled',settled);window.removeEventListener('scroll',settled);live = false; document.removeEventListener('up:prepare-view',prepare);cancelRender(element);intersection.disconnect();observer.disconnect(); themeObserver.disconnect(); reduced.removeEventListener('change', refresh); instance.current?.dispose(); instance.current = null; signature.current=""; bound.current = {}; };
   }, []);
   useEffect(()=>schedule.current(), [option, events]);
   const category=option.xAxis?.type==='category'&&option.xAxis?.axisLabel?.interval===0;const count=category?option.xAxis.data?.length??0:0;const minimum=count*9+(Number(option.grid?.left)||50)+(Number(option.grid?.right)||25);

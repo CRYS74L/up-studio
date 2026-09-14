@@ -1,6 +1,6 @@
 export const quarterSpace='\u2005';
 export function spaceNumbers(text:string){
- return text.replace(/(?<=\p{Script=Han})[ \u00a0\u2000-\u200a]*(?=\d)|(?<=\d)[ \u00a0\u2000-\u200a]*(?=\p{Script=Han})/gu,quarterSpace);
+ return text.replace(/(?<=\p{Script=Han})[ \u00a0\u2000-\u200a]*(?=\d)|(?<=\d)[ \u00a0\u2000-\u200a]*(?=[%％\p{Script=Han}])/gu,quarterSpace);
 }
 function children(value:any):any{
  if(typeof value==='string')return spaceNumbers(value);

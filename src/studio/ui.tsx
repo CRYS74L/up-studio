@@ -1,6 +1,6 @@
 import {createPortal} from 'react-dom';
 import {SegmentedControl} from './controls';
-import { useEffect,useLayoutEffect,useRef,useState,type ReactNode } from 'react';
+import { Children,useEffect,useLayoutEffect,useRef,useState,type ReactNode } from 'react';
 import { AnimatePresence,motion,useReducedMotion,useIsPresent,useMotionValue } from 'motion/react';
 import { Check,ChevronRight,Search,X,ImageOff } from 'lucide-react';
 import type { Video } from '../types';
@@ -17,10 +17,10 @@ export function Cover({video,className='',variant='card'}:{video:Video;className
 export function Empty({title,body,action}:{title:string;body:string;action?:ReactNode}){return <div className="s-empty"><span className="s-empty-symbol"><Search/></span><h2>{title}</h2><p>{body}</p>{action}</div>;}
 export function Stat({label,value,color}:{label:string;value:string;color?:string}){return <div className="s-stat"><span>{label}</span><strong style={{color}}>{value}</strong></div>;}
 export function Sheet({title,subtitle,children,close,footer,wide=false}:{title:string;subtitle?:string;children:ReactNode;close:()=>void;footer?:ReactNode;wide?:boolean}){
-  const ref=useRef<HTMLDialogElement>(null);const reduced=useReducedMotion(),present=useIsPresent(),opacity=useMotionValue(0);
+  const hasBody=Children.toArray(children).length>0;const ref=useRef<HTMLDialogElement>(null);const reduced=useReducedMotion(),present=useIsPresent(),opacity=useMotionValue(0);
   useEffect(()=>{const previous=document.activeElement;ref.current?.showModal();return()=>{ref.current?.close();if(previous instanceof HTMLElement&&previous.isConnected)previous.focus({preventScroll:true});};},[]);
-  return createPortal(<motion.dialog ref={ref} style={{opacity,...{'--sheet-opacity':opacity}}} data-closing={!present} className={wide?"s-sheet s-sheet-wide":"s-sheet"} aria-label={title} initial={{opacity:0,y:reduced?0:16}} animate={{opacity:1,y:0}} exit={{opacity:0,y:reduced?0:12,transition:{type:'tween',duration:reduced?0:.18,ease:[.4,0,1,1]}}} transition={{type:'tween',duration:reduced?0:.22,ease:[.23,1,.32,1]}} onCancel={e=>{e.preventDefault();close();}} onClick={e=>{if(e.target!==ref.current)return;const r=e.currentTarget.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)close();}}>
-    <header><div><h2>{title}</h2>{subtitle&&<p>{subtitle}</p>}</div><button className="s-icon" aria-label="关闭" onClick={close}><X/></button></header><div className="s-sheet-body">{children}</div>{footer&&<footer>{footer}</footer>}
+  return createPortal(<motion.dialog ref={ref} style={{opacity,...{'--sheet-opacity':opacity}}} data-empty={!hasBody} data-closing={!present} className={wide?"s-sheet s-sheet-wide":"s-sheet"} aria-label={title} initial={{opacity:0,y:reduced?0:16}} animate={{opacity:1,y:0}} exit={{opacity:0,y:reduced?0:12,transition:{type:'tween',duration:reduced?0:.18,ease:[.4,0,1,1]}}} transition={{type:'tween',duration:reduced?0:.22,ease:[.23,1,.32,1]}} onCancel={e=>{e.preventDefault();close();}} onClick={e=>{if(e.target!==ref.current)return;const r=e.currentTarget.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)close();}}>
+    <header><div><h2>{title}</h2>{subtitle&&<p>{subtitle}</p>}</div><button className="s-icon" aria-label="关闭" onClick={close}><X/></button></header>{hasBody&&<div className="s-sheet-body">{children}</div>}{footer&&<footer>{footer}</footer>}
   </motion.dialog>,document.querySelector('.studio')??document.body);
 }
 export function VideoPicker({videos,selected,onChange,close}:{videos:Video[];selected:string[];onChange:(ids:string[])=>void;close:()=>void}){

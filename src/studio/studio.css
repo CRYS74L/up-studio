@@ -411,3 +411,5 @@ html{text-autospace:no-autospace}
 .studio .s-library-toolbar>.s-select{height:44px;min-height:44px;font-size:13px;line-height:20px}.studio .s-library-toolbar+.s-library{margin-top:22px}
 
 :root{--sync-success:#24c19a}.s-sync-plot rect[data-status=success]{fill:var(--sync-success)}.s-run-quality .s-run-dot.success{background:var(--sync-success)}.s-local-service .s-state.ok{color:var(--sync-success);background:#24c19a14;font-weight:600}.s-update-summary>.s-sync-actions{display:flex;flex-direction:row;flex-wrap:nowrap;flex:none;align-items:center;gap:12px}.s-update-summary{flex-wrap:wrap}.s-update-schedule{border-bottom:0}.s-source-title .s-service-symbol{border-radius:50%}.studio .s-library .s-media-stats .s-stat>strong{font-weight:525}.studio .s-library-toolbar>.s-select{margin-left:0}
+
+.s-sheet[data-empty=true]{grid-template-rows:auto auto}.s-sheet[data-empty=true]>header{border-bottom:0}.s-local-service .s-state.ok{color:#20a98a;font-weight:550}.studio .s-detail>.ui-segments{width:max-content;max-width:100%;height:auto;min-height:0}.studio .s-detail>.ui-segments>button{font-size:13px;padding-inline:17px}

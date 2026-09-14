@@ -10,3 +10,5 @@ it('joins adjacent display values without changing form values or option semanti
  expect(spacedProps('option',{children:'近30天'}).children).toBe('近30天');
  expect(spacedProps(()=>null,{children:'`近30天`'}).children).toBe('`近30天`');
 });
+
+it('spaces percentages with a quarter em',()=>{expect(spaceNumbers('12.5%')).toBe('12.5\u2005%');expect(spaceNumbers('12.5\u2005%')).toBe('12.5\u2005%');});
