@@ -18,8 +18,8 @@ export function SidebarBackdrop(){
     if(!intersects(rect,box)&&!moving.some(e=>intersects(e.getBoundingClientRect(),box)))continue;
     visible.add(source);let entry=copies.get(source);if(entry&&entry.route!==location.hash){entry.copy.remove();copies.delete(source);entry=undefined;}
     if(!entry){const copy=source.cloneNode(true) as HTMLElement;copy.removeAttribute('style');copy.setAttribute('aria-hidden','true');copy.inert=true;const targets=[...copy.querySelectorAll<HTMLElement>('.s-analysis-topic-body,[data-content-motion=true]')];entry={copy,route:location.hash,moving:moving.map((e,i)=>[e,targets[i]])};copies.set(source,entry);wrapper.append(copy);}
-    const style=entry.copy.style;for(const [key,value] of Object.entries({position:'absolute',left:(rect.left-box.left)+'px',top:(rect.top-box.top)+'px',width:rect.width+'px',margin:'0',transform:'none',clipPath:'none',backgroundColor:'var(--bg)'}))style.setProperty(key.replace(/[A-Z]/g,m=>'-'+m.toLowerCase()),value,'important');
-    for(const [original,copy] of entry.moving){if(copy){const computed=getComputedStyle(original);copy.style.transform=computed.transform;copy.style.clipPath=computed.clipPath;}}
+    const style=entry.copy.style,sourceStyle=getComputedStyle(source);style.font=sourceStyle.font;style.padding=sourceStyle.padding;style.boxSizing=sourceStyle.boxSizing;for(const [key,value] of Object.entries({position:'absolute',left:(rect.left-box.left)+'px',top:(rect.top-box.top)+'px',width:rect.width+'px',margin:'0',transform:'none',clipPath:'none',backgroundColor:'var(--bg)'}))style.setProperty(key.replace(/[A-Z]/g,m=>'-'+m.toLowerCase()),value,'important');
+    for(const [original,copy] of entry.moving){if(copy){const computed=getComputedStyle(original);const movingRect=original.getBoundingClientRect();Object.assign(copy.style,{position:'absolute',left:(movingRect.left-rect.left)+'px',top:(movingRect.top-rect.top)+'px',width:movingRect.width+'px',margin:'0',transform:'none',clipPath:computed.clipPath});}}
    }
    for(const [source,{copy}] of copies){if(!visible.has(source)){copy.remove();copies.delete(source);}}
    host.dataset.sampleLayers=String(copies.size);
