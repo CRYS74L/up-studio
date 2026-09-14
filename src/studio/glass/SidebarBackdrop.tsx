@@ -9,17 +9,18 @@ export function SidebarBackdrop(){
   const copies=new Map<HTMLElement,{copy:HTMLElement;route:string;moving:Array<[HTMLElement,HTMLElement]>}>();let frame=0,until=0;
   const draw=()=>{
    frame=0;const box=host.getBoundingClientRect();if(!box.width||!box.height)return;
-   root.adoptedStyleSheets=[snapshotStyleSheet()];
+   host.dataset.theme=document.documentElement.dataset.theme??'light';root.adoptedStyleSheets=[snapshotStyleSheet()];
    const main=document.querySelector<HTMLElement>('.studio>.s-main');
    const layers=[...document.querySelectorAll<HTMLElement>('.s-route-snapshot')].map(e=>snapshotMotionLayer(e).querySelector<HTMLElement>('.s-main')).filter(Boolean) as HTMLElement[];if(main)layers.push(main);
    const visible=new Set<HTMLElement>();
    for(const source of layers){
     const rect=source.getBoundingClientRect(),moving=[...source.querySelectorAll<HTMLElement>('.s-analysis-topic-body,[data-content-motion=true]')];
     if(!intersects(rect,box)&&!moving.some(e=>intersects(e.getBoundingClientRect(),box)))continue;
-    visible.add(source);let entry=copies.get(source);if(entry&&entry.route!==location.hash){entry.copy.remove();copies.delete(source);entry=undefined;}
-    if(!entry){const copy=source.cloneNode(true) as HTMLElement;copy.removeAttribute('style');copy.setAttribute('aria-hidden','true');copy.inert=true;const targets=[...copy.querySelectorAll<HTMLElement>('.s-analysis-topic-body,[data-content-motion=true]')];entry={copy,route:location.hash,moving:moving.map((e,i)=>[e,targets[i]])};copies.set(source,entry);wrapper.append(copy);}
+    const sampleKey=location.hash+'|'+rect.width+'|'+innerHeight+'|'+host.dataset.theme;visible.add(source);let entry=copies.get(source);if(entry&&entry.route!==sampleKey){entry.copy.remove();copies.delete(source);entry=undefined;}
+    if(!entry){const copy=source.cloneNode(true) as HTMLElement;copy.removeAttribute('style');copy.setAttribute('aria-hidden','true');copy.inert=true;const targets=[...copy.querySelectorAll<HTMLElement>('.s-analysis-topic-body,[data-content-motion=true]')];entry={copy,route:sampleKey,moving:moving.map((e,i)=>[e,targets[i]])};copies.set(source,entry);wrapper.append(copy);}
     const style=entry.copy.style,sourceStyle=getComputedStyle(source);style.font=sourceStyle.font;style.padding=sourceStyle.padding;style.boxSizing=sourceStyle.boxSizing;for(const [key,value] of Object.entries({position:'absolute',left:(rect.left-box.left)+'px',top:(rect.top-box.top)+'px',width:rect.width+'px',margin:'0',transform:'none',clipPath:'none',backgroundColor:'var(--bg)'}))style.setProperty(key.replace(/[A-Z]/g,m=>'-'+m.toLowerCase()),value,'important');
-    for(const [original,copy] of entry.moving){if(copy){const computed=getComputedStyle(original);const movingRect=original.getBoundingClientRect();Object.assign(copy.style,{position:'absolute',left:(movingRect.left-rect.left)+'px',top:(movingRect.top-rect.top)+'px',width:movingRect.width+'px',margin:'0',transform:'none',clipPath:computed.clipPath});}}
+    for(const [original,copy] of entry.moving){if(copy){const computed=getComputedStyle(original);const movingRect=original.getBoundingClientRect();Object.assign(copy.style,{position:'absolute',width:movingRect.width+'px',margin:'0',transform:'none',clipPath:computed.clipPath});const parent=copy.offsetParent as HTMLElement|null,anchor=parent?.getBoundingClientRect()??box;copy.style.left=(movingRect.left-anchor.left-(parent?.clientLeft??0))+'px';copy.style.top=(movingRect.top-anchor.top-(parent?.clientTop??0))+'px';if(location.search.includes('material-check=1')){const actual=copy.getBoundingClientRect();host.dataset.alignmentError=String(Math.max(Math.abs(actual.left-movingRect.left),Math.abs(actual.top-movingRect.top)));}}}
+    if(location.search.includes('material-check=1')){const a=source.querySelector('img'),b=entry.copy.querySelector('img');if(a&&b){const x=a.getBoundingClientRect(),y=b.getBoundingClientRect();host.dataset.imageAlignmentError=String(Math.max(Math.abs(x.left-y.left),Math.abs(x.top-y.top)));}}
    }
    for(const [source,{copy}] of copies){if(!visible.has(source)){copy.remove();copies.delete(source);}}
    host.dataset.sampleLayers=String(copies.size);
