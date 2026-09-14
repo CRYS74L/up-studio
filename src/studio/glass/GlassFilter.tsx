@@ -21,19 +21,8 @@ const getMap=(mode:string,shaderMapUrl?:string)=>mode==='polar'?polarDisplacemen
       <filter id={id} filterUnits="userSpaceOnUse" primitiveUnits="userSpaceOnUse" x={-Math.abs(displacementScale)-2} y={-Math.abs(displacementScale)-2} width={width+2*Math.abs(displacementScale)+4} height={height+2*Math.abs(displacementScale)+4} colorInterpolationFilters="sRGB">
         <feImage id={`${id}-image`} x="0" y="0" width={width} height={height} result="DISPLACEMENT_MAP" href={getMap(mode, shaderMapUrl)} preserveAspectRatio="none" />
 
-        {/* Create edge mask using the displacement map itself */}
-        <feColorMatrix
-          in="DISPLACEMENT_MAP"
-          type="matrix"
-          values="0.3 0.3 0.3 0 0
-                 0.3 0.3 0.3 0 0
-                 0.3 0.3 0.3 0 0
-                 0 0 0 1 0"
-          result="EDGE_INTENSITY"
-        />
-        <feComponentTransfer in="EDGE_INTENSITY" result="EDGE_MASK">
-          <feFuncA type="discrete" tableValues={`0 ${aberrationIntensity * 0.05} 1`} />
-        </feComponentTransfer>
+        <feImage x="0" y="0" width={width} height={height} href={'data:image/svg+xml,'+encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}"><rect x="1" y="1" width="${Math.max(0,width-2)}" height="${Math.max(0,height-2)}" rx="24" fill="none" stroke="white" stroke-width="14"/></svg>`)} result="EDGE_SOURCE"/>
+        <feGaussianBlur in="EDGE_SOURCE" stdDeviation="2" result="EDGE_MASK"/>
 
         {/* Original undisplaced image for center */}
         <feOffset in="SourceGraphic" dx="0" dy="0" result="CENTER_ORIGINAL" />
