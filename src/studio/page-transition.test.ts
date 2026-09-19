@@ -73,3 +73,13 @@ it('clips the entering vertical page to its first viewport instead of exposing l
  expect(main.style.clipPath).toBe('inset(-32px 0 '+Math.max(0,2432-innerHeight)+'px 0)');
  animations.forEach(a=>a.finish());await done;expect(main.style.clipPath).toBe('');
 });
+
+it('preserves the outgoing pane crop when the destination has a taller toolbar',async()=>{
+ const pane=document.querySelector('.pane') as HTMLElement;
+ pane.className='s-analysis-topic-body';
+ pane.getBoundingClientRect=()=>({top:140,left:250,right:1050,bottom:740,width:800,height:600,x:250,y:140,toJSON:()=>({})});
+ const done=transitionPage(()=>{},undefined,undefined,'x','.s-analysis-topic-body');
+ const snapshot=document.querySelector('.s-route-snapshot') as HTMLElement;
+ expect(snapshot.style.clipPath).toBe('');
+ animations.forEach(a=>a.finish());await done;
+});
