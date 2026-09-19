@@ -39,9 +39,10 @@ export function SidebarBackdrop(){
   document.addEventListener('up:chart-painted',refresh);
   const loaded=(event:Event)=>{if(main?.contains(event.target as Node))refresh()};document.addEventListener('load',loaded,true);
   document.addEventListener('scroll',wake,true);
+  const tooltipMove=()=>{if(host.closest('.s-tooltip-glass'))wake()};document.addEventListener('pointermove',tooltipMove,{passive:true});
   const observer=new ResizeObserver(wake);observer.observe(host);
   document.addEventListener('pointerdown',wake,true);document.addEventListener('up:route-motion',wake);document.addEventListener('up:route-settled',wake);window.addEventListener('scroll',wake,{passive:true});window.addEventListener('resize',wake);const theme=new MutationObserver(wake);theme.observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});wake();
-  return()=>{content.disconnect();document.removeEventListener('up:chart-painted',refresh);document.removeEventListener('load',loaded,true);document.removeEventListener('scroll',wake,true);cancelAnimationFrame(frame);observer.disconnect();theme.disconnect();document.removeEventListener('pointerdown',wake,true);document.removeEventListener('up:route-motion',wake);document.removeEventListener('up:route-settled',wake);window.removeEventListener('scroll',wake);window.removeEventListener('resize',wake);root.replaceChildren();};
+  return()=>{document.removeEventListener('pointermove',tooltipMove);content.disconnect();document.removeEventListener('up:chart-painted',refresh);document.removeEventListener('load',loaded,true);document.removeEventListener('scroll',wake,true);cancelAnimationFrame(frame);observer.disconnect();theme.disconnect();document.removeEventListener('pointerdown',wake,true);document.removeEventListener('up:route-motion',wake);document.removeEventListener('up:route-settled',wake);window.removeEventListener('scroll',wake);window.removeEventListener('resize',wake);root.replaceChildren();};
  },[]);
  return <span ref={ref} className="s-sidebar-painted-backdrop" aria-hidden="true"/>;
 }

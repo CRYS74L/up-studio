@@ -18,3 +18,5 @@
 .s-liquid .s-sidebar-painted-backdrop{inset:-40px;border-radius:0}
 
 .s-mobile-nav .s-sidebar-painted-backdrop{inset:-40px;border-radius:0}
+
+.s-chart-tooltip,.ui-popover[role=tooltip]{background:transparent!important;border-color:transparent!important;box-shadow:none!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important}.s-tooltip-glass{overflow:hidden}

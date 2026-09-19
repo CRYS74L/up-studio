@@ -1,3 +1,4 @@
+import {TooltipGlass} from './glass/TooltipGlass';
 import {SyncFreshness} from './FreshnessAge';
 import {GlassMaterial} from './glass/GlassMaterial';
 import {useLabSettings,applyLabSettings} from './lab-settings';
@@ -35,7 +36,7 @@ function Studio(){const lab=useLabSettings();useLayoutEffect(()=>applyLabSetting
   useEffect(()=>{if(!sync.data&&!sync.error)return;const timer=setTimeout(()=>sync.reset(),sync.error?6500:3500);return()=>clearTimeout(timer)},[sync.data,sync.error]);
   function go(p:string){navigate(p);setMenu(false);}
   return <MotionConfig reducedMotion="user" transition={spring}><LayoutGroup><div className={`studio ${menu?'nav-open':''}`}>
-    <aside className="s-sidebar s-liquid"><GlassMaterial sidebar/><Brand/><nav aria-label="主导航"><NavSelection page={page}/>{pages.map(([id,label])=><NavButton key={id} id={id} label={label} active={page===id} onClick={()=>go(id)}></NavButton>)}</nav><Account/></aside>
+    <TooltipGlass/><aside className="s-sidebar s-liquid"><GlassMaterial sidebar/><Brand/><nav aria-label="主导航"><NavSelection page={page}/>{pages.map(([id,label])=><NavButton key={id} id={id} label={label} active={page===id} onClick={()=>go(id)}></NavButton>)}</nav><Account/></aside>
     <main className="s-main"><header className="s-header" data-page={page}><div><h1>{titles[page]??'创作概览'}</h1></div>{page==='analysis'&&<div className="s-analysis-header-tabs"><Segments label="分析范围" items={['全局统计','联合分析','AI 对话']} value={route.tab==='ai'?'AI 对话':route.tab==='videos'||route.ids.length?'联合分析':'全局统计'} onChange={value=>navigate('analysis',value==='AI 对话'?{tab:'ai'}:value==='联合分析'?{tab:'videos'}:{})}/></div>}<div className="s-header-actions">{summary?.configured&&<span className="s-header-freshness">最近同步 · <SyncFreshness capturedAt={summary.summary.fresh} fallback={summary.freshnessMinutes}/></span>}<ThemeSwitch value={theme} onChange={(next,origin)=>{void transitionTheme(next,origin,()=>setTheme(next))}}/></div></header>
     <AnimatePresence>{(sync.data||sync.error)&&<motion.div className={`s-toast s-floating-toast s-liquid ${sync.error?'error':''}`} role="status" initial={{opacity:0,y:-16,scale:.98}} animate={{opacity:1,y:0,scale:1}} exit={{opacity:0,y:-12,scale:.98}} transition={{type:'tween',duration:.2}}><GlassMaterial/><span>{sync.error?.message??(sync.data?.status==='partial'?'同步完成，部分数据待更新':sync.data?.status==='skipped'?'正在同步中':'同步完成')}</span></motion.div>}</AnimatePresence>
     <div className="s-page" key={page+':'+(route.video??'')+(page==='settings'?location.hash:'')}>{page==='videos'?<Library route={route}/>:page==='analysis'?<Analysis route={route}/>:page==='sources'?<Sources sync={sync}/>:<Overview/>}</div></main><BackToTop/>
