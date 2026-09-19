@@ -14,3 +14,5 @@
 
 .studio .s-connection .s-connection-accounts{border:0;padding:0;margin:0}.studio .s-connection .s-account-row[data-active=true]{border-color:var(--line)}.studio .s-accounts-toolbar{margin-bottom:24px}.s-update-footer{justify-content:flex-end}.s-history-heading>div:first-child{flex-wrap:wrap}.s-history-status{font-variant-numeric:tabular-nums}
 .studio .s-accounts-toolbar h2{font-size:19px;line-height:1.4;font-weight:660}
+
+.s-account-logout{display:grid;place-items:center;width:30px;height:30px;min-height:30px;flex:none;padding:0;border-radius:50%;color:var(--muted)}.s-account-logout svg{width:16px;height:16px}.s-account-logout:hover{background:var(--surface-2);color:var(--text)}

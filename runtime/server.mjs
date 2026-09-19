@@ -29,8 +29,8 @@ let intervalMinutes=[0,5,10,15,30,60,180].includes(config.COLLECT_INTERVAL_MINUT
 let collecting=false, lastCollection=null, stopping=false, retryCount=0, retryTimer;
 async function collect() {
   if(collecting||stopping||intervalMinutes===0)return; collecting=true;
-  try {const jobs=[]; await worker.scheduled({cron:'*/15 * * * *'},env,{waitUntil(promise){jobs.push(promise);}}); await Promise.all(jobs); lastCollection=new Date().toISOString();
-    const latest=await db.prepare('SELECT status,error_code FROM acquisition_runs ORDER BY started_at DESC LIMIT 1').first();
+  try {const jobs=[]; await worker.scheduled({cron:'*/15 * * * *'},env,{waitUntil(promise){jobs.push(promise);}}); const results=await Promise.all(jobs); lastCollection=new Date().toISOString();
+    const result=results.find(r=>r?.status);const latest=result?{status:result.status,error_code:result.errorCode}:null;
     log({event:'collection_finished',status:latest?.status,errorCode:latest?.error_code});
     if(latest?.status==='failed'&&latest.error_code==='network'&&retryCount<2){retryCount++;retryTimer=setTimeout(collect,retryCount*60_000);}else retryCount=0;
   }

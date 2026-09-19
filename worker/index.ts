@@ -1,7 +1,7 @@
 import {registerVideoDetail} from './video-detail';
 import {registerAi,aiModel,aiEffort,AI_MODELS} from './ai-analysis';
 import {registerChat} from './ai-chat';
-import {accountDatabase,rootDatabase,prepareAccount,fetchProfile} from './accounts';
+import {accountDatabase,rootDatabase,prepareAccount,fetchProfile,logoutAccount} from './accounts';
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { secureHeaders } from 'hono/secure-headers';
@@ -44,10 +44,11 @@ app.get('/api/account/profile',async(c)=>{
  const active=await db.prepare("SELECT value_json FROM settings WHERE key='active_account'").first<{value_json:string}>();
  const cached=active?await db.prepare('SELECT value_json,updated_at FROM settings WHERE key=?').bind('profile_'+JSON.parse(active.value_json)).first<{value_json:string;updated_at:string}>():null;
  let profile=cached?JSON.parse(cached.value_json):null;
- if(!cached||Date.now()-Date.parse(cached.updated_at)>300000){try{const {session}=await decryptJson<{session:string}>(secret.ciphertext,secret.iv,c.env.MASTER_ENCRYPTION_KEY_BASE64);profile=await fetchProfile(session);await prepareAccount(db,profile);await db.batch([db.prepare("INSERT OR REPLACE INTO settings(key,value_json,updated_at) VALUES('active_account',?,?)").bind(JSON.stringify(profile.uid),new Date().toISOString()),db.prepare("INSERT OR REPLACE INTO encrypted_secrets(id,ciphertext,iv,updated_at) VALUES(?,?,?,?)").bind('bilibili_session_'+profile.uid,secret.ciphertext,secret.iv,new Date().toISOString())]);}catch{if(!profile)return jsonError(c,502,'profile_unavailable','UP主资料暂时无法读取，请重新连接账号');}}
- const accounts=(await db.prepare("SELECT value_json FROM settings WHERE key LIKE 'profile_%'").all<{value_json:string}>()).results.map(r=>JSON.parse(r.value_json));
+ if(!cached||Date.now()-Date.parse(cached.updated_at)>300000){try{const {session}=await decryptJson<{session:string}>(secret.ciphertext,secret.iv,c.env.MASTER_ENCRYPTION_KEY_BASE64);profile=await fetchProfile(session);const currentActive=await db.prepare("SELECT value_json FROM settings WHERE key='active_account'").first<{value_json:string}>(),currentSecret=await db.prepare("SELECT ciphertext FROM encrypted_secrets WHERE id='bilibili_session'").first<{ciphertext:string}>();if(currentActive?.value_json===active?.value_json&&currentSecret?.ciphertext===secret.ciphertext){await prepareAccount(db,profile);await db.batch([db.prepare("INSERT OR REPLACE INTO settings(key,value_json,updated_at) VALUES('active_account',?,?)").bind(JSON.stringify(profile.uid),new Date().toISOString()),db.prepare("INSERT OR REPLACE INTO encrypted_secrets(id,ciphertext,iv,updated_at) VALUES(?,?,?,?)").bind('bilibili_session_'+profile.uid,secret.ciphertext,secret.iv,new Date().toISOString())]);}else{const latest=currentActive?await db.prepare('SELECT value_json FROM settings WHERE key=?').bind('profile_'+JSON.parse(currentActive.value_json)).first<{value_json:string}>():null;profile=latest?JSON.parse(latest.value_json):null;}}catch{if(!profile)return jsonError(c,502,'profile_unavailable','UP主资料暂时无法读取，请重新连接账号');}}
+ const accounts=(await db.prepare("SELECT value_json FROM settings WHERE key LIKE 'profile_%' AND EXISTS (SELECT 1 FROM encrypted_secrets WHERE id='bilibili_session_' || substr(settings.key,9))").all<{value_json:string}>()).results.map(r=>JSON.parse(r.value_json));
  return c.json({ok:true,profile,accounts});
 });
+app.post('/api/account/logout',zValidator('json',z.object({uid:z.string().regex(/^\d+$/)})),async(c)=>c.json({ok:true,...await logoutAccount(c.env.DB,c.req.valid('json').uid)}));
 app.post('/api/account/switch',zValidator('json',z.object({uid:z.string().regex(/^\d+$/)})),async(c)=>{
  const db=rootDatabase(c.env.DB),uid=c.req.valid('json').uid,secret=await db.prepare('SELECT ciphertext,iv FROM encrypted_secrets WHERE id=?').bind('bilibili_session_'+uid).first<{ciphertext:string;iv:string}>();if(!secret)return jsonError(c,404,'account_missing','请先扫码连接该账号');
  await db.batch([db.prepare("UPDATE encrypted_secrets SET ciphertext=?,iv=?,updated_at=? WHERE id='bilibili_session'").bind(secret.ciphertext,secret.iv,new Date().toISOString()),db.prepare("UPDATE settings SET value_json=?,updated_at=? WHERE key='active_account'").bind(JSON.stringify(uid),new Date().toISOString())]);return c.json({ok:true});
@@ -294,7 +295,7 @@ async function collect(env: Bindings, trigger: string) {
     return { id, status, coverage: result.coverage, details: result.coverageDetails, videos: result.videos.length, trigger, timings, requestCount: result.requestCount };
   } catch (error) {
     const detail = error instanceof Error ? `${error.name}: ${error.message}${error.cause ? ` | cause: ${String(error.cause)}` : ''}` : String(error || 'UNKNOWN');
-    const errorCode = /SESSION|API_-101|API_-111|HTTP_401/.test(detail) ? 'session_expired' : /API_(-352|-412)|HTTP_(403|412|429)/.test(detail) ? 'risk_control' : /INVENTORY_INCOMPLETE/.test(detail) ? 'inventory_incomplete' : error instanceof z.ZodError ? 'schema_changed' : 'network';
+    const errorCode = /SESSION|API_-101|API_-111|HTTP_401/.test(detail) ? 'session_expired' : /API_(-352|-412)|HTTP_(403|412|429)/.test(detail) ? 'risk_control' : /INVENTORY_INCOMPLETE/.test(detail) ? 'inventory_incomplete' : error instanceof z.ZodError ? 'schema_changed' : /no such (column|table)|SQLITE|constraint failed/i.test(detail)?'storage':'network';
     await env.DB.prepare('UPDATE acquisition_runs SET finished_at=?,status=\'failed\',error_code=?,safe_error_detail=? WHERE id=?').bind(new Date().toISOString(), errorCode, detail.slice(0, 160), id).run();
     return { id, status: 'failed', errorCode };
   }
