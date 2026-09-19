@@ -2,7 +2,7 @@
 // no library mouse tracking, typography, positioning, or elastic hover is applied.
 import type React from 'react';
 import {displacementMap,polarDisplacementMap,prominentDisplacementMap} from './maps';
-const getMap=(mode:string,shaderMapUrl?:string)=>mode==='polar'?polarDisplacementMap:mode==='prominent'?prominentDisplacementMap:mode==='shader'&&shaderMapUrl?shaderMapUrl:displacementMap;export const GlassFilter: React.FC<{ id: string; displacementScale: number; aberrationIntensity: number; width: number; height: number; mode: "standard" | "polar" | "prominent" | "shader"; shaderMapUrl?: string }> = ({
+const getMap=(mode:string,shaderMapUrl?:string)=>mode==='polar'?polarDisplacementMap:mode==='prominent'?prominentDisplacementMap:mode==='shader'&&shaderMapUrl?shaderMapUrl:displacementMap;export const GlassFilter: React.FC<{ id: string; displacementScale: number; aberrationIntensity: number; width: number; height: number; mode: "standard" | "polar" | "prominent" | "shader"; shaderMapUrl?: string; gentle?: boolean }> = ({
   id,
   displacementScale,
   aberrationIntensity,
@@ -10,6 +10,7 @@ const getMap=(mode:string,shaderMapUrl?:string)=>mode==='polar'?polarDisplacemen
   height,
   mode,
   shaderMapUrl,
+  gentle=false,
 }) => (
   <svg style={{ position: "absolute", width, height }} aria-hidden="true">
     <defs>
@@ -22,8 +23,16 @@ const getMap=(mode:string,shaderMapUrl?:string)=>mode==='polar'?polarDisplacemen
         <feImage id={`${id}-image`} x="0" y="0" width={width} height={height} result="DISPLACEMENT_MAP" href={getMap(mode, shaderMapUrl)} preserveAspectRatio="none" />
 
         <feImage x="0" y="0" width={width} height={height} href={'data:image/svg+xml,'+encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}"><rect x="1" y="1" width="${Math.max(0,width-2)}" height="${Math.max(0,height-2)}" rx="24" fill="none" stroke="white" stroke-width="14"/></svg>`)} result="EDGE_SOURCE"/>
-        <feGaussianBlur in="EDGE_SOURCE" stdDeviation="2" result="EDGE_MASK"/>
+        <feGaussianBlur in="EDGE_SOURCE" stdDeviation={gentle?5:2} result="EDGE_MASK"/>
 
+        {gentle ? <>
+          {/* Fade the displacement vector to neutral before sampling, avoiding
+              a second displaced image composited over the original. */}
+          <feComposite in="DISPLACEMENT_MAP" in2="EDGE_MASK" operator="in" result="EDGE_VECTOR"/>
+          <feFlood floodColor="rgb(128,128,128)" result="NEUTRAL_VECTOR"/>
+          <feComposite in="EDGE_VECTOR" in2="NEUTRAL_VECTOR" operator="over" result="SOFT_VECTOR"/>
+          <feDisplacementMap in="SourceGraphic" in2="SOFT_VECTOR" scale={-Math.min(6,Math.abs(displacementScale))} xChannelSelector="R" yChannelSelector="B"/>
+        </> : <>
         {/* Original undisplaced image for center */}
         <feOffset in="SourceGraphic" dx="0" dy="0" result="CENTER_ORIGINAL" />
 
@@ -81,6 +90,7 @@ const getMap=(mode:string,shaderMapUrl?:string)=>mode==='polar'?polarDisplacemen
 
         {/* Combine edge aberration with clean center */}
         <feComposite in="EDGE_ABERRATION" in2="CENTER_CLEAN" operator="over" />
+        </>}
       </filter>
     </defs>
   </svg>

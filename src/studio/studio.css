@@ -264,7 +264,7 @@ html[data-transition-kind=theme] .studio,html[data-transition-kind=theme] .studi
 .studio button:active:not(:disabled){transition-duration:100ms!important}.studio .ui-segments>button:active{transform:none}
 .s-sidebar nav button[aria-current=page],.s-sidebar nav button[aria-current=page]:hover,.s-mobile-nav>button[aria-current=page],.s-mobile-nav>button[aria-current=page]:hover{background:transparent!important;color:var(--pink-text)}
 .s-sidebar nav button:not([aria-current=page]):hover{background:var(--surface-2);color:var(--text)}
-.s-kpi-change>b[data-direction=up]{color:#FF765F}
+.s-kpi-change>b[data-direction=up]{color:#FF665F}
 html[data-route-phase=preparing] .studio>.s-main{pointer-events:none}
 @media(prefers-reduced-motion:reduce){.studio button,.studio a,.studio input,.studio textarea,.studio .ui-segments>button,.s-select-menu button{transition:none!important}}
 
@@ -421,3 +421,6 @@ html{text-autospace:no-autospace}
 
 /* Equal +25 weight adjustment from the accepted 400/525 baseline. */
 .studio .s-library .s-media-stats .s-stat>span{font-weight:425}.studio .s-library .s-media-stats .s-stat>strong{font-weight:550}
+
+/* Short confirmations should fit their message rather than the full sheet width. */
+.s-sheet[data-compact=true]{width:fit-content;min-width:min(300px,calc(100vw - 30px));max-width:min(420px,calc(100vw - 30px))}.s-sheet[data-compact=true]>header p{line-height:1.7;text-wrap:pretty}
