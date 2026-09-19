@@ -5,8 +5,12 @@ import { compact,escapeHtml } from '../format';
 import type { Video } from '../types';
 import {formatMetric,metricById,valueOf,type MetricId} from './model';
 export function chartBase(){const dark=document.documentElement.dataset.theme==='dark';return {textStyle:{fontFamily:chartFont,fontSize:12,color:dark?'#c9cad5':'#717585'},animationDuration:320,grid:{left:48,right:20,top:20,bottom:46},tooltip:{trigger:'axis',valueFormatter:(n:unknown)=>typeof n==='number'?n.toLocaleString('zh-CN',{useGrouping:false,maximumFractionDigits:2}):String(n??'—'),confine:true,backgroundColor:dark?'#2d303d':'#fff',borderWidth:0,textStyle:{color:dark?'#f3f4f8':'#272c3a',fontSize:13},extraCssText:'border-radius:14px;max-width:300px;white-space:normal;line-height:1.6;box-shadow:0 10px 35px #0002'},xAxis:{axisLine:{lineStyle:{color:dark?'#ffffff14':'#00000010'}},axisTick:{show:false},axisLabel:{fontSize:12}},yAxis:{type:'value',splitLine:{lineStyle:{type:'dashed',color:dark?'#ffffff10':'#0000000d'}},axisLabel:{fontSize:12,formatter:compact}}};}
-export function scoreExtent(_values:Array<number|null>) {
- return {min:0,max:5,interval:1};
+export function scoreExtent(values:Array<number|null>) {
+ const xs=values.filter((v):v is number=>v!=null&&Number.isFinite(v));if(!xs.length)return {min:0,max:1};
+ const lo=Math.min(...xs),hi=Math.max(...xs),pad=Math.max(.1,(hi-lo)*.12);
+ const interval=Math.max(.1,Math.ceil((hi-lo+2*pad)/5*10)/10);
+ const round=(n:number)=>Number(n.toFixed(10));
+ return {min:round(Math.max(0,Math.floor((lo-pad)/interval)*interval)),max:round(Math.min(5,Math.ceil((hi+pad)/interval)*interval)),interval};
 }
 export function MetricChart({videos,id,horizontal=false}:{videos:Video[];id:MetricId;horizontal?:boolean}){
  const base=chartBase(),metric=metricById[id],values=videos.map(v=>valueOf(v,id));
