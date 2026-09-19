@@ -21,7 +21,7 @@ function themedOption(option: any, element: HTMLElement | null) {
     series:map(option.series,(v:any)=>({...v,...(v.type==='pie'?{padAngle:1,minAngle:2.5,itemStyle:{...v.itemStyle,borderRadius:7},data:v.data?.map((d:any)=>({...d,itemStyle:{...d.itemStyle,borderRadius:7}}))}:{}),...(v.type==='line'?{symbol:'circle',lineStyle:{...v.lineStyle,color:v.lineStyle?.color??v.itemStyle?.color,width:v.lineStyle?.width??2.2},itemStyle:{...v.itemStyle,color:surface,borderColor:v.lineStyle?.color??v.itemStyle?.color,borderWidth:2},smooth:.5,smoothMonotone:'x',connectNulls:false,areaStyle:v.areaStyle??{opacity:.5,color:{type:'linear',x:0,y:0,x2:0,y2:1,colorStops:[{offset:0,color:(v.lineStyle?.color??v.itemStyle?.color??'#FF73AC')+'28'},{offset:1,color:(v.lineStyle?.color??v.itemStyle?.color??'#FF73AC')+'00'}]}}}:{}),label:label(v.label),endLabel:label(v.endLabel),emphasis:{...v.emphasis,label:label(v.emphasis?.label)},markLine:v.markLine?{...v.markLine,label:label(v.markLine.label)}:v.markLine}))};
 }
 
-export function Chart({ option, className, events }: { option: any; className: string; events?: Record<string, (p: any) => void> }) {
+export function Chart({ option, className, events, animateChanges=false }: { option: any; className: string; animateChanges?:boolean; events?: Record<string, (p: any) => void> }) {
   const element = useRef<HTMLDivElement>(null);
   const instance = useRef<ReturnType<typeof echarts.init> | null>(null);
   const latest = useRef({ option, events });
@@ -44,8 +44,12 @@ export function Chart({ option, className, events }: { option: any; className: s
       resolved.yAxis=axes.map(a=>({...a,offset:Math.floor((a.offset??0)/54)*32,nameTextStyle:{...a.nameTextStyle,fontSize:10},axisLabel:{...a.axisLabel,fontSize:10}}));
     }
     const x=resolved.xAxis;if(x?.type==='category'&&x.axisLabel?.interval===0&&x.data?.length){const width=available-(Number(resolved.grid?.left)||50)-(Number(resolved.grid?.right)||25);const tight=width/x.data.length<30;const size=Math.max(8,Math.min(10,Math.floor(width/x.data.length)));x.axisLabel={...x.axisLabel,hideOverlap:false,showMinLabel:true,showMaxLabel:true,rotate:tight?-90:x.axisLabel.rotate,...(tight?{fontSize:size,lineHeight:size}:{})};}
+    if(animateChanges){
+      resolved.series=resolved.series?.map((series:any,index:number)=>({...series,id:series.id??'series-'+index}));
+      for(const key of ['xAxis','yAxis'] as const){const axes=resolved[key];const normalize=(axis:any,index:number)=>({min:null,max:null,...axis,id:axis.id??key+'-'+index});resolved[key]=Array.isArray(axes)?axes.map(normalize):axes?normalize(axes,0):axes;}
+    }
     const nextSignature=JSON.stringify({...resolved,tooltip:undefined});
-    if(nextSignature!==signature.current){chart.setOption({...resolved,animation:!reduced&&document.documentElement.dataset.transitionKind!=='theme'&&current.option.animation!==false,animationDuration:650,animationDurationUpdate:300},{notMerge:true});signature.current=nextSignature;}
+    if(nextSignature!==signature.current){chart.setOption({...resolved,animation:!reduced&&document.documentElement.dataset.transitionKind!=='theme'&&current.option.animation!==false,animationDuration:650,animationDurationUpdate:450,animationEasingUpdate:'cubicInOut'},{notMerge:!animateChanges, ...(animateChanges?{replaceMerge:['series','xAxis','yAxis','dataZoom']}: {})});signature.current=nextSignature;}
     else chart.setOption({tooltip:resolved.tooltip});
     dirty.current=false;
     for (const [name, callback] of Object.entries(bound.current)) chart.off(name, callback);
@@ -64,7 +68,7 @@ export function Chart({ option, className, events }: { option: any; className: s
       const bounds=element.current?.getBoundingClientRect();visible=!!bounds&&bounds.bottom>0&&bounds.top<innerHeight+120;
       if (!live || !fontsReady || !visible || !element.current?.clientWidth || !element.current.clientHeight) return;
       if(picture&&!instance.current&&document.documentElement.dataset.transitionKind==='page')return;
-      if (!instance.current) { element.current.innerHTML='';delete element.current.dataset.chartPreview;instance.current = echarts.init(element.current,undefined,{renderer:'svg'});element.current.querySelector('svg')?.setAttribute('data-chart-renderer','svg'); update(); }
+      if (!instance.current) { element.current.innerHTML='';delete element.current.dataset.chartPreview;instance.current = echarts.init(element.current,undefined,{renderer:'svg'});instance.current.on('finished',()=>document.dispatchEvent(new Event('up:chart-painted')));element.current.querySelector('svg')?.setAttribute('data-chart-renderer','svg'); update(); }
       else if(width!==element.current.clientWidth||height!==element.current.clientHeight) { instance.current.resize(); update(); }
       else if(dirty.current)update();
       width=element.current.clientWidth;height=element.current.clientHeight;
