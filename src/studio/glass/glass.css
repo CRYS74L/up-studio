@@ -1,12 +1,14 @@
+:root{--liquid-tint-rgb:255,255,255;--liquid-edge-highlight:#ffffff80;--liquid-edge-outline:#0000000b}
+:root[data-theme=dark]{--liquid-tint-rgb:36,36,38;--liquid-edge-highlight:#ffffff20;--liquid-edge-outline:#ffffff0c}
 /* All four floating surfaces share a single optical/tint layer, including in dark mode. */
-.studio .s-liquid,:root .s-liquid.s-lab-glass-surface{isolation:isolate;background:transparent!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;border:0!important;box-shadow:0 4px 18px #00000012!important;color:#171719}
+.studio .s-liquid,:root .s-liquid.s-lab-glass-surface{isolation:isolate;background:transparent!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;border:0!important;box-shadow:0 4px 18px #00000012!important;color:var(--text)}
 .s-glass-material{position:absolute;inset:0;z-index:-2;pointer-events:none;border-radius:inherit;overflow:hidden;contain:paint}
 .s-glass-material>svg{pointer-events:none}
 .s-glass-optics,.s-glass-tint{position:absolute;inset:0;pointer-events:none;border-radius:inherit}
-.s-glass-material::after{content:'';position:absolute;inset:0;border-radius:inherit;box-shadow:inset 0 1px 0 #ffffff80,inset 0 0 0 .65px #0000000b;pointer-events:none}
+.s-glass-material::after{content:'';position:absolute;inset:0;border-radius:inherit;box-shadow:inset 0 1px 0 var(--liquid-edge-highlight),inset 0 0 0 .65px var(--liquid-edge-outline);pointer-events:none}
 .s-liquid>.s-nav-selection-track{z-index:-1}
-.studio .s-liquid.s-version-toast>span{color:#111}
-@media(prefers-reduced-transparency:reduce){.s-glass-optics{display:none}.s-glass-tint{background:#f8f8fa!important}}
+.studio .s-liquid.s-version-toast>span{color:var(--text)}
+@media(prefers-reduced-transparency:reduce){.s-glass-optics{display:none}.s-glass-tint{background:var(--surface)!important}}
 
 /* The sidebar uses the same optical plane as the Dock, with its established tint and shadow. */
 .studio .s-sidebar.s-liquid{color:var(--text);box-shadow:var(--shadow)!important;border:1px solid var(--glass-border)!important}.s-sidebar .s-glass-tint{background:var(--glass)!important}.s-sidebar .s-glass-material::after{box-shadow:none}

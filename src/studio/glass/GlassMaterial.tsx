@@ -15,6 +15,6 @@ export function GlassMaterial({sidebar=false,painted=sidebar}:{sidebar?:boolean;
  return <span ref={ref} className="s-glass-material" aria-hidden="true" data-material={glass}>
   {size.width>0&&size.height>0&&<GlassFilter gentle={painted} id={id} mode={p.mode} displacementScale={Math.min(p.scale,size.height*.4)} aberrationIntensity={.25} width={size.width} height={size.height}/>}
   <span className="s-glass-optics" style={{filter:painted?`blur(${p.blur}px) saturate(${p.saturation}%) url(#${id})`:`url(#${id})`,backdropFilter:painted?'none':`blur(${p.blur}px) saturate(${p.saturation}%)`}}>{painted&&<SidebarBackdrop/>}</span>
-  <span className="s-glass-tint" style={{background:`rgba(255,255,255,${p.tint})`}}/>
+  <span className="s-glass-tint" style={{background:`rgba(var(--liquid-tint-rgb),${p.tint})`}}/>
  </span>;
 }
