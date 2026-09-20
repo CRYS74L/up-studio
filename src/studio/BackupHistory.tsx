@@ -1,0 +1,15 @@
+import {useLayoutEffect,useRef,useState} from 'react';
+import {Popover} from './controls';
+import {syncSlots} from './sync-strip';
+export type BackupRun={id:string;status:string;startedAt:string;finishedAt?:string;uploadedBytes?:number;bytes?:number;error?:string;legacy?:boolean};
+const names:Record<string,string>={success:'备份完成',failed:'备份失败',running:'正在备份'};
+const size=(n?:number)=>n==null?'未记录':n>=1e6?(n/1e6).toFixed(1)+' MB':Math.ceil(n/1000)+' KB';
+export function BackupHistory({runs}:{runs:BackupRun[]}){
+ const plot=useRef<HTMLDivElement>(null),[width,setWidth]=useState(400),[page,setPage]=useState(0),[active,setActive]=useState<{run:BackupRun;x:number}|null>(null);
+ useLayoutEffect(()=>{const el=plot.current!;const update=()=>setWidth(el.clientWidth);const ro=new ResizeObserver(update);ro.observe(el);update();return()=>ro.disconnect()},[]);
+ const {capacity,pages,current,step,offset}=syncSlots(width,runs.length,page),slice=runs.slice(current*capacity,(current+1)*capacity).reverse();
+ useLayoutEffect(()=>{setActive(null)},[current,runs.length]);
+ useLayoutEffect(()=>{const group=plot.current?.querySelector('g');if(group&&!matchMedia('(prefers-reduced-motion: reduce)').matches){const a=group.animate([{opacity:0},{opacity:1}],{duration:220});return()=>a.cancel()}},[current]);
+ const focused=active?runs.find(r=>r.id===active.run.id):undefined;
+ return <div className="s-backup-history">{!runs.length&&<p className="s-muted">尚无备份记录</p>}<div ref={plot} className="s-sync-plot" onPointerLeave={()=>setActive(null)}><svg width="100%" height="16" viewBox={`0 0 ${width} 16`} role="group" aria-label="备份状态历史"><g>{slice.map((run,i)=><rect key={run.id} x={offset+i*step} y={0} width={5} height={16} rx={1} data-status={run.status} tabIndex={0} role="button" aria-label={new Date(run.startedAt).toLocaleString('zh-CN')+' · '+names[run.status]} onPointerEnter={()=>setActive({run,x:offset+i*step})} onFocus={()=>setActive({run,x:offset+i*step})} onBlur={()=>setActive(null)} onClick={()=>setActive({run,x:offset+i*step})}/>)}</g></svg><Popover open={!!active} close={()=>setActive(null)} anchor={plot} anchorOffset={active?.x??0} label="备份详情" role="tooltip" width={280}>{focused&&<div className="s-run-quality"><header><b>{new Date(focused.startedAt).toLocaleString('zh-CN',{hour12:false})}</b></header><p><i className={'s-run-dot '+focused.status}/>{names[focused.status]}</p><small>新增上传 · {size(focused.uploadedBytes)}</small><p>数据快照 · {size(focused.bytes)}</p>{!focused.legacy&&focused.finishedAt&&<small>耗时 · {((Date.parse(focused.finishedAt)-Date.parse(focused.startedAt))/1000).toFixed(1)} s</small>}{focused.error&&<p className="s-error">{focused.error}</p>}</div>}</Popover></div>{pages>1&&<nav className="s-history-dots" aria-label="备份记录分页">{Array.from({length:pages},(_,i)=>pages-1-i).map(i=><button key={i} aria-label={'第 '+(i+1)+' 页备份记录'} aria-current={current===i?'page':undefined} onClick={()=>setPage(i)}><span/></button>)}</nav>}</div>;
+}
