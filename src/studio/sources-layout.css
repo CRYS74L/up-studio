@@ -46,8 +46,11 @@
 @container (min-width:281px) and (max-width:360px){.s-sync-records-panel .s-history-day{font-size:11.5px}}
 @media(max-width:1050px){.studio .s-sources{grid-template-columns:minmax(0,1fr)}.studio .s-sources>.s-two-col>.s-connection,.studio .s-sources>.s-two-col>.s-local-service,.studio .s-sources>.s-sync-records-panel{grid-column:1;grid-row:auto}}
 
-.studio .s-connection .s-current-account:disabled{opacity:1;cursor:default;color:var(--text);background:var(--surface);border-color:var(--line)}
+.studio .s-connection .s-current-account:disabled{opacity:1;cursor:default;color:var(--text);background:transparent;border-color:var(--line)}
 .studio .s-connection .s-account-logout{display:grid;place-items:center;width:36px;height:36px;min-height:36px;flex:0 0 36px;padding:0;border-radius:50%;border:1px solid var(--line)}
 .studio .s-source-title .s-service-symbol,.studio .s-source-heading .s-service-symbol{display:grid;place-items:center;width:44px;height:44px;flex:0 0 44px;border-radius:50%}
 .studio .s-source-title .s-service-symbol svg,.studio .s-source-heading .s-service-symbol svg{width:50%;height:50%}
 @media(max-width:500px){.studio .s-source-title .s-service-symbol,.studio .s-source-heading .s-service-symbol{width:32px;height:32px;flex-basis:32px}.studio .s-source-heading{gap:10px}.studio .s-source-heading h2{white-space:nowrap}.studio .s-connection .s-account-row{gap:6px}.studio .s-connection .s-account-action{gap:4px;padding:6px}.studio .s-connection .s-account-logout{width:32px;height:32px;min-height:32px;flex-basis:32px;padding:0}}
+
+.studio .s-connection .s-account-row .s-account-action{font-size:12px;line-height:20px;gap:8px}.studio .s-connection .s-account-row .s-account-action>svg{width:16px;height:16px;flex:0 0 16px}
+@media(max-width:500px){.studio .s-connection .s-account-row .s-account-action{font-size:11px;gap:4px}}
