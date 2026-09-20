@@ -18,3 +18,20 @@
 .s-account-logout{display:grid;place-items:center;width:30px;height:30px;min-height:30px;flex:none;padding:0;border-radius:50%;color:var(--muted)}.s-account-logout svg{width:16px;height:16px}.s-account-logout:hover{background:var(--surface-2);color:var(--text)}
 
 .s-history-heading>div:first-child{flex-wrap:wrap}.s-history-day{display:inline-flex;align-items:center;gap:4px;color:var(--muted);font-size:13px}.s-history-day button{display:grid;place-items:center;width:26px;height:28px;min-height:28px;border-radius:50%;padding:0;color:inherit}.s-history-day button:hover:not(:disabled){background:var(--surface-2);color:var(--text)}.s-history-day button:disabled{opacity:.3;cursor:default}.s-history-day svg{width:15px;height:15px}.s-history-day time{white-space:nowrap;font-variant-numeric:tabular-nums}.s-history-empty{padding:10px 0;color:var(--muted);font-size:13px}
+
+/* Fit short metadata to the actual card width, not device orientation. */
+.s-sync-records-panel{container-type:inline-size}
+.s-sync-records-panel .s-history-heading{display:grid;grid-template-columns:max-content max-content minmax(0,1fr);align-items:center;gap:12px;--history-number-size:16px}
+.s-sync-records-panel .s-history-heading>div:first-child{display:contents}
+.s-sync-records-panel .s-history-heading h2{white-space:nowrap}
+.s-sync-records-panel .s-history-day,.s-sync-records-panel .s-history-totals b{font-size:var(--history-number-size)}
+.s-sync-records-panel .s-history-totals{justify-self:end;display:flex;flex-direction:row;align-items:center;gap:14px}
+.s-history-totals>span,.s-account-identity small,.s-current-account,.s-update-summary small,.s-source-heading>.s-state{white-space:nowrap}
+.studio .s-connection .s-account-identity{min-width:112px}
+@container (max-width:460px){.s-sync-records-panel .s-history-heading{--history-number-size:13px;gap:8px}.s-sync-records-panel .s-history-heading h2{font-size:16px}.s-sync-records-panel .s-history-totals{gap:8px;font-size:11px}.s-history-day{gap:1px}.s-history-day button{width:20px}}
+@container (max-width:280px){.s-sync-records-panel .s-history-heading{grid-template-columns:max-content 1fr}.s-sync-records-panel .s-history-day{justify-self:end}.s-sync-records-panel .s-history-totals{grid-column:1/-1}}
+@media(max-width:400px){.studio .s-connection .s-account-row{gap:8px;padding:10px}.studio .s-connection .s-account-row>.s-avatar{width:36px;height:36px;flex-basis:36px}.studio .s-connection .s-account-action{gap:4px;padding:6px}.s-account-logout{width:26px;flex-basis:26px}}
+@media(max-width:350px){.studio .s-connection .s-account-row{flex-wrap:wrap}.studio .s-connection .s-account-identity{flex-basis:calc(100% - 52px)}}
+
+@container (min-width:281px) and (max-width:360px){.s-sync-records-panel .s-history-heading{--history-number-size:12px;gap:6px}.s-sync-records-panel .s-history-heading h2{font-size:15px}.s-sync-records-panel .s-history-totals{gap:6px;font-size:10px}.s-history-day{gap:0}.s-history-day button{width:16px}}
+@media(max-width:500px){.s-update-schedule .s-select{width:124px}.s-update-schedule small{max-width:none;text-wrap:pretty}}
