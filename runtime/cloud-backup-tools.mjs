@@ -8,7 +8,7 @@ export class BackupVault{
 export function cleanField(value,label,max=1000){if(typeof value!=='string'||!value.trim()||value.length>max||/[\r\n\0]/.test(value))throw Error(label+'无效');return value.trim()}
 export function validateProfile(input){
  if(input.provider!=='webdav')throw Error('不支持的云盘');const password='';
- const result={provider:input.provider,password,scope:'statistics',label:'WebDAV',autoHours:input.autoHours===24?24:0};
+ const result={provider:input.provider,password,scope:'statistics',label:'WebDAV',autoHours:[0,6,12,24].includes(input.autoHours)?input.autoHours:24};
 
  const endpoint=new URL(cleanField(input.endpoint,'WebDAV 地址',2000));if(!['https:','http:'].includes(endpoint.protocol)||endpoint.username||endpoint.password||endpoint.search||endpoint.hash)throw Error('WebDAV 地址格式无效');if(endpoint.protocol==='http:'&&!['localhost','127.0.0.1','[::1]'].includes(endpoint.hostname))throw Error('远程 WebDAV 请使用 HTTPS 地址');
  const safeSegments=value=>value.split('/').filter(Boolean).map(segment=>{const plain=decodeURIComponent(segment);if(!plain||plain==='.'||plain==='..'||/[\\/\r\n\0]/.test(plain)||/%[0-9a-f]{2}/i.test(plain))throw Error('目录路径不能包含上级目录或编码分隔符');return encodeURIComponent(plain)});

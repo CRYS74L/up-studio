@@ -25,7 +25,7 @@ export function Sources({sync}:{sync:ReturnType<typeof useSync>}){
   const schedule=useMutation({mutationFn:(intervalMinutes:number)=>request('/api/local/schedule',{method:'PUT',body:JSON.stringify({intervalMinutes})}),onSuccess:()=>client.invalidateQueries({queryKey:['local-status']})});
   const [historyDay,setHistoryDay]=useState('');
   const history=useQuery({queryKey:['acquisition-history',historyDay],placeholderData:keepPreviousData,queryFn:()=>request<{runs:any[];day:string;today:string;firstDay:string|null}>('/api/acquisition/runs'+(historyDay?'?day='+historyDay:'')),refetchInterval:5000});
-  const shownDay=history.data?.day||historyDay||syncDay();
+  const shownDay=historyDay||syncDay();
 
   const [qr,setQr]=useState<{key:string;image:string}|null>(null),[qrState,setQrState]=useState('waiting'),[error,setError]=useState(''),[starting,setStarting]=useState(false),[confirm,setConfirm]=useState(false);
   const disconnect=useMutation({mutationFn:()=>request('/api/bilibili/qr/disconnect',{method:'POST'}),onSuccess:async()=>{setConfirm(false);await client.invalidateQueries();}});
