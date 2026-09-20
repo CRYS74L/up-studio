@@ -55,7 +55,7 @@
 .studio .s-connection .s-account-row .s-account-action{font-size:12px;line-height:20px;gap:8px}.studio .s-connection .s-account-row .s-account-action>svg{width:16px;height:16px;flex:0 0 16px}
 @media(max-width:500px){.studio .s-connection .s-account-row .s-account-action{font-size:11px;gap:4px}}
 
-.studio .s-sources{align-items:start}.s-sync-records-panel .s-sync-history{height:auto;display:flex;flex-direction:column}.s-sync-records-panel .s-sync-plot{margin-block:0}.s-sync-records-panel .s-history-dots{padding-top:18px}
+.studio .s-sources{align-items:start}.s-sync-records-panel .s-sync-history{height:auto;display:flex;flex-direction:column}.s-sync-records-panel .s-sync-plot{margin-block:0}.s-sync-records-panel .s-history-dots{padding-top:0;margin-top:4px}
 
 .studio .s-connection .s-account-row[data-active=true] .s-account-logout{background:transparent}
 
@@ -68,3 +68,5 @@
 .studio .s-connection .s-account-row .s-account-logout:hover:not(:disabled){background:color-mix(in srgb,var(--muted) 10%,transparent);border-color:var(--line);color:var(--text)}
 @media(max-width:500px){.studio .s-history-title .s-service-symbol{width:32px;height:32px;flex-basis:32px}.s-history-title{gap:8px}}
 @container(max-width:360px){.s-sync-records-panel .s-history-title{gap:6px}.s-sync-records-panel .s-history-heading h2{font-size:14px}}
+
+.studio .s-sync-records-panel .s-history-dots button{height:22px;min-height:22px}.s-sync-records-panel .s-history-dots button::before{inset:-5px -8px}.studio .s-history-title .s-service-symbol{color:var(--sync-success)}
