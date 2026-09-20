@@ -1,0 +1,5 @@
+import {test} from 'node:test';import assert from 'node:assert/strict';import {findShallowestFolder} from './webdav-folder.mjs';
+const dirs=(...names)=>names.map(Name=>({Name,IsDir:true}));
+test('top-level name wins without reading deeper directories',async()=>{const calls=[];const found=await findShallowestFolder('UP Studio',async p=>{calls.push(p);return dirs('parent','UP Studio')});assert.equal(found,'UP Studio');assert.deepEqual(calls,['']);});
+test('find nested name level by level and reject equal-depth ambiguity',async()=>{const tree={'':dirs('a','b'),a:dirs('UP Studio'),b:dirs('other')};assert.equal(await findShallowestFolder('UP Studio',async p=>tree[p]??[]),'a/UP Studio');tree.b=dirs('UP Studio');await assert.rejects(()=>findShallowestFolder('UP Studio',async p=>tree[p]??[]),/多个同名/);});
+test('missing and traversal entries cannot select a fallback directory',async()=>{await assert.rejects(()=>findShallowestFolder('missing',async()=>[]),/未找到/);await assert.rejects(()=>findShallowestFolder('x',async()=>dirs('../x')),/无效/);});

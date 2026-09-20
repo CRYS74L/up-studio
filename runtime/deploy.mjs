@@ -26,7 +26,7 @@ const id=new Date().toISOString().replace(/[:.]/g,'-'); const release=path.join(
 fs.copyFileSync(path.join(project,'dist/up_studio/index.js'),path.join(release,'worker.mjs'));
 function copyTree(source,target){fs.mkdirSync(target,{recursive:true});for(const entry of fs.readdirSync(source,{withFileTypes:true})){const from=path.join(source,entry.name),to=path.join(target,entry.name);if(entry.isDirectory())copyTree(from,to);else if(entry.isFile())fs.copyFileSync(from,to);}}
 copyTree(path.join(project,'dist/client'),path.join(release,'client'));
-for(const file of ['server.mjs','d1.mjs','launch.ps1','cloud-backups.mjs','cloud-backup-tools.mjs','cloud-backup-data.mjs'])fs.copyFileSync(path.join(project,'runtime',file),path.join(root,file));
+for(const file of ['server.mjs','d1.mjs','launch.ps1','cloud-backups.mjs','cloud-backup-tools.mjs','cloud-backup-data.mjs','webdav-folder.mjs'])fs.copyFileSync(path.join(project,'runtime',file),path.join(root,file));
 fs.writeFileSync(path.join(root,'snapshot-storage.mjs'),stripTypeScriptTypes(fs.readFileSync(path.join(project,'shared/snapshot-storage.ts'),'utf8')));
 fs.writeFileSync(path.join(root,'backup-schema.json'),JSON.stringify(fs.readdirSync(path.join(project,'migrations')).filter(name=>name.endsWith('.sql'))));
 const csc=path.join(process.env.SystemRoot,'Microsoft.NET','Framework64','v4.0.30319','csc.exe');

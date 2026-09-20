@@ -29,6 +29,9 @@ export function Sources({sync}:{sync:ReturnType<typeof useSync>}){
     }
     const value=Math.ceil(height)+'px';if(root.style.getPropertyValue('--backup-history-height')!==value)root.style.setProperty('--backup-history-height',value);
     const space=Math.max(0,Math.ceil(height)-backupHeight).toFixed(3)+'px';if(root.style.getPropertyValue('--backup-action-space')!==space)root.style.setProperty('--backup-action-space',space);
+    const panel=root.querySelector<HTMLElement>('.s-sync-records-panel'),plot=panel?.querySelector('.s-sync-plot'),dot=panel?.querySelector('.s-history-dots button span');
+    if(panel&&plot&&dot){const old=parseFloat(root.style.getPropertyValue('--history-dot-offset'))||0,point=dot.getBoundingClientRect(),bottom=panel.getBoundingClientRect().bottom-parseFloat(getComputedStyle(panel).borderBottomWidth),middle=(plot.getBoundingClientRect().bottom+bottom)/2;const offset=(middle-(point.top+point.height/2-old)).toFixed(3)+'px';if(root.style.getPropertyValue('--history-dot-offset')!==offset)root.style.setProperty('--history-dot-offset',offset);}
+
 
    };
    const schedule=()=>{if(!frame)frame=requestAnimationFrame(measure)};

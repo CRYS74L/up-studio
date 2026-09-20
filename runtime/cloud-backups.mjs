@@ -1,3 +1,4 @@
+import {resolveBackupFolder} from './webdav-folder.mjs';
 import fs from 'node:fs';import path from 'node:path';import {randomUUID} from 'node:crypto';
 import {BackupVault,toolsFor,runTool,runRestic,withRemote,validateProfile,ensureRepository} from './cloud-backup-tools.mjs';import {fileHash,validateBackup} from './cloud-backup-data.mjs';
 const snapshotPattern=/^[a-f0-9]{64}$/;
@@ -8,8 +9,9 @@ export class CloudBackups{
  requireTools(){if(!this.available)throw Error('备份工具尚未准备好，请安装 rclone 和 restic');}
  requireIdle(){if(this.remoteBusy||this.job?.status==='running')throw Error('正在执行备份或恢复，请等待当前操作完成');}
  profile(id){const p=this.vault.read().profiles.find(p=>p.id===id);if(!p||p.provider!=='webdav')throw Error('WebDAV 云盘连接不存在');return p;}
- async save(input){await this.ready;this.requireTools();this.requireIdle();this.remoteBusy=true;try{const clean=validateProfile(input),profile={...clean,id:input.id||randomUUID()};if(input.id&&!this.vault.read().profiles.some(p=>p.id===input.id))throw Error('云盘连接不存在');
+ async save(input){await this.ready;this.requireTools();this.requireIdle();this.remoteBusy=true;try{const clean=validateProfile(input);let profile={...clean,id:input.id||randomUUID()};if(input.id&&!this.vault.read().profiles.some(p=>p.id===input.id))throw Error('云盘连接不存在');
 
+ profile=await resolveBackupFolder(this.tools,this.vault,profile);
  await withRemote(this.tools,this.vault,profile,env=>ensureRepository(this.tools,env));const state=this.vault.read();state.profiles=state.profiles.filter(p=>p.id!==profile.id);state.profiles.push(profile);this.vault.write(state);return{ok:true,profile:this.publicProfile(profile)};}finally{this.remoteBusy=false;}}
  disconnect(id){this.requireIdle();const state=this.vault.read();state.profiles=state.profiles.filter(p=>p.id!==id);this.vault.write(state);return{ok:true};}
  work(){return fs.mkdtempSync(path.join(this.vault.dir,'work-'))}
