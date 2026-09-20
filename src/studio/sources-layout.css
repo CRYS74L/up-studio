@@ -57,4 +57,14 @@
 
 .studio .s-sources{align-items:start}.s-sync-records-panel .s-sync-history{height:auto;display:flex;flex-direction:column}.s-sync-records-panel .s-sync-plot{margin-block:0}.s-sync-records-panel .s-history-dots{padding-top:18px}
 
-.studio .s-connection .s-account-row[data-active=true] .s-account-logout{background:transparent}.studio .s-connection .s-account-row[data-active=true] .s-account-logout:hover:not(:disabled){background:var(--surface);border-color:var(--muted)}
+.studio .s-connection .s-account-row[data-active=true] .s-account-logout{background:transparent}
+
+/* Both cards share their grid row height; their content keeps its natural spacing. */
+.studio .s-sources>.s-backup-panel,.studio .s-sources>.s-sync-records-panel{align-self:stretch;min-height:var(--backup-history-height,0px)}
+.s-history-title{display:flex;align-items:center;gap:14px;white-space:nowrap}
+.studio .s-history-title .s-service-symbol{width:44px;height:44px;flex:0 0 44px;border-radius:50%}
+.studio .s-history-title .s-service-symbol svg{width:50%;height:50%}
+.studio .s-connection .s-account-logout{transition:background-color 240ms var(--ease-out),border-color 240ms var(--ease-out),color 240ms var(--ease-out)}
+.studio .s-connection .s-account-row .s-account-logout:hover:not(:disabled){background:color-mix(in srgb,var(--muted) 10%,transparent);border-color:var(--line);color:var(--text)}
+@media(max-width:500px){.studio .s-history-title .s-service-symbol{width:32px;height:32px;flex-basis:32px}.s-history-title{gap:8px}}
+@container(max-width:360px){.s-sync-records-panel .s-history-title{gap:6px}.s-sync-records-panel .s-history-heading h2{font-size:14px}}
