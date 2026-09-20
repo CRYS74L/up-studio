@@ -90,6 +90,6 @@
  .studio .s-sources>.s-two-col>.s-connection,.studio .s-sources>.s-two-col>.s-local-service{height:304px;box-sizing:border-box;min-height:0;overflow:hidden}
  .studio .s-sources>.s-backup-panel,.studio .s-sources>.s-sync-records-panel{height:160px;box-sizing:border-box;min-height:0}
  .studio .s-connection{display:flex;flex-direction:column}.studio .s-connection .s-accounts-toolbar{flex:none}.studio .s-connection .s-account-list{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin}.studio .s-connection .s-account-row{flex-shrink:0}
- .s-sync-records-panel .s-sync-history{height:100%}.s-sync-records-panel .s-history-dots{translate:none;flex:1;min-height:22px;margin-block:0;padding:0;align-content:center;align-items:center}
+ .s-sync-records-panel .s-sync-history{height:100%}.s-sync-records-panel .s-history-dots{translate:none;flex:1;min-height:22px;margin-top:0;margin-bottom:-24px;padding:0;align-content:center;align-items:center}
 }
 @media(min-width:1051px){.studio .s-connection .s-connection-accounts{display:flex;flex-direction:column;flex:1;min-height:0}}
