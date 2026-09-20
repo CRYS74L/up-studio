@@ -2,17 +2,57 @@ import fs from 'node:fs';import path from 'node:path';import {DatabaseSync,backu
 const quote=value=>'"'+value.replaceAll('"','""')+'"';
 const configKeys=['MASTER_ENCRYPTION_KEY_BASE64','APP_PASSWORD_HASH','INTERNAL_COLLECT_SECRET','DEEPSEEK_API_KEY','DEEPSEEK_MODEL','AI_DAILY_CNY_LIMIT','AI_MONTHLY_CNY_LIMIT','COLLECT_INTERVAL_MINUTES'];
 export function fileHash(file){const hash=createHash('sha256'),fd=fs.openSync(file,'r'),buffer=Buffer.alloc(1024*1024);try{let n;while((n=fs.readSync(fd,buffer,0,buffer.length,null)))hash.update(buffer.subarray(0,n));return hash.digest('hex')}finally{fs.closeSync(fd)}}
-export async function captureBackup(database,file,config,version){await backup(database,file);const db=new DatabaseSync(file);try{db.exec('CREATE TABLE _up_backup_metadata(id INTEGER PRIMARY KEY CHECK(id=1),body TEXT NOT NULL)');const existing=db.prepare("SELECT name FROM sqlite_master WHERE type='table'").all().map(r=>r.name);const schemaMigrations=[...new Set(['runtime_migrations','d1_migrations'].filter(t=>existing.includes(t)).flatMap(t=>db.prepare('SELECT name FROM '+quote(t)).all().map(r=>r.name)))];const recovery=Object.fromEntries(configKeys.filter(k=>config[k]!==undefined).map(k=>[k,config[k]]));db.prepare('INSERT INTO _up_backup_metadata VALUES(1,?)').run(JSON.stringify({format:1,createdAt:new Date().toISOString(),version,schemaMigrations,config:recovery}));}finally{db.close()}return validateBackup(file,false)}
+const statisticsTable=/^(?:up_\d+_)?(?:videos|video_snapshots|video_trend_points|account_snapshots|account_trends|acquisition_runs)$/;
+// Work only on the consistent staging copy. Unknown tables are empty by default.
+export function stripBackupCredentials(db){
+ const tables=db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'").all().map(r=>r.name);
+ db.exec('PRAGMA foreign_keys=OFF;PRAGMA secure_delete=ON;BEGIN');
+ try{
+  for(const table of tables)if(!statisticsTable.test(table)&&!['snapshot_chunks','settings','runtime_migrations','d1_migrations','_up_backup_metadata'].includes(table))db.exec('DELETE FROM '+quote(table));
+  const settings=db.prepare('SELECT key,value_json,updated_at FROM settings').all();db.exec('DELETE FROM settings');
+  const insert=db.prepare('INSERT INTO settings(key,value_json,updated_at) VALUES(?,?,?)');
+  for(const row of settings){
+   if(row.key==='original_account'){const uid=JSON.parse(row.value_json);if(/^\d+$/.test(String(uid)))insert.run(row.key,JSON.stringify(uid),row.updated_at);}
+   else if(/^profile_\d+$/.test(row.key)){const value=JSON.parse(row.value_json);insert.run(row.key,JSON.stringify({uid:String(value.uid),name:String(value.name??''),avatar:String(value.avatar??'')}),row.updated_at);}
+  }
+  // Only chunks referenced by retained statistics belong in this export.
+  db.exec('CREATE TEMP TABLE retained_chunks(hash TEXT PRIMARY KEY)');
+  const keep=db.prepare('INSERT OR IGNORE INTO retained_chunks VALUES(?)');
+  for(const table of tables.filter(t=>statisticsTable.test(t))){
+   const columns=db.prepare('PRAGMA table_info('+quote(table)+')').all().map(r=>r.name).filter(c=>['metrics_json','dimensions_json','source_json'].includes(c));
+   if(!columns.length)continue;
+   for(const row of db.prepare('SELECT '+columns.map(quote).join(',')+' FROM '+quote(table)).iterate())for(const value of Object.values(row)){
+    if(typeof value==='string'&&value.startsWith('{"$snapshot":')){const manifest=JSON.parse(value).$snapshot;if(manifest?.format!=='up-studio-lossless-v1'||!Array.isArray(manifest.chunks))throw Error('快照格式无效');for(const hash of manifest.chunks)keep.run(hash);}
+   }
+  }
+  db.exec('DELETE FROM snapshot_chunks WHERE hash NOT IN (SELECT hash FROM retained_chunks);DROP TABLE retained_chunks;COMMIT;PRAGMA foreign_keys=ON;VACUUM');
+ }catch(error){if(db.isTransaction)db.exec('ROLLBACK');throw error;}
+}
+export async function captureBackup(database,file,_config,version){
+ await backup(database,file);const db=new DatabaseSync(file);
+ try{
+  stripBackupCredentials(db);
+  db.exec('CREATE TABLE _up_backup_metadata(id INTEGER PRIMARY KEY CHECK(id=1),body TEXT NOT NULL)');
+  const existing=db.prepare("SELECT name FROM sqlite_master WHERE type='table'").all().map(r=>r.name);
+  const schemaMigrations=[...new Set(['runtime_migrations','d1_migrations'].filter(t=>existing.includes(t)).flatMap(t=>db.prepare('SELECT name FROM '+quote(t)).all().map(r=>r.name)))];
+  db.prepare('INSERT INTO _up_backup_metadata VALUES(1,?)').run(JSON.stringify({format:1,scope:'statistics',createdAt:new Date().toISOString(),version,schemaMigrations,config:{}}));
+ }finally{db.close()}return validateBackup(file,false)
+}
 export async function validateBackup(file,prepareRestore=true){
  const codec=await import(fs.existsSync(new URL('./snapshot-storage.mjs',import.meta.url))?'./snapshot-storage.mjs':'../shared/snapshot-storage.ts');
  const db=new DatabaseSync(file,{readOnly:!prepareRestore});try{
  if(Object.values(db.prepare('PRAGMA integrity_check').get())[0]!=='ok'||db.prepare('PRAGMA foreign_key_check').all().length)throw Error('备份数据库完整性校验失败');
  const metadata=db.prepare('SELECT body FROM _up_backup_metadata WHERE id=1').get();if(!metadata)throw Error('不是 UP Studio 数据备份');const info=JSON.parse(metadata.body);if(info.format!==1)throw Error('备份版本不兼容');const supported=fs.existsSync(new URL('./backup-schema.json',import.meta.url))?JSON.parse(fs.readFileSync(new URL('./backup-schema.json',import.meta.url),'utf8')):fs.readdirSync(new URL('../migrations/',import.meta.url));if((info.schemaMigrations??[]).some(name=>!supported.includes(name)))throw Error('备份来自较新的数据库版本，请先升级程序');
+ if(info.scope==='statistics'&&Object.keys(info.config??{}).length)throw Error('统计备份不应包含服务配置');
  const key=info.config?.MASTER_ENCRYPTION_KEY_BASE64;if(key&&Buffer.from(key,'base64').length!==32)throw Error('备份中的恢复密钥无效');
  const tables=db.prepare("SELECT name FROM sqlite_master WHERE type='table'").all().map(r=>r.name);for(const table of ['videos','video_snapshots','account_snapshots','settings','encrypted_secrets','snapshot_chunks'])if(!tables.includes(table))throw Error('备份缺少必要的数据表');
  const prepare=(sql,args=[])=>({bind:(...next)=>prepare(sql,next),all:async()=>({results:db.prepare(sql).all(...args)})});const adapter={prepare};
  let checked=0;for(const row of db.prepare('SELECT hash,codec,raw_bytes,body FROM snapshot_chunks').iterate()){await codec.decodeChunk(row);if(++checked%128===0)await new Promise(resolve=>setImmediate(resolve));}
  for(const name of tables.filter(n=>/(^|_)(video_snapshots|account_snapshots)$/.test(n))){let cursor=0;const fields=name.endsWith('video_snapshots')?'metrics_json,dimensions_json':'source_json';while(true){const rows=db.prepare('SELECT rowid AS cursor,'+fields+' FROM '+quote(name)+' WHERE rowid>? ORDER BY rowid LIMIT 40').all(cursor);if(!rows.length)break;await codec.unpackRows(adapter,rows);cursor=rows.at(-1).cursor;await new Promise(resolve=>setImmediate(resolve));}}
+ if(info.scope==='statistics'){
+  for(const table of tables)if(!statisticsTable.test(table)&&!['snapshot_chunks','settings','runtime_migrations','d1_migrations','_up_backup_metadata','sqlite_sequence'].includes(table)&&db.prepare('SELECT COUNT(*) n FROM '+quote(table)).get().n)throw Error('统计备份包含范围外数据');
+  for(const row of db.prepare('SELECT key,value_json FROM settings').all())if(row.key!=='original_account'&&!/^profile_\d+$/.test(row.key))throw Error('统计备份包含范围外设置');
+ }
  const secrets=db.prepare('SELECT ciphertext,iv,algorithm FROM encrypted_secrets').all();if(secrets.length&&!key)throw Error('备份缺少凭据恢复密钥');for(const secret of secrets){try{if(secret.algorithm!=='AES-GCM')throw Error('algorithm');const body=Buffer.from(secret.ciphertext,'base64'),decipher=createDecipheriv('aes-256-gcm',Buffer.from(key,'base64'),Buffer.from(secret.iv,'base64'));decipher.setAuthTag(body.subarray(-16));JSON.parse(Buffer.concat([decipher.update(body.subarray(0,-16)),decipher.final()]).toString('utf8'));}catch{throw Error('备份登录凭据与恢复密钥不匹配');}}
  const count=regex=>tables.filter(n=>regex.test(n)).reduce((n,t)=>n+Number(db.prepare('SELECT COUNT(*) n FROM '+quote(t)).get().n),0);
  const summary={createdAt:info.createdAt,version:info.version,accounts:tables.filter(n=>/(^|_)videos$/.test(n)&&!n.endsWith('snapshots')).length,videos:count(/(^|_)videos$/),snapshots:count(/(^|_)video_snapshots$/),conversations:count(/^ai_conversations$/),bytes:fs.statSync(file).size};
