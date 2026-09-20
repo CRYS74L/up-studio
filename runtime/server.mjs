@@ -55,6 +55,11 @@ const server=http.createServer(async(req,res)=>{
     if(!allowedHosts.has(req.headers.host) || (req.headers.origin && !['http://localhost:'+port,'http://127.0.0.1:'+port].includes(req.headers.origin))) {res.writeHead(403);res.end('Local origin required');return;}
     const url=new URL(req.url,'http://localhost:'+port);
     if(url.pathname==='/api/local/status') {res.writeHead(200,{'Content-Type':'application/json','Cache-Control':'no-store'});res.end(JSON.stringify({ok:true,pid:process.pid,supervisorPid:Number(process.env.BILIBILI_SUPERVISOR_PID)||null,version:current.version,uptime:Math.floor((Date.now()-started)/1000),autoCollect:intervalMinutes>0,intervalMinutes,collecting,lastCollection,recoveryOnly:!db,backupBusy:cloudBackups.job?.status==='running',runtime:'standalone-node',release:current.id}));return;}
+    if(url.pathname==='/api/backups/google/callback'&&req.method==='GET'){
+     let ok=false;try{await cloudBackups.googleCallback(url);ok=true;}catch{}
+     res.writeHead(ok?200:400,{'Content-Type':'text/html; charset=utf-8','Cache-Control':'no-store','Referrer-Policy':'no-referrer','Content-Security-Policy':"default-src 'none'; style-src 'unsafe-inline'"});
+     res.end('<!doctype html><meta charset="utf-8"><title>UP Studio · Google Drive</title><body style="font:16px system-ui;padding:48px"><h1>'+ (ok?'授权成功':'授权未完成')+'</h1><p>'+(ok?'请返回 UP Studio 完成云盘关联。此窗口可以关闭。':'请返回 UP Studio 重新授权。')+'</p>');return;
+    }
     const chunks=[];let size=0;for await(const chunk of req){size+=chunk.length;if(size>5_000_000){res.writeHead(413);res.end();return;}chunks.push(chunk);}
     if(url.pathname.startsWith('/api/backups/')){try{const body=chunks.length?JSON.parse(Buffer.concat(chunks).toString('utf8')):{};const result=await cloudBackups.handle(url,req.method,body);res.writeHead(200,{'Content-Type':'application/json','Cache-Control':'no-store'});res.end(JSON.stringify(result));}catch(error){res.writeHead(400,{'Content-Type':'application/json','Cache-Control':'no-store'});res.end(JSON.stringify({ok:false,error:{message:error.message||'备份操作失败'}}));}return;}
     if(url.pathname.startsWith('/api/')&&(!db||maintenance)){res.writeHead(503,{'Content-Type':'application/json'});res.end(JSON.stringify({ok:false,error:{message:maintenance?'正在恢复数据，请稍候':'数据库不可用，请在数据源的数据备份板块恢复'}}));return;}

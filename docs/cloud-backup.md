@@ -10,8 +10,7 @@
 
 ## 关联
 
-- Google Drive：点击授权后自动进入 Google 页面，在浏览器完成同意流程；指定专用文件夹的链接或 ID。授权入口使用 rclone 自带的 Google 连接器，不会自动打开系统默认浏览器。
-- 远程服务：本机回环授权不适用于未转发授权端口的远程服务器，可在有浏览器的电脑运行 `rclone authorize drive`，在高级选项导入返回的 JSON。令牌只加密保存在服务端，不会出现在状态接口。
+- Google Drive：使用 UP Studio 自己的 OAuth Web 应用，直接进入 Google 同意页，仅请求 `drive.file`。自动在根目录创建并按应用标记复用 `UP Studio` 文件夹；不会接管无标记的同名文件夹，不会擅自合并多个备份文件夹。
 - WebDAV：填写服务地址、账号、密码，以及相对于该地址的专用文件夹。123 云盘需先由用户配置可读写的 WebDAV 挂载服务。本工具不获取或绕过 123 云盘账号授权。
 - 初次关联使用已创建的空文件夹；也可关联已有的免密码统计备份仓库。不会覆盖不属于备份仓库的已有文件。
 - 云盘操作固定以所选 Google folder ID / WebDAV 路径为根，不允许 `..`、绝对路径或编码分隔符逃逸。备份数据和 restic 的索引、锁、密钥等文件都在指定文件夹内部。
@@ -58,3 +57,13 @@ restic 仓库格式 2 使用无损压缩和内容寻址去重，多次备份复�
 真实 Google Drive / 123 云盘的网络权限、服务限额及账号授权必须在用户关联后验证；本次没有登录用户云盘或上传真实业务数据。
 
 参考：[restic](https://restic.net/)、[rclone Google Drive](https://rclone.org/drive/)、[rclone WebDAV](https://rclone.org/webdav/)。
+
+## Google OAuth 部署配置
+
+在 Google Cloud 创建项目，启用 Google Drive API，配置应用名称 UP Studio 和 OAuth 同意屏幕；创建“Web 应用”类型 OAuth 客户端。开发阶段将使用账号加入测试用户。
+
+本地授权回调地址必须填写：`http://localhost:5173/api/backups/google/callback`。下载该客户端 JSON，保存为运行目录 `.local-runtime/google-oauth.json`。程序读取 `web.client_id`、`web.client_secret`、`web.redirect_uris`，此文件不得提交 Git。配置会在开始授权时重新读取，无需重启。
+
+远程 Node 部署填写对应 HTTPS 域名的同一路径，并配置服务入口与访问控制；当前本地服务仍仅接受 localhost，不因 OAuth 改动开放公网。授权码直接由服务与 Google 交换，使用随机 state、PKCE、一次性回调和十分钟过期。用于后台续期的凭据加密保存在独立连接配置中，不进入统计备份。
+
+尚未配置凭据时，Google 入口明确显示待部署者配置，不回退到 rclone 的第三方应用身份。rclone 仅作为本机传输工具，使用 UP Studio 的 Client ID、Client Secret、令牌和固定目录 ID。
