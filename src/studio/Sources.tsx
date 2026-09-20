@@ -6,7 +6,7 @@ import {AccountSettings} from './Account';
 import {SyncHistory} from './SyncHistory';
 import {Select} from './Select';
 import {SyncButton} from './SyncButton';
-import {useEffect,useLayoutEffect,useRef,useState} from 'react';
+import {useEffect,useState} from 'react';
 import {useQuery,useQueryClient,useMutation,keepPreviousData} from '@tanstack/react-query';
 import QRCode from 'qrcode';
 import {CheckCircle2,Clock3,Database,RefreshCw,Server,ShieldCheck,Unplug,Link2,ChevronDown} from 'lucide-react';
@@ -19,26 +19,6 @@ export type LocalStatus={ok:boolean;pid:number;version:string;uptime:number;auto
 export function uptimeLabel(seconds:number){const minutes=Math.floor(seconds/60);return minutes>=60?`${Math.floor(minutes/60)} 小时 ${minutes%60} 分钟`:`${minutes} 分钟`;}
 const runNames:Record<string,string>={success:'采集完成',partial:'部分完成',failed:'采集失败',running:'正在采集'};
 export function Sources({sync}:{sync:ReturnType<typeof useSync>}){
-  const cardsRoot=useRef<HTMLDivElement>(null);
-  useLayoutEffect(()=>{
-   const root=cardsRoot.current!;let frame=0;
-   const measure=()=>{frame=0;const cards=[...root.querySelectorAll<HTMLElement>(':scope>.s-backup-panel,:scope>.s-sync-records-panel')];let height=0,backupHeight=0;const previousSpace=parseFloat(root.style.getPropertyValue('--backup-action-space'))||0;
-    for(const card of cards){const top=card.getBoundingClientRect().top,style=getComputedStyle(card);let bottom=top+parseFloat(style.borderTopWidth)+parseFloat(style.paddingTop);
-     for(const child of card.children){const childStyle=getComputedStyle(child);if(['fixed','absolute'].includes(childStyle.position))continue;const r=child.getBoundingClientRect();if(r.height)bottom=Math.max(bottom,r.bottom+parseFloat(childStyle.marginBottom||'0'));}
-     let natural=bottom-top+parseFloat(style.paddingBottom)+parseFloat(style.borderBottomWidth);if(card.classList.contains('s-backup-panel')){natural-=previousSpace;backupHeight=natural;}height=Math.max(height,natural);
-    }
-    const value=Math.ceil(height)+'px';if(root.style.getPropertyValue('--backup-history-height')!==value)root.style.setProperty('--backup-history-height',value);
-    const space=Math.max(0,Math.ceil(height)-backupHeight).toFixed(3)+'px';if(root.style.getPropertyValue('--backup-action-space')!==space)root.style.setProperty('--backup-action-space',space);
-    const panel=root.querySelector<HTMLElement>('.s-sync-records-panel'),plot=panel?.querySelector('.s-sync-plot'),dot=panel?.querySelector('.s-history-dots button span');
-    if(panel&&plot&&dot){const old=parseFloat(root.style.getPropertyValue('--history-dot-offset'))||0,point=dot.getBoundingClientRect(),bottom=panel.getBoundingClientRect().bottom-parseFloat(getComputedStyle(panel).borderBottomWidth),middle=(plot.getBoundingClientRect().bottom+bottom)/2;const offset=(middle-(point.top+point.height/2-old)).toFixed(3)+'px';if(root.style.getPropertyValue('--history-dot-offset')!==offset)root.style.setProperty('--history-dot-offset',offset);}
-
-
-   };
-   const schedule=()=>{if(!frame)frame=requestAnimationFrame(measure)};
-   const resize=new ResizeObserver(schedule);const observe=()=>{resize.disconnect();root.querySelectorAll(':scope>.s-backup-panel,:scope>.s-sync-records-panel').forEach(card=>{resize.observe(card);[...card.children].forEach(child=>resize.observe(child))});schedule()};
-   const changes=new MutationObserver(observe);changes.observe(root,{childList:true,subtree:true});observe();
-   return()=>{resize.disconnect();changes.disconnect();cancelAnimationFrame(frame)};
-  },[]);
   const client=useQueryClient();const {summary}=useDashboardData();
   const connection=useQuery({queryKey:['bili-status'],queryFn:()=>request<any>('/api/bilibili/status'),refetchInterval:15000});
   const local=useQuery({queryKey:['local-status'],queryFn:()=>request<LocalStatus>('/api/local/status'),retry:false,refetchInterval:15000});
@@ -54,7 +34,7 @@ export function Sources({sync}:{sync:ReturnType<typeof useSync>}){
   useEffect(()=>{if(location.hash.includes('connect=1'))void start();},[]);
   const runtime=local.error?undefined:local.data;
   const details=summary?.acquisition?.details;const total=details?.totalVideos??0;const connected=connection.data?.connected;const sessionBad=connection.data?.lastRun?.error_code==='session_expired';
-  return <div ref={cardsRoot} className="s-sources" data-page-pending={connection.isPending||local.isPending||history.isPending}><div className="s-two-col">
+  return <div className="s-sources" data-page-pending={connection.isPending||local.isPending||history.isPending}><div className="s-two-col">
    <section className="s-panel s-connection"><div className="s-connection-accounts"><AccountSettings/></div></section>
    <section className="s-panel s-local-service"><header className="s-source-heading"><span className="s-service-symbol blue"><RefreshCw/></span><div><h2>数据更新</h2></div><span className={`s-state ${connected&&!sessionBad?'ok':'warning'}`}>{connection.isPending?'读取中':connected&&!sessionBad?'已运行 '+(runtime?uptimeLabel(runtime.uptime):'—'):'断开连接'}</span></header>
     <div className="s-update-summary"><div><strong><SyncFreshness capturedAt={summary?.summary.fresh} fallback={summary?.freshnessMinutes}/></strong><small>本轮同步 {total} 篇稿件</small></div>{connected&&!sessionBad?<div className="s-sync-actions"><button className="s-text" onClick={()=>setConfirm(true)}>断开连接</button><button className="s-primary" disabled={sync.isPending} onClick={()=>sync.mutate()}><RefreshCw className={sync.isPending?'spin':''}/>{sync.isPending?'正在同步':'立即同步'}</button></div>:<button className="s-primary" disabled={starting} onClick={start}><Link2/>{starting?'生成二维码…':'扫码连接'}</button>}</div>

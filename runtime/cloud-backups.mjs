@@ -4,14 +4,18 @@ import {BackupVault,toolsFor,runTool,runRestic,withRemote,validateProfile,ensure
 const snapshotPattern=/^[a-f0-9]{64}$/;
 export class CloudBackups{
  constructor({root,capture,install,healthy=()=>true,version='unknown'}){this.root=root;this.capture=capture;this.install=install;this.healthy=healthy;this.version=version;this.vault=new BackupVault(root);this.tools=toolsFor(root);this.job=null;this.restore=null;this.available=false;this.ready=Promise.all([runTool(this.tools.rclone,['version'],{timeout:15000}),runRestic(this.tools.restic,['version'],{timeout:15000})]).then(()=>{this.available=true}).catch(()=>{});}
- publicProfile(p){return{id:p.id,provider:p.provider,label:'WebDAV',folder:p.folder,endpoint:p.endpoint,autoHours:p.autoHours,lastBackup:p.lastBackup??null,lastAttempt:p.lastAttempt??null}}
+ publicProfile(p){return{id:p.id,provider:p.provider,label:'WebDAV',folder:p.folder,endpoint:p.endpoint,username:p.username,autoHours:p.autoHours,lastBackup:p.lastBackup??null,lastAttempt:p.lastAttempt??null}}
  async status(){await this.ready;return{ok:true,available:this.available,recoveryOnly:!this.healthy(),profiles:this.vault.read().profiles.filter(p=>p.provider==='webdav').map(p=>this.publicProfile(p)),job:this.job}}
  requireTools(){if(!this.available)throw Error('备份工具尚未准备好，请安装 rclone 和 restic');}
  requireIdle(){if(this.remoteBusy||this.job?.status==='running')throw Error('正在执行备份或恢复，请等待当前操作完成');}
  profile(id){const p=this.vault.read().profiles.find(p=>p.id===id);if(!p||p.provider!=='webdav')throw Error('WebDAV 云盘连接不存在');return p;}
- async save(input){await this.ready;this.requireTools();this.requireIdle();this.remoteBusy=true;try{const clean=validateProfile(input);let profile={...clean,id:input.id||randomUUID()};if(input.id&&!this.vault.read().profiles.some(p=>p.id===input.id))throw Error('云盘连接不存在');
+ async save(input){await this.ready;this.requireTools();this.requireIdle();this.remoteBusy=true;try{const previous=input.id?this.profile(input.id):null;
+ if(previous&&!input.davPassword&&(input.endpoint!==previous.endpoint||input.username!==previous.username))throw Error('更改服务地址或用户名时，请重新填写密码');
+ const clean=validateProfile({...input,davPassword:input.davPassword||(previous?.davPassword??'')});let profile={...clean,id:previous?.id||randomUUID()};
+ const sameDestination=previous&&clean.endpoint===previous.endpoint&&clean.folder===previous.folder;
+ if(sameDestination)Object.assign(profile,{rootUrl:previous.rootUrl,password:previous.password,lastBackup:previous.lastBackup,lastAttempt:previous.lastAttempt});
 
- profile=await resolveBackupFolder(this.tools,this.vault,profile);
+ if(!sameDestination)profile=await resolveBackupFolder(this.tools,this.vault,profile);
  await withRemote(this.tools,this.vault,profile,env=>ensureRepository(this.tools,env));const state=this.vault.read();state.profiles=state.profiles.filter(p=>p.id!==profile.id);state.profiles.push(profile);this.vault.write(state);return{ok:true,profile:this.publicProfile(profile)};}finally{this.remoteBusy=false;}}
  disconnect(id){this.requireIdle();const state=this.vault.read();state.profiles=state.profiles.filter(p=>p.id!==id);this.vault.write(state);return{ok:true};}
  work(){return fs.mkdtempSync(path.join(this.vault.dir,'work-'))}
