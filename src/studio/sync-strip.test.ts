@@ -5,9 +5,9 @@ it('fills wide strips with real records instead of stopping at ninety cells',()=
  expect(layout.offset).toBe(0);expect((layout.capacity-1)*layout.step+5).toBeCloseTo(936);
  expect(syncSlots(936,361,0)).toEqual(layout);
 });
-it('keeps limited historical records at the latest end without inventing cells',()=>{
+it('centers a complete day without changing cell widths or spacing',()=>{
  const layout=syncSlots(300,3,0);expect(layout.count).toBe(3);
- expect(layout.offset+2*layout.step+5).toBeCloseTo(300);
+ expect(layout.offset).toBeCloseTo(300-(layout.offset+2*layout.step+5));expect(layout.step).toBeLessThan(8);
 });
 it('moves one slot for one completion and ignores status-only or unrelated changes',()=>{
  expect(incomingSlots(['a','b','c'],['b','c','d'])).toBe(1);

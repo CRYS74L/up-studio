@@ -12,6 +12,7 @@ const names:Record<string,string>={success:'同步完成',partial:'部分完成'
 export function SyncHistory({runs,day,today,firstDay,onDayChange,loading=false,error=false}:{runs:any[];day:string;today:string;firstDay:string|null;onDayChange:(day:string)=>void;loading?:boolean;error?:boolean}){
  const plot=useRef<HTMLDivElement>(null),[width,setWidth]=useState(668),[pagination,setPagination]=useState({day,page:0}),[selected,setSelected]=useState(''),[hover,setHover]=useState<{run:any;x:number}|null>(null);
  useLayoutEffect(()=>{const el=plot.current!;const observer=new ResizeObserver(()=>setWidth(el.clientWidth));setWidth(el.clientWidth);observer.observe(el);return()=>observer.disconnect()},[]);
+ useLayoutEffect(()=>{setPagination({day,page:0});setSelected('');setHover(null)},[day]);
  const page=pagination.day===day?pagination.page:0,setPage=(page:number)=>setPagination({day,page});
  const complete=runs;
  const {capacity:count,pages,current,step,offset}=syncSlots(width,complete.length,page);
@@ -26,9 +27,10 @@ export function SyncHistory({runs,day,today,firstDay,onDayChange,loading=false,e
   }
   if(!before||current!==0||before.page!==0||before.width!==width||matchMedia('(prefers-reduced-motion: reduce)').matches)return;
   const added=incomingSlots(before.ids,ids),svg=plot.current?.querySelector('svg'),group=svg?.querySelector('g');if(!added||!svg||!group)return;
-  const distance=added*step,timing={duration:520,easing:'cubic-bezier(.18,.85,.22,1)'};
+  const oldLast=before.ids.length-1,newLast=ids.indexOf(before.ids[oldLast]);
+  const distance=before.offset+oldLast*before.step-(offset+newLast*step),timing={duration:520,easing:'cubic-bezier(.18,.85,.22,1)'};
   const animations=[group.animate([{transform:`translateX(${distance}px)`},{transform:'translateX(0)'}],timing)],ghosts:SVGRectElement[]=[];
-  before.runs.filter(r=>!ids.includes(r.id)).forEach((r,i)=>{const ghost=document.createElementNS('http://www.w3.org/2000/svg','rect');for(const [name,value] of Object.entries({x:String(i*step),y:'0',width:'5',height:'16',rx:'1','pointer-events':'none','aria-hidden':'true','data-status':r.status}))ghost.setAttribute(name,value);svg.append(ghost);ghosts.push(ghost);animations.push(ghost.animate([{transform:'translateX(0)'},{transform:`translateX(${-distance}px)`}],timing));});
+  before.runs.filter(r=>!ids.includes(r.id)).forEach((r,i)=>{const ghost=document.createElementNS('http://www.w3.org/2000/svg','rect');for(const [name,value] of Object.entries({x:String(before.offset+i*before.step),y:'0',width:'5',height:'16',rx:'1','pointer-events':'none','aria-hidden':'true','data-status':r.status}))ghost.setAttribute(name,value);svg.append(ghost);ghosts.push(ghost);animations.push(ghost.animate([{transform:'translateX(0)'},{transform:`translateX(${-distance}px)`}],timing));});
   [...group.querySelectorAll('rect')].slice(-added).forEach(rect=>animations.push(rect.animate([{opacity:0},{opacity:1}],{duration:440,easing:'cubic-bezier(.18,.85,.22,1)'})));
   const clean=()=>{animations.forEach(a=>a.cancel());ghosts.forEach(g=>g.remove())};stop.current=clean;
   void Promise.allSettled(animations.map(a=>a.finished)).then(()=>{if(stop.current===clean){clean();stop.current=null;}});
