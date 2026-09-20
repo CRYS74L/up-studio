@@ -29,12 +29,12 @@ export function BackupPanel(){
  </section>;
 }
 function ConnectBackup({close,done}:{close:()=>void;done:(id:string)=>void}){
- const [endpoint,setEndpoint]=useState(''),[folder,setFolder]=useState(''),[username,setUsername]=useState(''),[davPassword,setDavPassword]=useState(''),[autoHours,setAutoHours]=useState(0);
+ const [endpoint,setEndpoint]=useState(''),[folder,setFolder]=useState('/'),[username,setUsername]=useState(''),[davPassword,setDavPassword]=useState(''),[autoHours,setAutoHours]=useState(0);
  const connect=useMutation({mutationFn:()=>post('/api/backups/connections',{provider:'webdav',endpoint,folder,username,davPassword,autoHours}),onSuccess:result=>done(result.profile.id)});
  return <Sheet title="关联到 WebDAV" close={()=>{if(!connect.isPending)close()}} footer={<><button className="s-secondary" disabled={connect.isPending} onClick={close}>取消</button><button className="s-primary" disabled={connect.isPending||!endpoint||!username||!davPassword||!folder} onClick={()=>connect.mutate()}>{connect.isPending?'正在连接并检查':'关联到 WebDAV'}</button></>}>
  <label className="s-backup-field">WebDAV 服务地址<input value={endpoint} onChange={e=>setEndpoint(e.target.value)} placeholder="https://dav.example.com/dav/" autoComplete="url"/></label>
  <div className="s-backup-form-row"><label className="s-backup-field">用户名<input value={username} onChange={e=>setUsername(e.target.value)} autoComplete="off"/></label><label className="s-backup-field">WebDAV 密码<input type="password" value={davPassword} onChange={e=>setDavPassword(e.target.value)} autoComplete="new-password"/></label></div>
- <label className="s-backup-field">目标文件夹路径<input value={folder} onChange={e=>setFolder(e.target.value)} placeholder="例如：备份/UP Studio" autoComplete="off"/><small>相对于 WebDAV 地址，请使用专用文件夹。</small></label>
+ <label className="s-backup-field">目标文件夹路径<input value={folder} onChange={e=>setFolder(e.target.value)} placeholder="/ 或子文件夹路径" autoComplete="off"/><small>路径相对于 WebDAV 授权根目录。如果云盘已将授权限定到 UP Studio 文件夹，请填写 /；填写 UP Studio 会访问其下的同名子文件夹。</small></label>
  <label className="s-backup-field">备份频率<Select aria-label="云盘备份频率" value={autoHours} onChange={e=>setAutoHours(Number(e.target.value))}><option value={0}>仅手动备份</option><option value={24}>每天自动备份</option></Select></label>{connect.error&&<p className="s-error" role="alert">{connect.error.message}</p>}
  </Sheet>;
 }
