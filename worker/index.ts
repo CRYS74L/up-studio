@@ -1,3 +1,5 @@
+import {acquisitionHistory} from './acquisition-history';
+import {syncDay,syncDayBounds} from '../shared/sync-days';
 import {registerVideoDetail} from './video-detail';
 import {registerAi,aiModel,aiEffort,AI_MODELS} from './ai-analysis';
 import {registerChat} from './ai-chat';
@@ -187,8 +189,8 @@ app.get('/api/bilibili/status', async (c) => {
 });
 
 app.get('/api/acquisition/runs', async (c) => {
-  const rows = (await c.env.DB.prepare('SELECT id,status,started_at,finished_at,coverage,coverage_json,error_code,timings_json,request_count FROM acquisition_runs ORDER BY started_at DESC LIMIT 360').all()).results;
-  return c.json({ok:true,runs:rows.map((row:any)=>({...row,details:JSON.parse(row.coverage_json||'{}'),timings:JSON.parse(row.timings_json||'{}'),coverage_json:undefined,timings_json:undefined}))});
+ const day=c.req.query('day')||syncDay();if(!syncDayBounds(day))return jsonError(c,400,'invalid_day','日期格式应为 YYYY-MM-DD');
+ return c.json(await acquisitionHistory(c.env.DB,day));
 });
 async function overviewHistory(db:D1Database){
  const rows=(await db.prepare("SELECT captured_at,views,followers_gained,avg_watch_seconds,avg_watch_percent,metrics_json FROM video_snapshots WHERE captured_at IN (SELECT captured_at FROM video_snapshots WHERE source LIKE 'web-data-v%' GROUP BY captured_at ORDER BY captured_at DESC LIMIT 30) ORDER BY captured_at").all()).results as any[];

@@ -1,3 +1,4 @@
+import {syncDay} from '../../shared/sync-days';
 import {SyncFreshness} from './FreshnessAge';
 import './sources-layout.css';
 import {AccountSettings} from './Account';
@@ -21,7 +22,9 @@ export function Sources({sync}:{sync:ReturnType<typeof useSync>}){
   const connection=useQuery({queryKey:['bili-status'],queryFn:()=>request<any>('/api/bilibili/status'),refetchInterval:15000});
   const local=useQuery({queryKey:['local-status'],queryFn:()=>request<LocalStatus>('/api/local/status'),retry:false,refetchInterval:15000});
   const schedule=useMutation({mutationFn:(intervalMinutes:number)=>request('/api/local/schedule',{method:'PUT',body:JSON.stringify({intervalMinutes})}),onSuccess:()=>client.invalidateQueries({queryKey:['local-status']})});
-  const history=useQuery({queryKey:['acquisition-history'],queryFn:()=>request<{runs:any[]}>('/api/acquisition/runs'),refetchInterval:5000});
+  const [historyDay,setHistoryDay]=useState('');
+  const history=useQuery({queryKey:['acquisition-history',historyDay],queryFn:()=>request<{runs:any[];day:string;today:string;firstDay:string|null}>('/api/acquisition/runs'+(historyDay?'?day='+historyDay:'')),refetchInterval:5000});
+  const shownDay=historyDay||history.data?.day||syncDay();
 
   const [qr,setQr]=useState<{key:string;image:string}|null>(null),[qrState,setQrState]=useState('waiting'),[error,setError]=useState(''),[starting,setStarting]=useState(false),[confirm,setConfirm]=useState(false);
   const disconnect=useMutation({mutationFn:()=>request('/api/bilibili/qr/disconnect',{method:'POST'}),onSuccess:async()=>{setConfirm(false);await client.invalidateQueries();}});
@@ -38,7 +41,7 @@ export function Sources({sync}:{sync:ReturnType<typeof useSync>}){
     <div className="s-update-schedule"><div><b>自动更新</b><small>{runtime?.autoCollect?'按计划同步最新的创作数据':'需要时手动同步数据'}</small></div><Select aria-label="自动更新频率" value={runtime?.intervalMinutes??10} onChange={e=>schedule.mutate(Number(e.target.value))}>{[[0,'仅手动更新'],[5,'每5分钟'],[10,'每10分钟'],[15,'每15分钟'],[30,'每30分钟'],[60,'每1小时']].map(([n,label])=><option key={n} value={n}>{label}</option>)}</Select></div>
     {schedule.error&&<p className="s-error">{schedule.error.message}</p>}
    </section></div>
-    <section className="s-panel s-sync-records-panel">{!history.data?.runs.length&&<h2>同步记录</h2>}{history.isPending?<p>读取记录中…</p>:history.error?<p className="s-error">暂时无法读取同步记录</p>:!history.data?.runs.length?null:<SyncHistory runs={history.data.runs}/>}</section>
+    <section className="s-panel s-sync-records-panel"><SyncHistory key={shownDay} runs={history.data?.runs??[]} day={shownDay} today={history.data?.today??syncDay()} firstDay={history.data?.firstDay??null} onDayChange={day=>setHistoryDay(day===syncDay()?'':day)} loading={history.isPending} error={!!history.error}/></section>
     <AnimatePresence>{qr&&<Sheet key="qr" title="连接 B 站" subtitle={qrState==='scanned'?'已扫码，请在手机确认':qrState==='expired'?'二维码已过期，请重新获取':'使用哔哩哔哩 App 扫描二维码'} close={()=>setQr(null)}><div className="s-qr"><img src={qr.image} alt="B 站登录二维码"/>{qrState==='expired'&&<button className="s-primary" onClick={start}>重新获取</button>}</div></Sheet>}{confirm&&<Sheet key="disconnect" compact title="断开连接" subtitle="历史数据会保留，自动采集将暂停。重新扫码即可恢复。" close={()=>setConfirm(false)} footer={<><button className="s-secondary" onClick={()=>setConfirm(false)}>取消</button><button className="s-primary" disabled={disconnect.isPending} onClick={()=>disconnect.mutate()}>确认断开</button></>}>{disconnect.error&&<p role="alert">{disconnect.error.message}</p>}</Sheet>}</AnimatePresence>
   </div>;
 }

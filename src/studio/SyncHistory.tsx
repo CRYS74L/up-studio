@@ -1,3 +1,5 @@
+import {ChevronLeft,ChevronRight} from 'lucide-react';
+import {shiftSyncDay} from '../../shared/sync-days';
 import {Popover} from './controls';
 import {useLayoutEffect,useRef,useState} from 'react';
 
@@ -7,10 +9,10 @@ import {syncSlots,incomingSlots} from './sync-strip';
 
 const labels:Record<string,string>={views:'播放量',coverAttractionScore:'封标吸引力',avgWatchSeconds:'观看时长',avgWatchPercent:'观看进度',followersGained:'涨粉',likes:'点赞',comments:'评论',danmaku:'弹幕',favorites:'收藏',coins:'投币',shares:'分享',threeSecondBounceRate:'3秒跳出率',interactionRate:'互动率',playToFollowRate:'播转粉率',fanAudiencePercent:'粉丝观看率',guestAudiencePercent:'游客观看率'};
 const names:Record<string,string>={success:'同步完成',partial:'部分完成',failed:'同步失败',running:'正在同步'};
-export function SyncHistory({runs}:{runs:any[]}){
+export function SyncHistory({runs,day,today,firstDay,onDayChange,loading=false,error=false}:{runs:any[];day:string;today:string;firstDay:string|null;onDayChange:(day:string)=>void;loading?:boolean;error?:boolean}){
  const plot=useRef<HTMLDivElement>(null),[width,setWidth]=useState(668),[page,setPage]=useState(0),[selected,setSelected]=useState(''),[hover,setHover]=useState<{run:any;x:number}|null>(null);
  useLayoutEffect(()=>{const el=plot.current!;const observer=new ResizeObserver(()=>setWidth(el.clientWidth));setWidth(el.clientWidth);observer.observe(el);return()=>observer.disconnect()},[]);
- const complete=runs.filter(r=>r.status!=='running');
+ const complete=runs;
  const {capacity:count,pages,current,step,offset}=syncSlots(width,complete.length,page);
  const slice=complete.slice(current*count,(current+1)*count).reverse();
  const previous=useRef<{ids:string[];runs:any[];width:number;page:number;step:number;offset:number}|null>(null),stop=useRef<(()=>void)|null>(null);
@@ -33,7 +35,7 @@ export function SyncHistory({runs}:{runs:any[]}){
  useLayoutEffect(()=>()=>stop.current?.(),[]);
  const active=hover??(selected?{run:runs.find(r=>r.id===selected),x:offset+Math.max(0,slice.findIndex(r=>r.id===selected))*step}:null);
  const activeId=active?.run?.id;
- return <div className="s-sync-history s-sync-grid-history"><header className="s-history-heading"><div><h2>同步记录</h2><time className="s-history-status">{slice.length?date(slice[0].started_at).split(' ')[0]+' ~ '+date(slice.at(-1).started_at).split(' ')[0]:'暂无记录'}</time></div><div className="s-history-totals"><span><b>{complete.length}</b> 次同步</span><span><b>{Math.round(complete.filter(r=>r.status==='success').length/Math.max(1,complete.length)*100)}%</b> 完成</span></div></header>  <div className="s-sync-plot" ref={plot} onPointerLeave={()=>setHover(null)}><svg width="100%" height="16" viewBox={`0 0 ${width} 16`} role="group" aria-label="同步状态历史"><g>{slice.map((run,i)=><rect key={run.id} role="button" tabIndex={0} data-status={run.status} data-active={run.id===activeId} aria-label={date(run.started_at)+' · '+(names[run.status]??run.status)} aria-pressed={run.id===selected} x={offset+i*step} y={0} width={5} height={16} rx={1} ry={1} onPointerEnter={()=>setHover({run,x:offset+i*step})} onFocus={()=>setHover({run,x:offset+i*step})} onBlur={()=>setHover(null)} onClick={()=>setSelected(run.id===selected?'':run.id)} onKeyDown={e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();setSelected(run.id===selected?'':run.id)}}}/>)}</g></svg>
+ return <div className="s-sync-history s-sync-grid-history"><header className="s-history-heading"><div><h2>同步记录</h2><nav className="s-history-day" aria-label="同步记录日期"><button aria-label="前一天同步记录" disabled={loading||!firstDay||day<=firstDay} onClick={()=>onDayChange(shiftSyncDay(day,-1))}><ChevronLeft/></button><time dateTime={day}>{day.replaceAll('-','/')}</time><button aria-label="后一天同步记录" disabled={loading||day>=today} onClick={()=>onDayChange(shiftSyncDay(day,1))}><ChevronRight/></button></nav></div><div className="s-history-totals"><span><b>{complete.length}</b> 次同步</span><span><b>{Math.round(complete.filter(r=>r.status==='success').length/Math.max(1,complete.length)*100)}%</b> 完成</span></div></header>  {(loading||error||!complete.length)&&<p className="s-history-empty" role="status">{loading?'读取记录中…':error?'暂时无法读取同步记录':'当天暂无同步记录'}</p>}<div className="s-sync-plot" ref={plot} onPointerLeave={()=>setHover(null)}><svg width="100%" height="16" viewBox={`0 0 ${width} 16`} role="group" aria-label="同步状态历史"><g>{slice.map((run,i)=><rect key={run.id} role="button" tabIndex={0} data-status={run.status} data-active={run.id===activeId} aria-label={date(run.started_at)+' · '+(names[run.status]??run.status)} aria-pressed={run.id===selected} x={offset+i*step} y={0} width={5} height={16} rx={1} ry={1} onPointerEnter={()=>setHover({run,x:offset+i*step})} onFocus={()=>setHover({run,x:offset+i*step})} onBlur={()=>setHover(null)} onClick={()=>setSelected(run.id===selected?'':run.id)} onKeyDown={e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();setSelected(run.id===selected?'':run.id)}}}/>)}</g></svg>
    <Popover open={!!active?.run} close={()=>{setSelected('');setHover(null)}} anchor={plot} anchorOffset={active?.x??0} role="tooltip" label="同步记录详情" width="content">{active?.run&&<RunDetails run={active.run}/>}</Popover>
 
 
