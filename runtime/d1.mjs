@@ -1,7 +1,7 @@
 import { DatabaseSync } from 'node:sqlite';
 export function createD1(path) {
   const database = new DatabaseSync(path);
-  database.exec('PRAGMA journal_mode=WAL; PRAGMA foreign_keys=ON; PRAGMA busy_timeout=5000;');
+  try{database.exec('PRAGMA journal_mode=WAL; PRAGMA foreign_keys=ON; PRAGMA busy_timeout=5000;');}catch(error){database.close();throw error;}
   const prepare = (sql, args = []) => ({
     bind(...values) { return prepare(sql, values); },
     first(column) { const row = database.prepare(sql).get(...args) ?? null; return Promise.resolve(column ? row?.[column] ?? null : row); },

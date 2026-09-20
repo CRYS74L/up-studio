@@ -12,7 +12,6 @@ import { zValidator } from '@hono/zod-validator';
 import { z } from 'zod';
 import { analysisQuerySchema } from '../shared/contracts';
 import { BilibiliWebDataSource } from './bilibili';
-import { buildManifest } from './backup';
 import { decryptJson, encryptJson, hmac, sha256 } from './crypto';
 import { historyStatements, trendWindows, recentWindow } from './history';
 import { buildSummaryComparison, monthAgoReference, hasSharedOverviewBaseline } from './summary';
@@ -244,24 +243,7 @@ app.post('/api/settings/deepseek/test', async (c) => {
   } catch { return jsonError(c,502,'deepseek_unreachable','DeepSeek 连接超时或网络不可达'); }
 });
 
-app.get('/api/backups/status', async (c) => c.json({ ok: true, configured: Boolean(c.env.GOOGLE_CLIENT_ID && c.env.GOOGLE_CLIENT_SECRET), runs: (await c.env.DB.prepare('SELECT id,kind,status,started_at,finished_at,bytes,sha256,safe_error_detail FROM backup_runs ORDER BY started_at DESC LIMIT 20').all()).results }));
-app.get('/api/backups/oauth/start', async (c) => {
-  if (!c.env.GOOGLE_CLIENT_ID) return jsonError(c, 503, 'not_configured', '尚未配置 Google OAuth 客户端');
-  const state = crypto.randomUUID();
-  const redirect = new URL('/api/backups/oauth/callback', c.req.url).toString();
-  const url = new URL('https://accounts.google.com/o/oauth2/v2/auth');
-  url.search = new URLSearchParams({ client_id:c.env.GOOGLE_CLIENT_ID, redirect_uri:redirect, response_type:'code', scope:'https://www.googleapis.com/auth/drive.file', access_type:'offline', prompt:'consent', state }).toString();
-  return c.json({ ok:true, url:url.toString(), state });
-});
-app.get('/api/backups/oauth/callback', async (c) => jsonError(c, 501, 'oauth_exchange_pending', '部署域名和加密主密钥确认后才能安全交换并保存刷新令牌'));
-app.post('/api/backups/run', async (c) => {
-  const settings = await c.env.DB.prepare("SELECT value_json FROM settings WHERE key='google_drive'").first<{ value_json: string }>();
-  if (!settings) return jsonError(c, 503, 'not_configured', '请先连接 Google Drive 并选择目标目录');
-  const manifest = await buildManifest('incremental', [{ path: 'settings.json', body: '{}' }], new Date().toISOString());
-  return c.json({ ok: true, staged: true, manifest });
-});
-app.post('/api/backups/verify', async (c) => c.json({ ok: true, status: 'preflight_ready', note: '真实校验将在 OAuth 授权后读取 Drive 元数据并核对 SHA-256 manifest' }));
-app.post('/api/backups/restore/preflight', async (c) => c.json({ ok: true, status: 'requires_manifest', destructive: false }));
+app.all('/api/backups/*',async(c)=>jsonError(c,503,'backup_service_required','当前部署尚未接入云盘备份执行服务'));
 
 async function collect(env: Bindings, trigger: string) {
   env={...env,DB:withSnapshotReads(await accountDatabase(env.DB))};

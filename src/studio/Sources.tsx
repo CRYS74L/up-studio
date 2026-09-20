@@ -1,3 +1,4 @@
+import {BackupPanel} from './BackupPanel';
 import {syncDay} from '../../shared/sync-days';
 import {SyncFreshness} from './FreshnessAge';
 import './sources-layout.css';
@@ -42,6 +43,7 @@ export function Sources({sync}:{sync:ReturnType<typeof useSync>}){
     {schedule.error&&<p className="s-error">{schedule.error.message}</p>}
    </section></div>
     <section className="s-panel s-sync-records-panel"><SyncHistory runs={history.data?.runs??[]} day={shownDay} today={history.data?.today??syncDay()} firstDay={history.data?.firstDay??null} onDayChange={day=>setHistoryDay(day===syncDay()?'':day)} loading={history.isPending||history.isPlaceholderData} error={!!history.error}/></section>
+    <BackupPanel/>
     <AnimatePresence>{qr&&<Sheet key="qr" title="连接 B 站" subtitle={qrState==='scanned'?'已扫码，请在手机确认':qrState==='expired'?'二维码已过期，请重新获取':'使用哔哩哔哩 App 扫描二维码'} close={()=>setQr(null)}><div className="s-qr"><img src={qr.image} alt="B 站登录二维码"/>{qrState==='expired'&&<button className="s-primary" onClick={start}>重新获取</button>}</div></Sheet>}{confirm&&<Sheet key="disconnect" compact title="断开连接" subtitle="历史数据会保留，自动采集将暂停。重新扫码即可恢复。" close={()=>setConfirm(false)} footer={<><button className="s-secondary" onClick={()=>setConfirm(false)}>取消</button><button className="s-primary" disabled={disconnect.isPending} onClick={()=>disconnect.mutate()}>确认断开</button></>}>{disconnect.error&&<p role="alert">{disconnect.error.message}</p>}</Sheet>}</AnimatePresence>
   </div>;
 }
