@@ -7,7 +7,7 @@ import {request} from '../format';
 import {ConnectAccount} from './ConnectAccount';
 import {Sheet,AnimatePresence,motion} from './ui';
 // Stroke-based version of the supplied bilibili-line silhouette, matching Lucide's 24px grid.
-function BilibiliIcon(){return <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-bilibili" aria-hidden="true"><path d="m6.5 3.5 3.5 3.5m7.5-3.5L14 7"/><rect x="3" y="7" width="18" height="13" rx="2.5"/><path d="M8 12v2m8-2v2"/></svg>}
+function BilibiliIcon(){return <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-bilibili" aria-hidden="true"><path d="m6 2.75 3.75 3.75m8.25-3.75L14.25 6.5"/><rect x="2" y="6.5" width="20" height="14.5" rx="2.5"/><path d="M7.5 12v2.5m9-2.5v2.5"/></svg>}
 type Profile={uid:string;name:string;avatar:string};
 function useProfile(){return useQuery({queryKey:['account-profile'],queryFn:()=>request<{profile:Profile|null;accounts:Profile[]}>('/api/account/profile'),staleTime:300000})}
 function Avatar({profile}:{profile:Profile|null|undefined}){return <span className="s-avatar">{profile?.avatar?<img src={profile.avatar} alt="" referrerPolicy="no-referrer"/>:<UserRound/>}</span>}

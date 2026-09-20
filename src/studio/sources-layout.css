@@ -69,4 +69,6 @@
 @media(max-width:500px){.studio .s-history-title .s-service-symbol{width:32px;height:32px;flex-basis:32px}.s-history-title{gap:8px}}
 @container(max-width:360px){.s-sync-records-panel .s-history-title{gap:6px}.s-sync-records-panel .s-history-heading h2{font-size:14px}}
 
-.studio .s-sync-records-panel .s-history-dots button{height:22px;min-height:22px}.s-sync-records-panel .s-history-dots button::before{inset:-5px -8px}.studio .s-history-title .s-service-symbol{color:var(--sync-success)}
+.studio .s-sync-records-panel .s-history-dots button{height:22px;min-height:22px}.s-sync-records-panel .s-history-dots button::before{inset:-5px -8px}.studio .s-history-title .s-service-symbol{color:color-mix(in srgb,var(--sync-success) 82%,#38574f)}
+
+.s-sync-records-panel .s-history-dots{translate:0 var(--history-dot-offset,0px)}
