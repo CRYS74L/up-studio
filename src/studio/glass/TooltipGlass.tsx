@@ -1,4 +1,4 @@
-import {useEffect,useState} from 'react';
+import {useEffect,useLayoutEffect,useState} from 'react';
 import {GlassMaterial} from './GlassMaterial';
 const selector='.s-chart-tooltip,[role="tooltip"]';
 type Bounds={left:number;top:number;width:number;height:number;opacity:number;zIndex:number;radius:string};
@@ -16,5 +16,6 @@ export function TooltipGlass(){
   observer.observe(document.body,{subtree:true,childList:true,attributes:true,attributeFilter:['style','class']});window.addEventListener('scroll',wake,true);wake();
   return()=>{live=false;cancelAnimationFrame(frame);observer.disconnect();window.removeEventListener('scroll',wake,true)};
  },[]);
+ useLayoutEffect(()=>{if(bounds)document.dispatchEvent(new Event('up:tooltip-position'))},[bounds]);
  return bounds?<div className="s-tooltip-glass s-liquid" aria-hidden="true" style={{position:'fixed',left:bounds.left,top:bounds.top,width:bounds.width,height:bounds.height,opacity:bounds.opacity,zIndex:bounds.zIndex,borderRadius:bounds.radius,pointerEvents:'none'}}><GlassMaterial/></div>:null;
 }
