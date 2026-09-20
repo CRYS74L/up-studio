@@ -1,13 +1,13 @@
 import {useEffect,useRef,useState} from 'react';
 import {useMutation,useQuery,useQueryClient} from '@tanstack/react-query';
-import {CloudUpload,Link2,RotateCcw,Unplug,Check} from 'lucide-react';
+import {CloudUpload,Link2,RotateCcw,Unplug} from 'lucide-react';
 import {request} from '../format';
-import {Sheet,Segments,AnimatePresence} from './ui';
+import {Sheet,AnimatePresence} from './ui';
 import {Select} from './Select';
 import './backup-panel.css';
-type Connection={id:string;provider:'google'|'webdav';label:string;folder:string;endpoint?:string;autoHours:number;lastBackup?:{at:string;bytes:number;uploadedBytes:number;verified:boolean}};
+type Connection={id:string;provider:'webdav';label:string;folder:string;endpoint?:string;autoHours:number;lastBackup?:{at:string;bytes:number;uploadedBytes:number;verified:boolean}};
 type Job={id:string;kind:string;status:string;phase:string;error?:string;result?:any};
-type BackupStatus={available:boolean;googleConfigured:boolean;recoveryOnly:boolean;profiles:Connection[];job:Job|null;googleAuth:{id:string;url:string|null;ready:boolean;error:string|null}|null};
+type BackupStatus={available:boolean;recoveryOnly:boolean;profiles:Connection[];job:Job|null;};
 const bytes=(n:number|undefined)=>n==null?'—':n>=1e9?(n/1e9).toFixed(2)+' GB':n>=1e6?(n/1e6).toFixed(1)+' MB':Math.ceil(n/1000)+' KB';
 const time=(value:string)=>new Date(value).toLocaleString('zh-CN',{hour12:false});
 const post=(url:string,body:unknown={})=>request<any>(url,{method:'POST',body:JSON.stringify(body)});
@@ -25,50 +25,17 @@ export function BackupPanel(){
  {(status.error||action.error||job?.status==='failed')&&<p className="s-error" role="alert">{status.error?.message||action.error?.message||job?.error}</p>}
  {status.data&&!status.data.available&&<p className="s-backup-warning">备份工具尚未准备好，请按部署说明安装 rclone 和 restic。</p>}
  <div className="s-backup-actions"><button className="s-secondary" disabled={busy||!status.data?.available} onClick={()=>{action.reset();setDialog('connect')}}><Link2/>{profiles.length?'关联其他云盘':'关联云盘'}</button><button className="s-secondary" disabled={busy||!profile||status.data?.recoveryOnly} onClick={()=>{setNotice('');action.mutate({url:'/api/backups/run',body:{id:profile.id}})}}><CloudUpload/>立即备份</button><button className="s-text" disabled={busy||!profile} onClick={()=>{action.reset();setDialog('restore')}}><RotateCcw/>恢复数据</button></div>
- <AnimatePresence>{dialog==='connect'&&<ConnectBackup status={status.data} close={()=>setDialog(null)} done={id=>{setSelected(id);setDialog(null);void client.invalidateQueries({queryKey:['cloud-backups']})}}/>}{dialog==='restore'&&profile&&<RestoreList profile={profile} busy={busy} close={()=>setDialog(null)} prepare={snapshot=>action.mutate({url:'/api/backups/restore/prepare',body:{id:profile.id,snapshot}})} phase={busy?job.phase:undefined} error={action.error?.message||(job?.status==='failed'?job.error:undefined)}/>} {dialog==='confirm'&&job?.result?.token&&<Sheet title="恢复数据" subtitle="备份已通过完整校验。恢复会替换当前所有账号的数据并退出登录，替换前会保留当前数据库副本。恢复后请重新登录。" close={cancelRestore} footer={<><button className="s-secondary" disabled={busy||action.isPending} onClick={cancelRestore}>取消</button><button className="s-primary" disabled={busy||action.isPending||confirmation!=='恢复数据'} onClick={()=>action.mutate({url:'/api/backups/restore/commit',body:{token:job.result.token,confirmation}})}>{busy?'正在恢复':'确认恢复'}</button></>}><div className="s-backup-restore-summary"><time>{time(job.result.createdAt)}</time><p>{job.result.accounts} 个账号 · {job.result.videos} 篇稿件 · {job.result.snapshots} 条快照</p></div><label className="s-backup-field">输入“恢复数据”确认<input value={confirmation} onChange={event=>setConfirmation(event.target.value)} autoComplete="off"/></label>{action.error&&<p className="s-error">{action.error.message}</p>}</Sheet>}</AnimatePresence>
+ <AnimatePresence>{dialog==='connect'&&<ConnectBackup close={()=>setDialog(null)} done={id=>{setSelected(id);setDialog(null);void client.invalidateQueries({queryKey:['cloud-backups']})}}/>}{dialog==='restore'&&profile&&<RestoreList profile={profile} busy={busy} close={()=>setDialog(null)} prepare={snapshot=>action.mutate({url:'/api/backups/restore/prepare',body:{id:profile.id,snapshot}})} phase={busy?job.phase:undefined} error={action.error?.message||(job?.status==='failed'?job.error:undefined)}/>} {dialog==='confirm'&&job?.result?.token&&<Sheet title="恢复数据" subtitle="备份已通过完整校验。恢复会替换当前所有账号的数据并退出登录，替换前会保留当前数据库副本。恢复后请重新登录。" close={cancelRestore} footer={<><button className="s-secondary" disabled={busy||action.isPending} onClick={cancelRestore}>取消</button><button className="s-primary" disabled={busy||action.isPending||confirmation!=='恢复数据'} onClick={()=>action.mutate({url:'/api/backups/restore/commit',body:{token:job.result.token,confirmation}})}>{busy?'正在恢复':'确认恢复'}</button></>}><div className="s-backup-restore-summary"><time>{time(job.result.createdAt)}</time><p>{job.result.accounts} 个账号 · {job.result.videos} 篇稿件 · {job.result.snapshots} 条快照</p></div><label className="s-backup-field">输入“恢复数据”确认<input value={confirmation} onChange={event=>setConfirmation(event.target.value)} autoComplete="off"/></label>{action.error&&<p className="s-error">{action.error.message}</p>}</Sheet>}</AnimatePresence>
  </section>;
 }
-function ConnectBackup({status,close,done}:{status?:BackupStatus;close:()=>void;done:(id:string)=>void}){
- const client=useQueryClient(),[provider,setProvider]=useState('Google Drive'),[endpoint,setEndpoint]=useState(''),[folder,setFolder]=useState(''),[username,setUsername]=useState(''),[davPassword,setDavPassword]=useState(''),[autoHours,setAutoHours]=useState(0),[authId,setAuthId]=useState('');
- const authRef=useRef(''),popup=useRef<Window|null>(null),attempt=useRef(0);
- const cancelAuth=()=>{attempt.current++;popup.current?.close();popup.current=null;if(authRef.current)void post('/api/backups/google/cancel',{id:authRef.current}).catch(()=>{});authRef.current='';};
- useEffect(()=>()=>cancelAuth(),[]);
- const google=provider==='Google Drive',auth=status?.googleAuth,authorized=google&&auth?.id===authId&&auth.ready;
- const authorize=useMutation({mutationFn:async({window:target,generation}:{window:Window;generation:number})=>{
-  const result=await post('/api/backups/google/start');
-  if(attempt.current!==generation){void post('/api/backups/google/cancel',{id:result.id}).catch(()=>{});return;}
-  authRef.current=result.id;setAuthId(result.id);
-  const deadline=Date.now()+30000;
-  while(attempt.current===generation){
-   if(target.closed)throw Error('授权窗口已关闭，请重新授权');
-   const state=await request<BackupStatus>('/api/backups/status');
-   if(attempt.current!==generation)return;
-   const current=state.googleAuth;
-   if(!current||current.id!==result.id)throw Error('授权已取消，请重试');
-   if(current.error)throw Error(current.error);
-   if(current.url){target.opener=null;target.location.replace(current.url);void client.invalidateQueries({queryKey:['cloud-backups']});return;}
-   if(Date.now()>deadline)throw Error('准备授权超时，请重试');
-   await new Promise(resolve=>setTimeout(resolve,250));
-  }
- },onError:(_error,variables)=>{if(attempt.current===variables.generation)cancelAuth()}});
- const openAuthorization=()=>{
-  cancelAuth();setAuthId('');authorize.reset();
-  const target=window.open('about:blank','_blank');
-  if(!target){setPopupError('浏览器拦截了授权窗口，请允许此网站打开弹窗后重试。');return;}
-  setPopupError('');popup.current=target;
-  target.document.title='Google Drive 授权';
-  target.document.body.textContent='正在连接 Google Drive，授权页面将自动打开…';
-  target.document.body.style.cssText='font:16px system-ui;padding:48px;color:#555';
-  authorize.mutate({window:target,generation:attempt.current});
- };
- const [popupError,setPopupError]=useState('');
- const connect=useMutation({mutationFn:()=>{return post('/api/backups/connections',{provider:google?'google':'webdav',authId,endpoint,folder,username,davPassword,autoHours})},onSuccess:result=>done(result.profile.id)});
- return <Sheet title="关联备份云盘" subtitle="备份只写入指定的专用文件夹。仅备份稿件、粉丝等统计数据，不含账号授权、服务密钥和 AI 会话。恢复后重新登录账号，无需备份密码。" close={()=>{if(!connect.isPending)close()}} footer={<><button className="s-secondary" disabled={connect.isPending} onClick={close}>取消</button><button className="s-primary" disabled={connect.isPending||(google&&!authorized)||(!google&&(!endpoint||!username||!davPassword))||(!google&&!folder)} onClick={()=>connect.mutate()}>{connect.isPending?'正在连接并检查':'关联云盘'}</button></>}>
- <Segments label="备份云盘类型" items={['Google Drive','WebDAV']} value={provider} onChange={value=>{cancelAuth();setAuthId('');authorize.reset();setPopupError('');setProvider(value);setFolder('');connect.reset()}}/>
- {google?<div className="s-backup-auth">{authorized?<span><Check/>Google Drive 已授权</span>:<><button className="s-secondary" disabled={authorize.isPending||!status?.googleConfigured} onClick={openAuthorization}>{authorize.isPending?'正在打开授权…':auth?.id===authId&&!auth.error?'重新打开授权':'授权 Google Drive'}</button>{authId&&auth?.id===authId&&!auth.error&&<span role="status">请在 Google 页面完成授权</span>}</>}{auth?.id===authId&&auth.error&&<p className="s-error">{auth.error}</p>}</div>:<><label className="s-backup-field">WebDAV 服务地址<input value={endpoint} onChange={e=>setEndpoint(e.target.value)} placeholder="https://dav.example.com/dav/" autoComplete="url"/></label><div className="s-backup-form-row"><label className="s-backup-field">用户名<input value={username} onChange={e=>setUsername(e.target.value)} autoComplete="off"/></label><label className="s-backup-field">WebDAV 密码<input type="password" value={davPassword} onChange={e=>setDavPassword(e.target.value)} autoComplete="new-password"/></label></div></>}
- {google?<p className="s-backup-note">{status?.googleConfigured?'自动在 Google Drive 根目录创建并复用 UP Studio 文件夹。':'Google 授权尚待部署者配置，配置完成后即可连接。'}</p>:<label className="s-backup-field">目标文件夹路径<input value={folder} onChange={e=>setFolder(e.target.value)} placeholder="例如：备份/UP Studio" autoComplete="off"/><small>相对于 WebDAV 地址，请使用专用文件夹。</small></label>}
-
- <label className="s-backup-field">备份频率<Select aria-label="云盘备份频率" value={autoHours} onChange={e=>setAutoHours(Number(e.target.value))}><option value={0}>仅手动备份</option><option value={24}>每天自动备份</option></Select></label>{(connect.error||authorize.error||popupError)&&<p className="s-error" role="alert">{connect.error?.message||authorize.error?.message||popupError}</p>}
+function ConnectBackup({close,done}:{close:()=>void;done:(id:string)=>void}){
+ const [endpoint,setEndpoint]=useState(''),[folder,setFolder]=useState(''),[username,setUsername]=useState(''),[davPassword,setDavPassword]=useState(''),[autoHours,setAutoHours]=useState(0);
+ const connect=useMutation({mutationFn:()=>post('/api/backups/connections',{provider:'webdav',endpoint,folder,username,davPassword,autoHours}),onSuccess:result=>done(result.profile.id)});
+ return <Sheet title="关联 WebDAV 云盘" subtitle="仅备份统计数据，不含账号授权、服务密钥和 AI 会话。恢复后重新登录账号，无需备份密码。" close={()=>{if(!connect.isPending)close()}} footer={<><button className="s-secondary" disabled={connect.isPending} onClick={close}>取消</button><button className="s-primary" disabled={connect.isPending||!endpoint||!username||!davPassword||!folder} onClick={()=>connect.mutate()}>{connect.isPending?'正在连接并检查':'关联云盘'}</button></>}>
+ <label className="s-backup-field">WebDAV 服务地址<input value={endpoint} onChange={e=>setEndpoint(e.target.value)} placeholder="https://dav.example.com/dav/" autoComplete="url"/></label>
+ <div className="s-backup-form-row"><label className="s-backup-field">用户名<input value={username} onChange={e=>setUsername(e.target.value)} autoComplete="off"/></label><label className="s-backup-field">WebDAV 密码<input type="password" value={davPassword} onChange={e=>setDavPassword(e.target.value)} autoComplete="new-password"/></label></div>
+ <label className="s-backup-field">目标文件夹路径<input value={folder} onChange={e=>setFolder(e.target.value)} placeholder="例如：备份/UP Studio" autoComplete="off"/><small>相对于 WebDAV 地址，请使用专用文件夹。</small></label>
+ <label className="s-backup-field">备份频率<Select aria-label="云盘备份频率" value={autoHours} onChange={e=>setAutoHours(Number(e.target.value))}><option value={0}>仅手动备份</option><option value={24}>每天自动备份</option></Select></label>{connect.error&&<p className="s-error" role="alert">{connect.error.message}</p>}
  </Sheet>;
 }
 function RestoreList({profile,close,prepare,busy,phase,error}:{profile:Connection;close:()=>void;prepare:(id:string)=>void;busy:boolean;phase?:string;error?:string}){

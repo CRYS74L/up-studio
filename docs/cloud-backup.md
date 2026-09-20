@@ -2,7 +2,7 @@
 
 ## 当前可用范围
 
-网站服务仍运行在当前本机；备份目标是用户关联的 Google Drive 或 WebDAV 云盘目录（包括第三方挂载的 123 云盘），不是把“云盘备份”替换成本地备份。
+网站服务仍运行在当前本机；备份目标是用户关联的 WebDAV 云盘目录，不是把“云盘备份”替换成本地备份。
 
 第四张卡片位于数据源页面左下方。支持多个连接、手动备份、每天自动备份、列出恢复点、下载校验及确认恢复。未配置连接时不会上传任何业务数据。
 
@@ -10,10 +10,9 @@
 
 ## 关联
 
-- Google Drive：使用 UP Studio 自己的 OAuth Web 应用，直接进入 Google 同意页，仅请求 `drive.file`。自动在根目录创建并按应用标记复用 `UP Studio` 文件夹；不会接管无标记的同名文件夹，不会擅自合并多个备份文件夹。
 - WebDAV：填写服务地址、账号、密码，以及相对于该地址的专用文件夹。123 云盘需先由用户配置可读写的 WebDAV 挂载服务。本工具不获取或绕过 123 云盘账号授权。
 - 初次关联使用已创建的空文件夹；也可关联已有的免密码统计备份仓库。不会覆盖不属于备份仓库的已有文件。
-- 云盘操作固定以所选 Google folder ID / WebDAV 路径为根，不允许 `..`、绝对路径或编码分隔符逃逸。备份数据和 restic 的索引、锁、密钥等文件都在指定文件夹内部。
+- 云盘操作固定以所选 WebDAV 路径为根，不允许 `..`、绝对路径或编码分隔符逃逸。备份数据和 restic 的索引、锁、密钥等文件都在指定文件夹内部。
 
 ## 数据与安全
 
@@ -52,18 +51,8 @@ restic 仓库格式 2 使用无损压缩和内容寻址去重，多次备份复�
 
 `npm run test:cloud-backups` 会执行构建、路径边界/凭据加密/恢复日志测试，以及隔离的真实 rclone WebDAV + restic 集成测试。该 WebDAV 仅是测试替身，测试不连接用户的真实云盘。
 
-已覆盖：指定文件夹外文件保持不变、第二次相同内容仅上传变化的数据块、不重复整库上传、备份回读校验、数据库损坏后 HTTP 恢复入口仍可用、确认前不改动数据库、错误确认被拒绝、恢复后指标正确、账号授权为空、现有服务密钥未被替换、远端数据篡改被拒绝、取消 Google 授权后清理会话。
+已覆盖：指定文件夹外文件保持不变、第二次相同内容仅上传变化的数据块、不重复整库上传、备份回读校验、数据库损坏后 HTTP 恢复入口仍可用、确认前不改动数据库、错误确认被拒绝、恢复后指标正确、账号授权为空、现有服务密钥未被替换、远端数据篡改被拒绝。
 
-真实 Google Drive / 123 云盘的网络权限、服务限额及账号授权必须在用户关联后验证；本次没有登录用户云盘或上传真实业务数据。
+真实 WebDAV 云盘的网络权限、服务限额及账号授权必须在用户关联后验证；本次没有登录用户云盘或上传真实业务数据。
 
-参考：[restic](https://restic.net/)、[rclone Google Drive](https://rclone.org/drive/)、[rclone WebDAV](https://rclone.org/webdav/)。
-
-## Google OAuth 部署配置
-
-在 Google Cloud 创建项目，启用 Google Drive API，配置应用名称 UP Studio 和 OAuth 同意屏幕；创建“Web 应用”类型 OAuth 客户端。开发阶段将使用账号加入测试用户。
-
-本地授权回调地址必须填写：`http://localhost:5173/api/backups/google/callback`。下载该客户端 JSON，保存为运行目录 `.local-runtime/google-oauth.json`。程序读取 `web.client_id`、`web.client_secret`、`web.redirect_uris`，此文件不得提交 Git。配置会在开始授权时重新读取，无需重启。
-
-远程 Node 部署填写对应 HTTPS 域名的同一路径，并配置服务入口与访问控制；当前本地服务仍仅接受 localhost，不因 OAuth 改动开放公网。授权码直接由服务与 Google 交换，使用随机 state、PKCE、一次性回调和十分钟过期。用于后台续期的凭据加密保存在独立连接配置中，不进入统计备份。
-
-尚未配置凭据时，Google 入口明确显示待部署者配置，不回退到 rclone 的第三方应用身份。rclone 仅作为本机传输工具，使用 UP Studio 的 Client ID、Client Secret、令牌和固定目录 ID。
+参考：[restic](https://restic.net/)、[rclone WebDAV](https://rclone.org/webdav/)。

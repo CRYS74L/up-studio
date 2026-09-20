@@ -7,9 +7,9 @@ export class BackupVault{
 }
 export function cleanField(value,label,max=1000){if(typeof value!=='string'||!value.trim()||value.length>max||/[\r\n\0]/.test(value))throw Error(label+'无效');return value.trim()}
 export function validateProfile(input){
- if(!['google','webdav'].includes(input.provider))throw Error('不支持的云盘');const password='';
- const result={provider:input.provider,password,scope:'statistics',label:input.provider==='google'?'Google Drive':'WebDAV',autoHours:input.autoHours===24?24:0};
- if(input.provider==='google')return {...result,folder:null};
+ if(input.provider!=='webdav')throw Error('不支持的云盘');const password='';
+ const result={provider:input.provider,password,scope:'statistics',label:'WebDAV',autoHours:input.autoHours===24?24:0};
+
  const endpoint=new URL(cleanField(input.endpoint,'WebDAV 地址',2000));if(!['https:','http:'].includes(endpoint.protocol)||endpoint.username||endpoint.password||endpoint.search||endpoint.hash)throw Error('WebDAV 地址格式无效');if(endpoint.protocol==='http:'&&!['localhost','127.0.0.1','[::1]'].includes(endpoint.hostname))throw Error('远程 WebDAV 请使用 HTTPS 地址');
  const safeSegments=value=>value.split('/').filter(Boolean).map(segment=>{const plain=decodeURIComponent(segment);if(!plain||plain==='.'||plain==='..'||/[\\/\r\n\0]/.test(plain)||/%[0-9a-f]{2}/i.test(plain))throw Error('目录路径不能包含上级目录或编码分隔符');return encodeURIComponent(plain)});
  const folder=cleanField(input.folder,'备份文件夹',1000);if(folder.startsWith('/')||folder.includes('://'))throw Error('请输入相对于 WebDAV 地址的专用文件夹');const parts=safeSegments(folder);if(!parts.length)throw Error('必须指定专用文件夹');endpoint.pathname='/'+[...safeSegments(endpoint.pathname),...parts].join('/')+'/';
@@ -23,10 +23,11 @@ export function runTool(exe,args,{env={},inputFile,inputText,outputFile,onLine,t
  });}
 export function toolsFor(root){const saved=fs.existsSync(path.join(root,'backup-tools.json'))?JSON.parse(fs.readFileSync(path.join(root,'backup-tools.json'),'utf8')):{};return{rclone:process.env.UP_STUDIO_RCLONE||saved.rclone||'rclone',restic:process.env.UP_STUDIO_RESTIC||saved.restic||'restic'}}
 export async function toolEnvironment(tools,vault,profile){const dir=fs.mkdtempSync(path.join(vault.dir,'session-')),file=path.join(dir,'rclone.conf');let config='[cloud]\n';
- if(profile.provider==='google'){if(!profile.token)throw Error('请先完成 Google Drive 授权');config+='type = drive\nscope = '+(profile.googleManaged?'drive.file':'drive')+'\n'+(profile.googleClient?'client_id = '+cleanField(profile.googleClient.clientId,'OAuth Client ID')+'\nclient_secret = '+cleanField(profile.googleClient.clientSecret,'OAuth Client Secret')+'\n':'')+'root_folder_id = '+profile.folder+'\ntoken = '+JSON.stringify(profile.token)+'\n';}
- else{if(/[\r\n\0]/.test(profile.davPassword))throw Error('WebDAV 密码不能包含换行');const obscured=(await runTool(tools.rclone,['obscure','-'],{inputText:profile.davPassword,timeout:15000})).stdout.trim();config+='type = webdav\nvendor = other\nurl = '+profile.rootUrl+'\nuser = '+profile.username+'\npass = '+obscured+'\n';}
+ if(profile.provider!=='webdav')throw Error('仅支持 WebDAV');
+ {if(/[\r\n\0]/.test(profile.davPassword))throw Error('WebDAV 密码不能包含换行');const obscured=(await runTool(tools.rclone,['obscure','-'],{inputText:profile.davPassword,timeout:15000})).stdout.trim();config+='type = webdav\nvendor = other\nurl = '+profile.rootUrl+'\nuser = '+profile.username+'\npass = '+obscured+'\n';}
  fs.writeFileSync(file,config,{mode:0o600});const env={RCLONE_CONFIG:file,RESTIC_PASSWORD:profile.password,RESTIC_REPOSITORY:'rclone:cloud:',RESTIC_CACHE_DIR:path.join(vault.dir,'cache'),RESTIC_COMPRESSION:'max',PATH:path.dirname(tools.rclone)+path.delimiter+(process.env.PATH??'')};
- return {env,async close(){try{if(profile.provider==='google'){const token=fs.readFileSync(file,'utf8').match(/^token\s*=\s*(\{[^\r\n]+\})/m);if(token){const state=vault.read(),existing=state.profiles.find(p=>p.id===profile.id);if(existing){existing.token=JSON.parse(token[1]);vault.write(state)}}}}finally{if(fs.existsSync(file))fs.unlinkSync(file);fs.rmdirSync(dir)}}};}
+ return {env,async close(){if(fs.existsSync(file))fs.unlinkSync(file);fs.rmdirSync(dir)}};}
+
 export async function withRemote(tools,vault,profile,fn){const session=await toolEnvironment(tools,vault,profile);try{return await fn(session.env)}finally{await session.close()}}
 export async function ensureRepository(tools,env){const listing=await runTool(tools.rclone,['lsf','cloud:','--max-depth','1'],{env,timeout:60000});if(!listing.stdout.trim()){await runRestic(tools.restic,['init','--repository-version','2'],{env});return;}const info=await runRestic(tools.restic,['cat','config'],{env});if(JSON.parse(info.stdout).version!==2)throw Error('所选仓库不支持当前压缩格式，请选择新的专用文件夹');await runRestic(tools.restic,['snapshots','--json'],{env});}
 

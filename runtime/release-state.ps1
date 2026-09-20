@@ -1,4 +1,4 @@
-$script:OptionalReleaseFiles=@('cloud-backups.mjs','cloud-backup-tools.mjs','cloud-backup-data.mjs','google-drive.mjs','snapshot-storage.mjs','backup-schema.json')
+$script:OptionalReleaseFiles=@('cloud-backups.mjs','cloud-backup-tools.mjs','cloud-backup-data.mjs','snapshot-storage.mjs','backup-schema.json')
 $script:ReleaseFiles=@('current.json','server.mjs','d1.mjs','launch.ps1','config.json','ServiceHost.exe')
 function Save-ReleaseState([string]$Root,[string]$Destination) {
   foreach($name in $script:ReleaseFiles){if(!(Test-Path -LiteralPath (Join-Path $Root $name) -PathType Leaf)){throw ('Incomplete installed runtime: '+$name)}}
