@@ -6,7 +6,7 @@ export function recentWindow<T extends {date_key:number}>(points:T[],days=30):T[
  return points.filter(p=>p.date_key>=latest-(days-1)*86400);
 }
 const finite = (value: unknown): number | null => typeof value === 'number' && Number.isFinite(value) ? value : null;
-export function historyStatements(db: D1Database, result: CollectResult) {
+export function historyStatements(db: D1Database, result: CollectResult, accountSourceJson?:string) {
   const statements: D1PreparedStatement[] = [];
   for (const snapshot of result.snapshots) {
     const trend = snapshot.dimensions.trend as Record<string, Record<string, unknown>> | null;
@@ -21,7 +21,7 @@ export function historyStatements(db: D1Database, result: CollectResult) {
   }
   const account = result.account;
   if (account) {
-    statements.push(db.prepare('INSERT OR REPLACE INTO account_snapshots(captured_at,followers,source_json) VALUES(?,?,?)').bind(account.capturedAt,finite(account.stat?.total_num),JSON.stringify(account)));
+    statements.push(db.prepare('INSERT OR REPLACE INTO account_snapshots(captured_at,followers,source_json) VALUES(?,?,?)').bind(account.capturedAt,finite(account.stat?.total_num),accountSourceJson??JSON.stringify(account)));
     const days = new Map<string, Record<string, number | null>>();
     for (const [type, graph] of Object.entries(account.graphs)) {
       if (!Array.isArray(graph?.list)) continue;

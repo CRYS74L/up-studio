@@ -1,3 +1,4 @@
+import {SnapshotWriter,withSnapshotReads,compressRawJson} from '../shared/snapshot-storage';
 import {acquisitionHistory} from './acquisition-history';
 import {syncDay,syncDayBounds} from '../shared/sync-days';
 import {registerVideoDetail} from './video-detail';
@@ -263,7 +264,7 @@ app.post('/api/backups/verify', async (c) => c.json({ ok: true, status: 'preflig
 app.post('/api/backups/restore/preflight', async (c) => c.json({ ok: true, status: 'requires_manifest', destructive: false }));
 
 async function collect(env: Bindings, trigger: string) {
-  env={...env,DB:await accountDatabase(env.DB)};
+  env={...env,DB:withSnapshotReads(await accountDatabase(env.DB))};
   const id = crypto.randomUUID(); const started = new Date().toISOString();
   const source = new BilibiliWebDataSource();
   const cutoff = new Date(Date.now() - 10 * 60_000).toISOString();
@@ -278,26 +279,30 @@ async function collect(env: Bindings, trigger: string) {
     const result = await source.collect(session);
     const dbStarted = performance.now();
     const statements: D1PreparedStatement[] = [];
+    const packStarted=performance.now(),writer=new SnapshotWriter(env.DB);
     for (let index = 0; index < result.videos.length; index += 1) {
       const video = result.videos[index]; const snapshot = result.snapshots[index];
       statements.push(env.DB.prepare(`INSERT INTO videos(id,bvid,title,cover_url,duration_seconds,published_at) VALUES(?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET bvid=excluded.bvid,title=excluded.title,cover_url=excluded.cover_url,duration_seconds=excluded.duration_seconds,published_at=excluded.published_at`).bind(video.id, video.bvid, video.title, video.coverUrl, video.durationSeconds, video.publishedAt));
-      statements.push(env.DB.prepare(`INSERT OR IGNORE INTO video_snapshots(video_id,captured_at,source,views,impressions,cover_ctr,avg_watch_seconds,avg_watch_percent,followers_gained,metrics_json,dimensions_json) VALUES(?,?,?,?,?,?,?,?,?,?,?)`).bind(snapshot.videoId, snapshot.capturedAt, source.version, snapshot.views, snapshot.impressions, snapshot.coverCtr, snapshot.avgWatchSeconds, snapshot.avgWatchPercent, snapshot.followersGained, JSON.stringify(snapshot.metrics), JSON.stringify(snapshot.dimensions)));
+      statements.push(env.DB.prepare(`INSERT OR IGNORE INTO video_snapshots(video_id,captured_at,source,views,impressions,cover_ctr,avg_watch_seconds,avg_watch_percent,followers_gained,metrics_json,dimensions_json) VALUES(?,?,?,?,?,?,?,?,?,?,?)`).bind(snapshot.videoId, snapshot.capturedAt, source.version, snapshot.views, snapshot.impressions, snapshot.coverCtr, snapshot.avgWatchSeconds, snapshot.avgWatchPercent, snapshot.followersGained, await writer.pack(JSON.stringify(snapshot.metrics),{coverAttractionScore:snapshot.metrics.coverAttractionScore}), await writer.pack(JSON.stringify(snapshot.dimensions))));
     }
+    const accountSource=result.account?await writer.pack(JSON.stringify(result.account)):undefined;
+    await writer.flush();
+    const compressionMs=Math.round(performance.now()-packStarted);
     if (statements.length) await env.DB.batch(statements);
-    const history = historyStatements(env.DB,result);
+    const history = historyStatements(env.DB,result,accountSource);
     for (let offset=0;offset<history.length;offset+=80) await env.DB.batch(history.slice(offset,offset+80));
     const dbMs = Math.round(performance.now() - dbStarted);
     const storageStarted = performance.now();
-    if (env.BUCKET) await env.BUCKET.put(`raw/${started.slice(0, 10)}/${id}.json`, JSON.stringify(result.raw), { httpMetadata: { contentType: 'application/json' } });
+    if (env.BUCKET) await env.BUCKET.put(`raw/${started.slice(0, 10)}/${id}.json.gz`, compressRawJson(JSON.stringify(result.raw)), { httpMetadata: { contentType: 'application/gzip' } });
     const storageMs = Math.round(performance.now() - storageStarted);
     const capabilitiesComplete = Object.values(result.coverageDetails.capabilityCounts).every((capability) => capability.available === capability.total);
     const status = result.coverage === 1 && result.coverageDetails.missingByVideo.length === 0 && result.coverageDetails.warnings.length === 0 && capabilitiesComplete ? 'success' : 'partial';
-    const timings = { ...result.timings, dbMs, storageMs, totalMs: Date.now() - Date.parse(started) };
+    const timings = { ...result.timings, dbMs, compressionMs, storageMs, totalMs: Date.now() - Date.parse(started) };
     await env.DB.prepare('UPDATE acquisition_runs SET finished_at=?,status=?,coverage=?,coverage_json=?,timings_json=?,request_count=? WHERE id=?').bind(new Date().toISOString(), status, result.coverage, JSON.stringify(result.coverageDetails), JSON.stringify(timings), result.requestCount, id).run();
     return { id, status, coverage: result.coverage, details: result.coverageDetails, videos: result.videos.length, trigger, timings, requestCount: result.requestCount };
   } catch (error) {
     const detail = error instanceof Error ? `${error.name}: ${error.message}${error.cause ? ` | cause: ${String(error.cause)}` : ''}` : String(error || 'UNKNOWN');
-    const errorCode = /SESSION|API_-101|API_-111|HTTP_401/.test(detail) ? 'session_expired' : /API_(-352|-412)|HTTP_(403|412|429)/.test(detail) ? 'risk_control' : /INVENTORY_INCOMPLETE/.test(detail) ? 'inventory_incomplete' : error instanceof z.ZodError ? 'schema_changed' : /no such (column|table)|SQLITE|constraint failed/i.test(detail)?'storage':'network';
+    const errorCode = /SESSION|API_-101|API_-111|HTTP_401/.test(detail) ? 'session_expired' : /API_(-352|-412)|HTTP_(403|412|429)/.test(detail) ? 'risk_control' : /INVENTORY_INCOMPLETE/.test(detail) ? 'inventory_incomplete' : error instanceof z.ZodError ? 'schema_changed' : /no such (column|table)|SQLITE|constraint failed|Snapshot.*(integrity|collision|manifest|chunk|verification)/i.test(detail)?'storage':'network';
     await env.DB.prepare('UPDATE acquisition_runs SET finished_at=?,status=\'failed\',error_code=?,safe_error_detail=? WHERE id=?').bind(new Date().toISOString(), errorCode, detail.slice(0, 160), id).run();
     return { id, status: 'failed', errorCode };
   }
@@ -314,7 +319,7 @@ registerVideoDetail(app);
 app.notFound(async (c) => c.env.ASSETS.fetch(c.req.raw));
 
 export default {
-  async fetch(request:Request,env:Bindings,ctx:ExecutionContext){return app.fetch(request,{...env,DB:await accountDatabase(env.DB)},ctx);},
+  async fetch(request:Request,env:Bindings,ctx:ExecutionContext){return app.fetch(request,{...env,DB:withSnapshotReads(await accountDatabase(env.DB))},ctx);},
   async scheduled(event: ScheduledEvent, env: Bindings, ctx: ExecutionContext) {
     if (event.cron === '*/15 * * * *') ctx.waitUntil(collect(env, 'cron'));
     // Backup/retention cron routes are deliberately no-ops until OAuth is configured and verified.
