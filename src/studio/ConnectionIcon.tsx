@@ -1,0 +1,2 @@
+// Centerline version of the user-supplied 连接.svg; shared 24px grid and 1.7 stroke.
+export function ConnectionIcon(){return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m5.291 8.98-1.039 1.039a6.878 6.878 0 0 0 9.728 9.728L15.728 18M18.709 15.02l1.039-1.039a6.878 6.878 0 0 0-9.728-9.728L8.272 6M9.462 14.633l5.171-5.171"/></svg>}
