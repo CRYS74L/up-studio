@@ -127,9 +127,9 @@
 .studio .s-sync-records-panel .s-history-dots{margin-top:9px}
 .studio .s-sources>.s-backup-panel,.studio .s-sources>.s-sync-records-panel{height:286px}
 @media(min-width:1051px){.studio .s-sources{grid-template-rows:280px 286px}}
-/* Account controls share the update action's typography and touch size. */
-.studio .s-connection .s-account-identity b{font-size:14px;line-height:21px}
-.studio .s-connection .s-account-action,.studio .s-connection .s-account-row .s-account-action{font-size:14px;line-height:21px;min-height:42.6px;padding:10px 17px;gap:8px}
-.studio .s-connection .s-account-action>svg,.studio .s-connection .s-account-row .s-account-action>svg{width:20px;height:20px;flex:0 0 20px}
-.studio .s-connection .s-account-row .s-account-logout{width:42.6px;height:42.6px;min-height:42.6px;flex:0 0 42.6px;padding:0}
+/* Compact account typography and controls. */
+.studio .s-connection .s-account-identity b{font-size:12px;line-height:20px}
+.studio .s-connection .s-account-action,.studio .s-connection .s-account-row .s-account-action{font-size:12px;line-height:20px;min-height:36px;padding:7px 12px;gap:8px}
+.studio .s-connection .s-account-action>svg,.studio .s-connection .s-account-row .s-account-action>svg{width:16px;height:16px;flex:0 0 16px}
+.studio .s-connection .s-account-row .s-account-logout{width:36px;height:36px;min-height:36px;flex:0 0 36px;padding:0}
 @media(max-width:500px){.studio .s-connection .s-account-action,.studio .s-connection .s-account-row .s-account-action{padding-inline:10px;gap:6px}.studio .s-connection .s-account-row .s-account-logout{padding:0}}
