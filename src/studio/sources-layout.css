@@ -114,3 +114,12 @@
 .studio .s-update-schedule b,.studio .s-update-schedule .s-select,.studio .s-update-schedule .s-select>span{font-size:14px}
 .studio .s-update-schedule b{font-size:15px}
 .studio .s-sync-records-panel h3{font-size:16px;line-height:24px;display:flex;align-items:center;gap:8px;font-weight:550}.studio .s-history-status-icon{width:16px;height:16px;flex:0 0 16px;color:var(--muted)}.s-history-status-icon[data-state=ok]{color:var(--sync-success)}.s-history-status-icon[data-state=bad]{color:var(--red)}.s-history-status-icon[data-state=pending]{color:var(--source-update-ink)}.s-history-status-icon path{fill:none;stroke:var(--surface);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.s-history-empty-slot{fill:var(--surface-2);cursor:pointer;transition:fill 150ms ease}.s-history-empty-slot:hover,.s-history-empty-slot:focus{fill:color-mix(in srgb,var(--muted) 28%,var(--surface-2));outline:none}.s-empty-record-tooltip{font-size:12px;white-space:nowrap;line-height:1.6}.s-empty-record-tooltip p{margin-top:4px;color:var(--muted)}
+/* A cell is green only when a real record explicitly reports success. */
+.studio .s-sync-records-panel :is(.s-sync-plot,.s-backup-heatmap) rect{fill:var(--surface-2);opacity:1;stroke:none;transition:fill 150ms ease,filter 150ms ease}
+.studio .s-sync-records-panel :is(.s-sync-plot,.s-backup-heatmap) rect[data-status=success]{fill:var(--sync-success)}
+.studio .s-sync-records-panel :is(.s-sync-plot,.s-backup-heatmap) rect[data-status=partial]{fill:#fbbf24}
+.studio .s-sync-records-panel :is(.s-sync-plot,.s-backup-heatmap) rect[data-status=failed]{fill:#ed687e}
+.studio .s-sync-records-panel :is(.s-sync-plot,.s-backup-heatmap) rect[data-status=running]{fill:#69a8ef}
+.studio .s-sync-records-panel :is(.s-sync-plot,.s-backup-heatmap) rect[data-status]:is(:hover,:focus-visible,[data-active=true],[aria-pressed=true]){filter:brightness(.85)}
+.studio .s-sync-records-panel :is(.s-sync-plot,.s-backup-heatmap) rect.s-history-empty-slot{fill:var(--surface-2);filter:none;animation:none}
+.studio .s-sync-records-panel :is(.s-sync-plot,.s-backup-heatmap) rect.s-history-empty-slot:is(:hover,:focus){fill:color-mix(in srgb,var(--muted) 28%,var(--surface-2))}
