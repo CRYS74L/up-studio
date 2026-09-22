@@ -1,3 +1,4 @@
+import {PageSkeleton} from './PageSkeleton';
 import {cancelPageTransition} from './page-transition';
 import {VideoRetention} from './VideoRetention';
 import {RealtimePlays} from './RealtimePlays';
@@ -22,7 +23,7 @@ import {VideoDiagnostics,VideoEngagement} from './VideoDiagnostics';
 export function Library({route}:{route:StudioRoute}){
   const {videos,pending,error,retry}=useDashboardData();const [search,setSearch]=useState(''),[length,setLength]=useState('全部'),[sort,setSort]=useState('最新发布'),[view,setView]=useState('网格');
   const shown=filterVideos(videos,search,length,sort),current=videos.find(v=>v.id===route.video);
-  if(pending)return <div className="s-loading" role="status">正在读取作品库…</div>;
+  if(pending)return <PageSkeleton page={route.video?'detail':'videos'}/>;
   if(error)return <Empty title="作品暂时无法读取" body={error.message} action={<button className="s-primary" onClick={retry}>重新加载</button>}/>;
   if(route.video&&current)return <VideoDetail video={current} previous={videos[(videos.indexOf(current)+videos.length-1)%videos.length]} next={videos[(videos.indexOf(current)+1)%videos.length]}/>;
   return <>

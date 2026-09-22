@@ -1,3 +1,4 @@
+import {PageSkeleton} from './PageSkeleton';
 import {SourceNotice} from './SourceNotice';
 import {currentHistoryRuns} from './sync-strip';
 import {HistoryStatus} from './HistoryStatus';
@@ -41,7 +42,7 @@ export function Sources({sync}:{sync:ReturnType<typeof useSync>}){
   const details=summary?.acquisition?.details;const total=details?.totalVideos??0;const connected=connection.data?.connected;const sessionBad=connection.data?.lastRun?.error_code==='session_expired';
   const pending=connection.isPending||local.isPending||history.isPending||profile.isPending||backup.isPending||summaryPending;
   if(!pending)initialReady.current=true;
-  if(!initialReady.current)return <SourcesLoading/>;
+  if(!initialReady.current)return <PageSkeleton page="sources"/>;
   return <div className="s-sources" data-page-pending={connection.isPending||local.isPending||history.isPending}><div className="s-two-col">
    <section className="s-panel s-connection"><div className="s-connection-accounts"><AccountSettings/></div></section>
    <section className="s-panel s-local-service"><header className="s-source-heading"><span className="s-service-symbol blue"><RefreshCw/></span><div><h2>数据更新</h2></div><SourceNotice message={error||sync.error?.message||connection.error?.message||local.error?.message||schedule.error?.message}/></header>
@@ -63,4 +64,3 @@ function BackupRecords(){
  return <div className="s-backup-records"><header className="s-record-row-heading"><h3>{status.error?<SourceNotice compact message="暂时无法读取备份记录，正在重试；当前显示上次读取的记录。"/>:<HistoryStatus status={filtered[0]?.status}/>}数据备份</h3><nav className="s-history-day" aria-label="备份记录月份"><button aria-label="前一个月备份记录" disabled={month<=first} onClick={()=>shift(-1)}><ChevronLeft/></button><time>{month.replace('-','/')}</time><button aria-label="后一个月备份记录" disabled={month>=now} onClick={()=>shift(1)}><ChevronRight/></button></nav></header><BackupHistory key={month} runs={filtered} period={month.replace('-','/')}/></div>;
 }
 
-function SourcesLoading(){return <div className="s-sources s-sources-loading" aria-busy="true" aria-label="正在读取数据源"><div className="s-two-col">{['哔哩哔哩创作中心','数据更新'].map(title=><section className={'s-panel '+(title==='数据更新'?'s-local-service':'s-connection')} key={title}><header className="s-source-heading"><span className="s-load-placeholder s-load-icon"/><h2>{title}</h2></header><div className="s-load-placeholder s-load-row"/><div className="s-load-placeholder s-load-row"/></section>)}</div>{['数据备份','同步记录'].map(title=><section className={'s-panel '+(title==='数据备份'?'s-backup-panel':'s-sync-records-panel')} key={title}><header className="s-source-heading"><span className="s-load-placeholder s-load-icon"/><h2>{title}</h2></header><div className="s-load-placeholder s-load-row"/><div className="s-load-placeholder s-load-row"/></section>)}</div>}

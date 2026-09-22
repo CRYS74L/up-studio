@@ -1,3 +1,4 @@
+import {PageSkeleton} from './PageSkeleton';
 import {useQuery} from '@tanstack/react-query';
 import {Clock3,ArrowUpRight,Play,Users,Timer,PieChart,ArrowRight} from 'lucide-react';
 import {useDashboardData} from '../use-dashboard-data';
@@ -11,7 +12,7 @@ export function Overview(){
   const {summary,videos,pending,error,retry}=useDashboardData();
   const history=useQuery({queryKey:['overview-history'],staleTime:60000,queryFn:()=>request<{points:Array<Record<string,any>>}>('/api/dashboard/history'),enabled:!!summary?.configured&&!summary?.miniTrends});
   const accountHistory=useQuery({queryKey:['account-history'],queryFn:()=>request<{points:Array<{followers:number|null}>}>('/api/account/history'),enabled:!!summary?.configured&&!summary?.miniTrends});
-  if(pending)return <div className="s-loading" role="status">正在整理你的创作数据…</div>;
+  if(pending)return <PageSkeleton page={'overview'}/>;
   if(error)return <Empty title="暂时无法读取概览" body={error.message} action={<button className="s-primary" onClick={retry}>重试</button>}/>;
   if(!summary?.configured||!videos.length)return <Empty title="把创作，变成看得见的成长" body="连接 B 站创作中心，建立第一份真实快照。" action={<button className="s-primary" onClick={()=>navigate('sources')}>连接 B 站 <ArrowRight/></button>}/>;
   const s=summary.summary,base=chartBase(),recent=videos.slice(0,8),ranked=videos.filter(v=>v.cover_ctr!=null).sort((a,b)=>b.published_at.localeCompare(a.published_at));
