@@ -123,3 +123,7 @@
 .studio .s-sync-records-panel :is(.s-sync-plot,.s-backup-heatmap) rect[data-status]:is(:hover,:focus-visible,[data-active=true],[aria-pressed=true]){filter:brightness(.85)}
 .studio .s-sync-records-panel :is(.s-sync-plot,.s-backup-heatmap) rect.s-history-empty-slot{fill:var(--surface-2);filter:none;animation:none}
 .studio .s-sync-records-panel :is(.s-sync-plot,.s-backup-heatmap) rect.s-history-empty-slot:is(:hover,:focus){fill:color-mix(in srgb,var(--muted) 28%,var(--surface-2))}
+/* Match the visible title-to-strip gap, including the title font descent. */
+.studio .s-sync-records-panel .s-history-dots{margin-top:9px}
+.studio .s-sources>.s-backup-panel,.studio .s-sources>.s-sync-records-panel{height:286px}
+@media(min-width:1051px){.studio .s-sources{grid-template-rows:280px 286px}}
