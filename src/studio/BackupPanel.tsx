@@ -4,7 +4,8 @@ import {useMutation,useQuery,useQueryClient} from '@tanstack/react-query';
 import {CloudUpload,CloudDownload,Link2,Unplug,Check,X} from 'lucide-react';
 import {request} from '../format';
 import {Sheet,AnimatePresence} from './ui';
-import {Select} from './Select';
+import {SegmentedControl} from './controls';
+import {motion,useReducedMotion} from 'motion/react';
 import './backup-panel.css';
 type Connection={id:string;provider:'webdav';label:string;folder:string;endpoint?:string;username?:string;autoHours:number;runs?:BackupRun[];lastBackup?:{at:string;bytes:number;uploadedBytes:number;verified:boolean}};
 type Job={id:string;kind:string;status:string;phase:string;error?:string;result?:any};
@@ -33,18 +34,28 @@ export function BackupPanel(){
 }
 function ConnectBackup({profile,disconnect,disconnecting,disconnectError,close,done}:{profile?:Connection;disconnect:()=>void;disconnecting:boolean;disconnectError?:string;close:()=>void;done:(id:string)=>void}){
  const [endpoint,setEndpoint]=useState(profile?.endpoint??''),[folder,setFolder]=useState(profile?.folder??''),[username,setUsername]=useState(profile?.username??''),[davPassword,setDavPassword]=useState(''),[autoHours,setAutoHours]=useState(profile?.autoHours??24);
- const [confirmDisconnect,setConfirmDisconnect]=useState(false);
+
  const [loadingPassword,setLoadingPassword]=useState(!!profile),[loadError,setLoadError]=useState('');
  useEffect(()=>{if(!profile)return;let live=true;request<{davPassword:string}>('/api/backups/connection?id='+encodeURIComponent(profile.id)).then(result=>{if(live)setDavPassword(result.davPassword)}).catch(error=>{if(live)setLoadError(error.message)}).finally(()=>{if(live)setLoadingPassword(false)});return()=>{live=false}},[profile?.id]);
  const connect=useMutation({mutationFn:()=>post('/api/backups/connections',{id:profile?.id,provider:'webdav',endpoint,folder,username,davPassword,autoHours}),onSuccess:result=>done(result.profile.id)});
- return <Sheet title={profile?'WebDAV 连接设置':'关联到 WebDAV'} close={()=>{if(!connect.isPending)close()}} footer={<><div className="s-backup-footer-start">{profile&&<div className="s-disconnect-confirm" data-expanded={confirmDisconnect} onKeyDown={e=>{if(e.key==='Escape'&&confirmDisconnect){e.preventDefault();e.stopPropagation();setConfirmDisconnect(false)}}}><button className="s-icon" aria-label="断开连接" aria-expanded={confirmDisconnect} disabled={connect.isPending||disconnecting} onClick={()=>setConfirmDisconnect(v=>!v)}><Unplug/></button>{confirmDisconnect&&<><button className="s-icon" aria-label="取消断开连接" disabled={disconnecting} onClick={()=>setConfirmDisconnect(false)}><X/></button><button className="s-icon s-disconnect-accept" aria-label="确认断开连接" disabled={disconnecting} onClick={disconnect}><Check/></button></>}</div>}</div><button className="s-secondary s-backup-cancel" disabled={connect.isPending||disconnecting} onClick={close}>取消</button><button className="s-primary" disabled={loadingPassword||!!loadError||connect.isPending||!endpoint||!username||(!davPassword&&(!profile||endpoint!==profile.endpoint||username!==profile.username))||!folder.trim()} onClick={()=>connect.mutate()}>{connect.isPending?'正在连接并检查':profile?'保存设置':'关联到 WebDAV'}</button></>}>
+ return <Sheet title={profile?'WebDAV 连接设置':'关联到 WebDAV'} close={()=>{if(!connect.isPending)close()}} footer={<><div className="s-backup-footer-start">{profile&&<DisconnectConfirm disabled={connect.isPending||disconnecting} confirm={disconnect}/>}</div><button className="s-secondary s-backup-cancel" disabled={connect.isPending||disconnecting} onClick={close}>取消</button><button className="s-secondary" disabled={loadingPassword||!!loadError||connect.isPending||!endpoint||!username||(!davPassword&&(!profile||endpoint!==profile.endpoint||username!==profile.username))||!folder.trim()} onClick={()=>connect.mutate()}>{connect.isPending?'正在连接并检查':profile?'保存设置':'关联到 WebDAV'}</button></>}>
  <div className="s-backup-field"><span>WebDAV 服务地址</span><input aria-label="WebDAV 服务地址" value={endpoint} onChange={e=>setEndpoint(e.target.value)} placeholder="https://dav.example.com/dav/" autoComplete="url"/></div>
  <div className="s-backup-form-row"><div className="s-backup-field"><span>用户名</span><input aria-label="用户名" value={username} onChange={e=>setUsername(e.target.value)} autoComplete="off"/></div><div className="s-backup-field"><span>WebDAV 密码</span><input aria-label="WebDAV 密码" type="text" disabled={loadingPassword} placeholder={loadingPassword?'正在读取已保存的密码…':undefined} value={davPassword} onChange={e=>setDavPassword(e.target.value)} autoComplete="new-password"/></div></div>
  <div className="s-backup-field"><span>目标文件夹路径</span><input aria-label="目标文件夹路径" value={folder} onChange={e=>setFolder(e.target.value)} placeholder="/ 或子文件夹路径" autoComplete="off"/><small>网盘已限定授权文件夹时填 /；否则填写文件夹名称，优先查找层级最浅的同名目录。也可填写完整相对路径。</small></div>
- <div className="s-backup-field"><span>备份频率</span><Select aria-label="云盘备份频率" value={autoHours} onChange={e=>setAutoHours(Number(e.target.value))}><option value={0}>仅手动备份</option><option value={6}>每6小时</option><option value={12}>每12小时</option><option value={24}>每24小时</option></Select></div>{(connect.error||loadError||disconnectError)&&<p className="s-error" role="alert">{connect.error?.message||loadError||disconnectError}</p>}
+ <div className="s-backup-field"><span>备份频率</span><SegmentedControl label="云盘备份频率" value={String(autoHours)} onChange={value=>setAutoHours(Number(value))} items={[{value:"0",label:"仅手动"},{value:"6",label:"每6小时"},{value:"12",label:"每12小时"},{value:"24",label:"每24小时"}]}/></div>{(connect.error||loadError||disconnectError)&&<p className="s-error" role="alert">{connect.error?.message||loadError||disconnectError}</p>}
  </Sheet>;
 }
 function RestoreList({profile,close,prepare,busy,phase,error}:{profile:Connection;close:()=>void;prepare:(id:string)=>void;busy:boolean;phase?:string;error?:string}){
  const list=useQuery({queryKey:['cloud-backup-snapshots',profile.id],queryFn:()=>request<{snapshots:Array<{id:string;time:string;bytes:number|null}>}>('/api/backups/snapshots?id='+encodeURIComponent(profile.id)),refetchOnWindowFocus:false});
  return <Sheet title="从云盘恢复" subtitle={profile.label+' · '+profile.folder} close={()=>{if(!busy)close()}}><p className="s-backup-note">先选择备份进行完整下载和校验，此步骤不会修改当前数据。</p>{list.isPending?<p role="status">正在读取云盘备份…</p>:list.error?<p className="s-error">{list.error.message}</p>:!list.data?.snapshots.length?<p>此文件夹暂无 UP Studio 备份。</p>:<div className="s-backup-snapshots">{list.data.snapshots.map(snapshot=><button className="s-secondary" key={snapshot.id} disabled={busy} onClick={()=>prepare(snapshot.id)}><span>{time(snapshot.time)}</span><small>{snapshot.bytes==null?'完整恢复点':bytes(snapshot.bytes)} · 检查并恢复</small></button>)}</div>}{phase&&<p role="status">{phase}…</p>}{error&&<p className="s-error" role="alert">{error}</p>}</Sheet>;
+}
+
+function DisconnectConfirm({disabled,confirm}:{disabled:boolean;confirm:()=>void}){
+ const [open,setOpen]=useState(false),reduced=useReducedMotion(),trigger=useRef<HTMLButtonElement>(null);
+ const close=()=>{setOpen(false);trigger.current?.focus()};
+ const spring=reduced?{duration:0}:{type:'spring' as const,stiffness:460,damping:32,mass:.75};
+ return <motion.div className="s-disconnect-confirm" initial={false} animate={{width:open?120:42}} transition={spring} data-expanded={open} onKeyDown={e=>{if(e.key==='Escape'&&open){e.preventDefault();e.stopPropagation();close()}}}>
+ <button ref={trigger} className="s-disconnect-trigger" aria-label="断开连接" aria-expanded={open} disabled={disabled} onClick={()=>setOpen(v=>!v)}><motion.span animate={{rotate:open?-16:0,scale:open?.92:1}} transition={spring}><Unplug/></motion.span></button>
+ <div className="s-disconnect-options" aria-hidden={!open}>{[{label:'确认断开连接',icon:<Check/>,action:confirm,kind:'accept'},{label:'取消断开连接',icon:<X/>,action:close,kind:'cancel'}].map((item,i)=><motion.span key={item.kind} initial={false} animate={{opacity:open?1:0,x:open?0:-14,scale:open?1:.65}} transition={reduced?{duration:0}:{...spring,delay:open?.045+i*.035:0}}><button className={'s-disconnect-choice '+item.kind} aria-label={item.label} tabIndex={open?0:-1} disabled={disabled||!open} onClick={item.action}>{item.icon}</button></motion.span>)}</div>
+ </motion.div>;
 }

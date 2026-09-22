@@ -15,3 +15,5 @@
 .ui-step-slider[data-dragging=true] .ui-slider-thumb{box-shadow:0 1px 4px #00000020}
 @media(prefers-reduced-motion:reduce){.ui-popover{animation:none}.ui-slider-ticks i{transition:none}}
 .ui-popover .ui-menu-list,.ui-popover .s-select-menu{max-height:min(360px,calc(100dvh - 48px))}
+
+.ui-popover .ui-menu-list>button,.ui-popover .s-select-menu>button{border-radius:999px}
