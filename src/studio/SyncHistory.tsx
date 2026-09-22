@@ -8,7 +8,7 @@ import {date} from '../format';
 import {syncSlots,incomingSlots} from './sync-strip';
 
 const labels:Record<string,string>={views:'播放量',coverAttractionScore:'封标吸引力',avgWatchSeconds:'观看时长',avgWatchPercent:'观看进度',followersGained:'涨粉',likes:'点赞',comments:'评论',danmaku:'弹幕',favorites:'收藏',coins:'投币',shares:'分享',threeSecondBounceRate:'3秒跳出率',interactionRate:'互动率',playToFollowRate:'播转粉率',fanAudiencePercent:'粉丝观看率',guestAudiencePercent:'游客观看率'};
-const names:Record<string,string>={success:'同步完成',partial:'部分完成',failed:'同步失败',running:'正在同步'};
+const names:Record<string,string>={success:'更新完成',partial:'部分完成',failed:'同步失败',running:'正在同步'};
 export function SyncHistory({runs,day,today,firstDay,onDayChange,loading=false,error=false}:{runs:any[];day:string;today:string;firstDay:string|null;onDayChange:(day:string)=>void;loading?:boolean;error?:boolean}){
  const plot=useRef<HTMLDivElement>(null),[width,setWidth]=useState(668),[pagination,setPagination]=useState({day,page:0}),[selected,setSelected]=useState(''),[hover,setHover]=useState<{run:any;x:number}|null>(null);
  useLayoutEffect(()=>{const el=plot.current!;const observer=new ResizeObserver(()=>setWidth(el.clientWidth));setWidth(el.clientWidth);observer.observe(el);return()=>observer.disconnect()},[]);
@@ -52,7 +52,7 @@ export function SyncHistory({runs,day,today,firstDay,onDayChange,loading=false,e
 
   </div>
 
-{pages>1&&<nav className="s-history-dots" aria-label="同步记录分页">{Array.from({length:pages},(_,n)=>pages-1-n).map(i=><button key={i} aria-label={'第 '+(i+1)+' 页同步记录'} aria-current={current===i?'page':undefined} onClick={()=>{setPage(i);setHover(null);setSelected('')}}><span/></button>)}</nav>}
+{<nav style={{visibility:pages>1?'visible':'hidden'}} aria-hidden={pages<=1} className="s-history-dots" aria-label="同步记录分页">{Array.from({length:pages},(_,n)=>pages-1-n).map(i=><button key={i} tabIndex={pages>1?0:-1} aria-label={'第 '+(i+1)+' 页同步记录'} aria-current={current===i?'page':undefined} onClick={()=>{setPage(i);setHover(null);setSelected('')}}><span/></button>)}</nav>}
  </div>;
 }
 
