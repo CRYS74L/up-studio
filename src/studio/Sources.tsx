@@ -1,3 +1,4 @@
+import {HistoryStatus} from './HistoryStatus';
 import {DisconnectIcon} from './DisconnectIcon';
 import {BackupHistory} from './BackupHistory';
 import {BackupPanel,useBackupStatus} from './BackupPanel';
@@ -54,5 +55,5 @@ function BackupRecords(){
  const status=useBackupStatus(),runs=status.data?.profiles[0]?.runs??[],now=syncDay().slice(0,7),[selected,setSelected]=useState(''),month=selected||now,first=runs.length?runs.map(r=>syncDay(new Date(r.startedAt)).slice(0,7)).sort()[0]:now;
  const shift=(n:number)=>{const [y,m]=month.split('-').map(Number),d=new Date(y,m-1+n,1);setSelected(d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'))};
  const filtered=runs.filter(r=>syncDay(new Date(r.startedAt)).startsWith(month));
- return <div className="s-backup-records"><header className="s-record-row-heading"><h3>数据备份</h3><nav className="s-history-day" aria-label="备份记录月份"><button aria-label="前一个月备份记录" disabled={month<=first} onClick={()=>shift(-1)}><ChevronLeft/></button><time>{month.replace('-','/')}</time><button aria-label="后一个月备份记录" disabled={month>=now} onClick={()=>shift(1)}><ChevronRight/></button></nav></header><BackupHistory key={month} runs={filtered}/>{status.error&&<p className="s-error">暂时无法读取备份记录</p>}</div>;
+ return <div className="s-backup-records"><header className="s-record-row-heading"><h3><HistoryStatus status={filtered[0]?.status}/>数据备份</h3><nav className="s-history-day" aria-label="备份记录月份"><button aria-label="前一个月备份记录" disabled={month<=first} onClick={()=>shift(-1)}><ChevronLeft/></button><time>{month.replace('-','/')}</time><button aria-label="后一个月备份记录" disabled={month>=now} onClick={()=>shift(1)}><ChevronRight/></button></nav></header><BackupHistory key={month} runs={filtered} period={month.replace('-','/')}/>{status.error&&<p className="s-error">暂时无法读取备份记录</p>}</div>;
 }
