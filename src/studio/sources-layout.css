@@ -108,4 +108,6 @@
 /* Match the inner vertical inset to the gap between account actions. */
 .studio .s-connection .s-account-row{--account-inset:12px;padding-block:var(--account-inset);gap:var(--account-inset)}
 @media(max-width:500px){.studio .s-connection .s-account-row{--account-inset:10px}}
-
+.studio .s-connection .s-account-identity b{font-size:14px}
+@media(max-width:1050px){.studio .s-sources .s-service-symbol,.studio .s-backup-panel>.s-source-heading .s-service-symbol{width:32px;height:32px;flex:0 0 32px}.studio .s-sources .s-service-symbol>svg{width:50%;height:50%;flex:none}}
+@media(max-width:500px){.studio .s-connection .s-account-identity b{font-size:15px}}
