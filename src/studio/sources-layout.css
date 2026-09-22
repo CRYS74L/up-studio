@@ -95,3 +95,5 @@
 @media(min-width:1051px){.studio .s-connection .s-connection-accounts{display:flex;flex-direction:column;flex:1;min-height:0}}
 
 .s-sync-records-panel .s-history-heading{grid-template-columns:max-content minmax(0,1fr)}.s-sync-records-panel .s-history-day{justify-self:end}.s-history-day button{touch-action:none;user-select:none}
+
+.s-history-day{align-items:center;line-height:20px}.s-history-day time{display:flex;align-items:center;height:28px;font-weight:500;line-height:20px}.studio .s-history-day button{display:flex;align-items:center;justify-content:center;line-height:20px}.studio .s-history-day button svg{display:block;margin:0;flex:none}
