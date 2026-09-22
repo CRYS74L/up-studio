@@ -7,11 +7,11 @@ import {BackupPanel,useBackupStatus} from './BackupPanel';
 import {syncDay} from '../../shared/sync-days';
 import {SyncFreshness} from './FreshnessAge';
 import './sources-layout.css';
-import {AccountSettings} from './Account';
+import {AccountSettings,useProfile} from './Account';
 import {SyncHistory} from './SyncHistory';
 import {Select} from './Select';
 import {SyncButton} from './SyncButton';
-import {useEffect,useState} from 'react';
+import {useEffect,useState,useRef} from 'react';
 import {useQuery,useQueryClient,useMutation,keepPreviousData} from '@tanstack/react-query';
 import QRCode from 'qrcode';
 import {CheckCircle2,Clock3,Database,RefreshCw,Server,ShieldCheck,Unplug,Link2,ChevronDown,ChevronLeft,ChevronRight,History} from 'lucide-react';
@@ -24,7 +24,7 @@ export type LocalStatus={ok:boolean;pid:number;version:string;uptime:number;auto
 export function uptimeLabel(seconds:number){const minutes=Math.floor(seconds/60);return minutes>=60?`${Math.floor(minutes/60)} 小时 ${minutes%60} 分钟`:`${minutes} 分钟`;}
 const runNames:Record<string,string>={success:'采集完成',partial:'部分完成',failed:'采集失败',running:'正在采集'};
 export function Sources({sync}:{sync:ReturnType<typeof useSync>}){
-  const client=useQueryClient();const {summary}=useDashboardData();
+  const client=useQueryClient();const {summary,summaryPending}=useDashboardData();const profile=useProfile(),backup=useBackupStatus(),initialReady=useRef(false);
   const connection=useQuery({queryKey:['bili-status'],queryFn:()=>request<any>('/api/bilibili/status'),refetchInterval:15000});
   const local=useQuery({queryKey:['local-status'],queryFn:()=>request<LocalStatus>('/api/local/status'),retry:false,refetchInterval:15000});
   const schedule=useMutation({mutationFn:(intervalMinutes:number)=>request('/api/local/schedule',{method:'PUT',body:JSON.stringify({intervalMinutes})}),onSuccess:()=>client.invalidateQueries({queryKey:['local-status']})});
@@ -39,10 +39,13 @@ export function Sources({sync}:{sync:ReturnType<typeof useSync>}){
   useEffect(()=>{if(location.hash.includes('connect=1'))void start();},[]);
   const runtime=local.error?undefined:local.data;
   const details=summary?.acquisition?.details;const total=details?.totalVideos??0;const connected=connection.data?.connected;const sessionBad=connection.data?.lastRun?.error_code==='session_expired';
+  const pending=connection.isPending||local.isPending||history.isPending||profile.isPending||backup.isPending||summaryPending;
+  if(!pending)initialReady.current=true;
+  if(!initialReady.current)return <SourcesLoading/>;
   return <div className="s-sources" data-page-pending={connection.isPending||local.isPending||history.isPending}><div className="s-two-col">
    <section className="s-panel s-connection"><div className="s-connection-accounts"><AccountSettings/></div></section>
    <section className="s-panel s-local-service"><header className="s-source-heading"><span className="s-service-symbol blue"><RefreshCw/></span><div><h2>数据更新</h2></div><SourceNotice message={error||sync.error?.message||connection.error?.message||local.error?.message||schedule.error?.message}/></header>
-    <div className="s-update-summary"><div><strong><SyncFreshness capturedAt={summary?.summary.fresh} fallback={summary?.freshnessMinutes}/></strong><small>{connection.isPending?'读取中':connected&&!sessionBad?'已运行 '+(runtime?uptimeLabel(runtime.uptime):'—'):'断开连接'}</small></div>{connected&&!sessionBad?<div className="s-sync-actions"><button className="s-secondary s-round-action" aria-label="断开更新连接" onClick={()=>setConfirm(true)}><DisconnectIcon/></button><button className="s-primary" disabled={sync.isPending} onClick={()=>sync.mutate()}><RefreshCw className={sync.isPending?'spin':''}/>{sync.isPending?'正在更新':'立即更新'}</button></div>:<button className="s-primary" disabled={starting} onClick={start}><Link2/>{starting?'生成二维码…':'扫码连接'}</button>}</div>
+    <div className="s-update-summary"><div><strong><SyncFreshness capturedAt={summary?.summary.fresh} fallback={summary?.freshnessMinutes}/></strong><small>{connection.isPending?'读取中':connected&&!sessionBad?'已运行 '+(runtime?uptimeLabel(runtime.uptime):'—'):'断开连接'}</small></div>{connected&&!sessionBad?<div className="s-sync-actions"><button className="s-secondary s-round-action" aria-label="断开更新连接" onClick={()=>setConfirm(true)}><DisconnectIcon/></button><button className="s-primary" disabled={sync.isPending} onClick={()=>sync.mutate()}><RefreshCw className={sync.isPending?'spin':''}/>{sync.isPending?'正在更新':'立即更新'}</button></div>:<button className="s-primary" disabled={starting||!connection.data} onClick={start}><Link2/>{!connection.data?'连接状态未知':starting?'生成二维码…':'扫码连接'}</button>}</div>
 
     <div className="s-update-schedule"><div><b>更新频率</b></div><Select aria-label="自动更新频率" value={runtime?.intervalMinutes??10} onChange={e=>schedule.mutate(Number(e.target.value))}>{[[0,'仅手动更新'],[5,'每5分钟'],[10,'每10分钟'],[15,'每15分钟'],[30,'每30分钟'],[60,'每1小时']].map(([n,label])=><option key={n} value={n}>{label}</option>)}</Select></div>
 
@@ -59,3 +62,5 @@ function BackupRecords(){
  const filtered=runs.filter(r=>syncDay(new Date(r.startedAt)).startsWith(month));
  return <div className="s-backup-records"><header className="s-record-row-heading"><h3>{status.error?<SourceNotice compact message="暂时无法读取备份记录，正在重试；当前显示上次读取的记录。"/>:<HistoryStatus status={filtered[0]?.status}/>}数据备份</h3><nav className="s-history-day" aria-label="备份记录月份"><button aria-label="前一个月备份记录" disabled={month<=first} onClick={()=>shift(-1)}><ChevronLeft/></button><time>{month.replace('-','/')}</time><button aria-label="后一个月备份记录" disabled={month>=now} onClick={()=>shift(1)}><ChevronRight/></button></nav></header><BackupHistory key={month} runs={filtered} period={month.replace('-','/')}/></div>;
 }
+
+function SourcesLoading(){return <div className="s-sources s-sources-loading" aria-busy="true" aria-label="正在读取数据源"><div className="s-two-col">{['哔哩哔哩创作中心','数据更新'].map(title=><section className={'s-panel '+(title==='数据更新'?'s-local-service':'s-connection')} key={title}><header className="s-source-heading"><span className="s-load-placeholder s-load-icon"/><h2>{title}</h2></header><div className="s-load-placeholder s-load-row"/><div className="s-load-placeholder s-load-row"/></section>)}</div>{['数据备份','同步记录'].map(title=><section className={'s-panel '+(title==='数据备份'?'s-backup-panel':'s-sync-records-panel')} key={title}><header className="s-source-heading"><span className="s-load-placeholder s-load-icon"/><h2>{title}</h2></header><div className="s-load-placeholder s-load-row"/><div className="s-load-placeholder s-load-row"/></section>)}</div>}

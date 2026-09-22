@@ -13,6 +13,7 @@ export function useDashboardData() {
   });
   return {
     summary: summary.data,
+    summaryPending: summary.isPending,
     videos: summary.data?.configured ? videos.data?.videos ?? [] : [],
     pending: summary.isPending || (Boolean(summary.data?.configured) && videos.isPending),
     error: summary.error || (summary.data?.configured ? videos.error : null),
