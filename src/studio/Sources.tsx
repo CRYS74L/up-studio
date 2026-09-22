@@ -1,3 +1,4 @@
+import {SourceNotice} from './SourceNotice';
 import {currentHistoryRuns} from './sync-strip';
 import {HistoryStatus} from './HistoryStatus';
 import {DisconnectIcon} from './DisconnectIcon';
@@ -40,11 +41,11 @@ export function Sources({sync}:{sync:ReturnType<typeof useSync>}){
   const details=summary?.acquisition?.details;const total=details?.totalVideos??0;const connected=connection.data?.connected;const sessionBad=connection.data?.lastRun?.error_code==='session_expired';
   return <div className="s-sources" data-page-pending={connection.isPending||local.isPending||history.isPending}><div className="s-two-col">
    <section className="s-panel s-connection"><div className="s-connection-accounts"><AccountSettings/></div></section>
-   <section className="s-panel s-local-service"><header className="s-source-heading"><span className="s-service-symbol blue"><RefreshCw/></span><div><h2>数据更新</h2></div></header>
+   <section className="s-panel s-local-service"><header className="s-source-heading"><span className="s-service-symbol blue"><RefreshCw/></span><div><h2>数据更新</h2></div><SourceNotice message={error||sync.error?.message||connection.error?.message||local.error?.message||schedule.error?.message}/></header>
     <div className="s-update-summary"><div><strong><SyncFreshness capturedAt={summary?.summary.fresh} fallback={summary?.freshnessMinutes}/></strong><small>{connection.isPending?'读取中':connected&&!sessionBad?'已运行 '+(runtime?uptimeLabel(runtime.uptime):'—'):'断开连接'}</small></div>{connected&&!sessionBad?<div className="s-sync-actions"><button className="s-secondary s-round-action" aria-label="断开更新连接" onClick={()=>setConfirm(true)}><DisconnectIcon/></button><button className="s-primary" disabled={sync.isPending} onClick={()=>sync.mutate()}><RefreshCw className={sync.isPending?'spin':''}/>{sync.isPending?'正在更新':'立即更新'}</button></div>:<button className="s-primary" disabled={starting} onClick={start}><Link2/>{starting?'生成二维码…':'扫码连接'}</button>}</div>
-    {(error||sync.error||connection.error)&&<p className="s-error" role="alert">{error||sync.error?.message||connection.error?.message}</p>}
+
     <div className="s-update-schedule"><div><b>更新频率</b></div><Select aria-label="自动更新频率" value={runtime?.intervalMinutes??10} onChange={e=>schedule.mutate(Number(e.target.value))}>{[[0,'仅手动更新'],[5,'每5分钟'],[10,'每10分钟'],[15,'每15分钟'],[30,'每30分钟'],[60,'每1小时']].map(([n,label])=><option key={n} value={n}>{label}</option>)}</Select></div>
-    {schedule.error&&<p className="s-error">{schedule.error.message}</p>}
+
    </section></div>
     <section className="s-panel s-sync-records-panel"><header className="s-source-heading"><span className="s-service-symbol teal"><History/></span><h2>同步记录</h2></header><SyncHistory runs={currentHistoryRuns(history.data,shownDay)} day={shownDay} today={history.data?.today??syncDay()} firstDay={history.data?.firstDay??null} onDayChange={day=>setHistoryDay(day===syncDay()?'':day)} loading={history.isPending||history.isPlaceholderData} error={!!history.error}/><BackupRecords/></section>
     <BackupPanel/>
@@ -56,5 +57,5 @@ function BackupRecords(){
  const status=useBackupStatus(),runs=status.data?.profiles[0]?.runs??[],now=syncDay().slice(0,7),[selected,setSelected]=useState(''),month=selected||now,first=runs.length?runs.map(r=>syncDay(new Date(r.startedAt)).slice(0,7)).sort()[0]:now;
  const shift=(n:number)=>{const [y,m]=month.split('-').map(Number),d=new Date(y,m-1+n,1);setSelected(d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'))};
  const filtered=runs.filter(r=>syncDay(new Date(r.startedAt)).startsWith(month));
- return <div className="s-backup-records"><header className="s-record-row-heading"><h3><HistoryStatus status={filtered[0]?.status}/>数据备份</h3><nav className="s-history-day" aria-label="备份记录月份"><button aria-label="前一个月备份记录" disabled={month<=first} onClick={()=>shift(-1)}><ChevronLeft/></button><time>{month.replace('-','/')}</time><button aria-label="后一个月备份记录" disabled={month>=now} onClick={()=>shift(1)}><ChevronRight/></button></nav></header><BackupHistory key={month} runs={filtered} period={month.replace('-','/')}/>{status.error&&<p className="s-error">暂时无法读取备份记录</p>}</div>;
+ return <div className="s-backup-records"><header className="s-record-row-heading"><h3>{status.error?<SourceNotice compact message="暂时无法读取备份记录，正在重试；当前显示上次读取的记录。"/>:<HistoryStatus status={filtered[0]?.status}/>}数据备份</h3><nav className="s-history-day" aria-label="备份记录月份"><button aria-label="前一个月备份记录" disabled={month<=first} onClick={()=>shift(-1)}><ChevronLeft/></button><time>{month.replace('-','/')}</time><button aria-label="后一个月备份记录" disabled={month>=now} onClick={()=>shift(1)}><ChevronRight/></button></nav></header><BackupHistory key={month} runs={filtered} period={month.replace('-','/')}/></div>;
 }

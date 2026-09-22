@@ -1,0 +1,4 @@
+import {useRef,useState} from 'react';
+import {TriangleAlert} from 'lucide-react';
+import {Popover} from './controls';
+export function SourceNotice({message,compact=false,label='异常详情'}:{message?:string;compact?:boolean;label?:string}){const ref=useRef<HTMLButtonElement>(null),[open,setOpen]=useState(false);if(!message)return null;const detail=/failed to fetch|networkerror|load failed/i.test(message)?'暂时无法连接服务，服务恢复后会自动刷新。当前保留最近读取的数据。':message;return <><button ref={ref} className={'s-source-notice'+(compact?' compact':'')} aria-label={label+'：'+detail} onMouseEnter={()=>setOpen(true)} onMouseLeave={()=>setOpen(false)} onFocus={()=>setOpen(true)} onBlur={()=>setOpen(false)} onClick={()=>setOpen(true)}><TriangleAlert/>{!compact&&<span>{label}</span>}</button><span className="s-notice-announcement" role="status">{detail}</span><Popover open={open} close={()=>setOpen(false)} anchor={ref} label={label} width={280}><p className="s-notice-detail">{detail}</p></Popover></>}
