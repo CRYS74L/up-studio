@@ -104,3 +104,8 @@
 @media(min-width:1051px){.studio .s-sources{grid-template-rows:280px 280px}.studio .s-sources>.s-two-col>.s-connection,.studio .s-sources>.s-two-col>.s-local-service,.studio .s-sources>.s-backup-panel,.studio .s-sources>.s-sync-records-panel{height:280px}.studio .s-local-service .s-update-schedule{padding-bottom:0}.studio .s-sync-records-panel{padding:24px}}
 @media(max-width:1050px){.studio .s-sources>.s-backup-panel,.studio .s-sources>.s-sync-records-panel{height:280px;box-sizing:border-box}.studio .s-backup-panel>.s-backup-actions{flex-wrap:nowrap}.studio .s-connection .s-account-row>.s-avatar{width:30px;height:30px;flex-basis:30px}.studio .s-connection .s-account-row{min-height:52px}}
 .studio .s-sync-records-panel .s-history-dots{margin:6px auto 0}
+
+/* Match the inner vertical inset to the gap between account actions. */
+.studio .s-connection .s-account-row{--account-inset:12px;padding-block:var(--account-inset);gap:var(--account-inset)}
+@media(max-width:500px){.studio .s-connection .s-account-row{--account-inset:10px}}
+
