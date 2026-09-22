@@ -1,3 +1,4 @@
+import {ServiceSettings,loopback} from './service-settings.mjs';
 import {CloudBackups} from './cloud-backups.mjs';
 import {captureBackup,installRestoredDatabase,recoverRestore} from './cloud-backup-data.mjs';
 import http from 'node:http';
@@ -49,13 +50,13 @@ async function collect() {
   }
   catch {log({event:'collection_failed'});} finally {collecting=false;}
 }
-const server=http.createServer(async(req,res)=>{
+const handler=async(req,res)=>{
   let counted=false;try {
-    const allowedHosts=new Set(['localhost:'+port,'127.0.0.1:'+port]);
-    if(!allowedHosts.has(req.headers.host) || (req.headers.origin && !['http://localhost:'+port,'http://127.0.0.1:'+port].includes(req.headers.origin))) {res.writeHead(403);res.end('Local origin required');return;}
-    const url=new URL(req.url,'http://localhost:'+port);
+    if(!serviceSettings.allowed(req)){res.writeHead(403);res.end('Access origin denied');return;}
+    const url=new URL(req.url,'http://'+req.headers.host);if(url.origin!=='http://'+req.headers.host){res.writeHead(403);res.end();return;}
     if(url.pathname==='/api/local/status') {res.writeHead(200,{'Content-Type':'application/json','Cache-Control':'no-store'});res.end(JSON.stringify({ok:true,pid:process.pid,supervisorPid:Number(process.env.BILIBILI_SUPERVISOR_PID)||null,version:current.version,uptime:Math.floor((Date.now()-started)/1000),autoCollect:intervalMinutes>0,intervalMinutes,collecting,lastCollection,recoveryOnly:!db,backupBusy:cloudBackups.job?.status==='running',runtime:'standalone-node',release:current.id}));return;}
     const chunks=[];let size=0;for await(const chunk of req){size+=chunk.length;if(size>5_000_000){res.writeHead(413);res.end();return;}chunks.push(chunk);}
+    if(url.pathname==='/api/local/settings'){const localClient=loopback(req.socket.remoteAddress);try{if(req.method!=='GET'&&!(req.method==='PUT'&&localClient)){res.writeHead(403);res.end();return;}const result=req.method==='GET'?await serviceSettings.status():await serviceSettings.update(JSON.parse(Buffer.concat(chunks).toString('utf8')));res.writeHead(200,{'Content-Type':'application/json','Cache-Control':'no-store'});res.end(JSON.stringify({...result,canEdit:localClient}));}catch(error){res.writeHead(400,{'Content-Type':'application/json'});res.end(JSON.stringify({error:{message:error.message}}));}return;}
     if(url.pathname.startsWith('/api/backups/')){try{const body=chunks.length?JSON.parse(Buffer.concat(chunks).toString('utf8')):{};const result=await cloudBackups.handle(url,req.method,body);res.writeHead(200,{'Content-Type':'application/json','Cache-Control':'no-store'});res.end(JSON.stringify(result));}catch(error){res.writeHead(400,{'Content-Type':'application/json','Cache-Control':'no-store'});res.end(JSON.stringify({ok:false,error:{message:error.message||'备份操作失败'}}));}return;}
     if(url.pathname.startsWith('/api/')&&(!db||maintenance)){res.writeHead(503,{'Content-Type':'application/json'});res.end(JSON.stringify({ok:false,error:{message:maintenance?'正在恢复数据，请稍候':'数据库不可用，请在数据源的数据备份板块恢复'}}));return;}
     if(url.pathname==='/api/local/schedule'&&req.method==='PUT'){
@@ -67,12 +68,14 @@ const server=http.createServer(async(req,res)=>{
     const controller=new AbortController();res.on('close',()=>controller.abort());
     const request=new Request(url,{method:req.method,headers:req.headers,signal:controller.signal,...(!['GET','HEAD'].includes(req.method)?{body:Buffer.concat(chunks)}:{})});
     activeRequests++;counted=true;
-    const response=!db?await env.ASSETS.fetch(request):await worker.fetch(request,env,{waitUntil(p){backgroundWrites++;Promise.resolve(p).catch(()=>log({event:'background_failed'})).finally(()=>backgroundWrites--);},passThroughOnException(){}});
+    const response=!db?await env.ASSETS.fetch(request):await worker.fetch(request,{...env,APP_ORIGIN:url.origin},{waitUntil(p){backgroundWrites++;Promise.resolve(p).catch(()=>log({event:'background_failed'})).finally(()=>backgroundWrites--);},passThroughOnException(){}});
     res.writeHead(response.status,Object.fromEntries(response.headers));
     if(response.body){const reader=response.body.getReader();const cancel=()=>{void reader.cancel().catch(()=>{})};res.on('close',cancel);try{while(!res.destroyed){const {value,done}=await reader.read();if(done)break;if(!res.write(Buffer.from(value)))await new Promise(resolve=>{const done=()=>{res.off('drain',done);res.off('close',done);resolve()};res.once('drain',done);res.once('close',done)});}}finally{res.off('close',cancel);reader.releaseLock();}}
     res.end();
   } catch {log({event:'request_failed'});if(!res.headersSent)res.writeHead(500);res.end();}finally{if(counted)activeRequests--;}
-});
+};
+const serviceSettings=new ServiceSettings({root,port,handler});
+const server=http.createServer(handler);
 server.on('error',error=>{log({event:'listen_failed',code:error.code});db?.database.close();process.exit(1);});
 server.listen(port,'127.0.0.1',()=>{fs.writeFileSync(path.join(root,'service.json'),JSON.stringify({pid:process.pid,started,release:current.id}));log({event:'started',pid:process.pid,version:current.version});});
 if(intervalMinutes>0)timer=setInterval(collect,intervalMinutes*60_000);
@@ -86,6 +89,6 @@ const backups=setInterval(async()=>{if(!db||maintenance||stopping||localBacking)
   for(const file of owned.slice(0,-7)){if(/^data-\d{4}-\d{2}-\d{2}\.sqlite$/.test(file)){const ownedPath=path.join(root,'backups',file);if(fs.existsSync(ownedPath))fs.unlinkSync(ownedPath);}}
   fs.writeFileSync(indexFile,JSON.stringify(owned.slice(-7)));
 }catch{log({event:'backup_failed'});}finally{localBacking=false;}},60*60_000);
-let delayedStop;function stop(){if(stopping)return;if(cloudBackups.job?.status==='running'){if(!delayedStop)delayedStop=setTimeout(()=>{delayedStop=null;stop()},1000);return;}stopping=true;clearInterval(cloudTimer);cloudBackups.close();clearInterval(timer);clearTimeout(initial);clearTimeout(retryTimer);clearInterval(backups);server.close(()=>{const drain=setInterval(()=>{if(collecting||activeRequests||backgroundWrites||localBacking)return;clearInterval(drain);db?.database.close();log({event:'stopped'});process.exit(0);},100);});setTimeout(()=>{log({event:'stop_timeout'});process.exit(0);},120_000).unref();}
+let delayedStop;function stop(){if(stopping)return;if(cloudBackups.job?.status==='running'){if(!delayedStop)delayedStop=setTimeout(()=>{delayedStop=null;stop()},1000);return;}stopping=true;serviceSettings.close();clearInterval(cloudTimer);cloudBackups.close();clearInterval(timer);clearTimeout(initial);clearTimeout(retryTimer);clearInterval(backups);server.close(()=>{const drain=setInterval(()=>{if(collecting||activeRequests||backgroundWrites||localBacking)return;clearInterval(drain);db?.database.close();log({event:'stopped'});process.exit(0);},100);});setTimeout(()=>{log({event:'stop_timeout'});process.exit(0);},120_000).unref();}
 setInterval(()=>{if(fs.existsSync(path.join(root,'stop.request')))stop();},1000).unref();
 process.on('SIGTERM',stop);process.on('SIGINT',stop);

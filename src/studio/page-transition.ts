@@ -22,6 +22,7 @@ async function prefetch(route:StudioRoute,signal:AbortSignal){
   const videos=summary.configured?(await ensure(['videos',captured??null],'/api/videos'+(captured?'?capturedAt='+encodeURIComponent(captured):''))).videos:[];
   if(signal.aborted)return;
   const jobs:Promise<unknown>[]=[loadFonts(chartFont)],covers:Promise<unknown>[]=[];
+  if(route.page==='settings')jobs.push(ensure(['service-settings'],'/api/local/settings'));
   if(route.page==='sources')jobs.push(ensure(['bili-status'],'/api/bilibili/status'),ensure(['local-status'],'/api/local/status'),ensure(['acquisition-history'],'/api/acquisition/runs'));
   if(route.page==='analysis'&&route.tab==='ai')jobs.push(import('./AIAnalysis'),ensure(['ai-status'],'/api/ai/status').then(status=>ensure(['ai-conversations',status.accountId??'local',false],'/api/ai/conversations')));
   else if(route.page==='analysis')jobs.push(ensure(['account-history'],'/api/account/history'));
