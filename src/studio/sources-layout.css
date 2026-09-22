@@ -128,8 +128,8 @@
 .studio .s-sources>.s-backup-panel,.studio .s-sources>.s-sync-records-panel{height:286px}
 @media(min-width:1051px){.studio .s-sources{grid-template-rows:280px 286px}}
 /* Compact account typography and controls. */
-.studio .s-connection .s-account-identity b{font-size:12px;line-height:20px}
-.studio .s-connection .s-account-action,.studio .s-connection .s-account-row .s-account-action{font-size:12px;line-height:20px;min-height:36px;padding:7px 12px;gap:8px}
-.studio .s-connection .s-account-action>svg,.studio .s-connection .s-account-row .s-account-action>svg{width:16px;height:16px;flex:0 0 16px}
-.studio .s-connection .s-account-row .s-account-logout{width:36px;height:36px;min-height:36px;flex:0 0 36px;padding:0}
+.studio .s-connection .s-account-identity b{font-size:13px;line-height:20px}
+.studio .s-connection .s-account-action,.studio .s-connection .s-account-row .s-account-action{font-size:13px;line-height:20px;min-height:40px;padding:9px 14px;gap:8px}
+.studio .s-connection .s-account-action>svg,.studio .s-connection .s-account-row .s-account-action>svg{width:18px;height:18px;flex:0 0 18px}
+.studio .s-connection .s-account-row .s-account-logout{width:40px;height:40px;min-height:40px;flex:0 0 40px;padding:0}
 @media(max-width:500px){.studio .s-connection .s-account-action,.studio .s-connection .s-account-row .s-account-action{padding-inline:10px;gap:6px}.studio .s-connection .s-account-row .s-account-logout{padding:0}}
