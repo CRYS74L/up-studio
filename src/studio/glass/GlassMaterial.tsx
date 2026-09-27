@@ -1,4 +1,3 @@
-import {SidebarBackdrop} from './SidebarBackdrop';
 import {useId,useLayoutEffect,useRef,useState} from 'react';
 import {useLabSettings} from '../lab-settings';
 import {GlassFilter} from './GlassFilter';
@@ -12,9 +11,14 @@ export const GLASS_PRESETS={
 export function GlassMaterial({sidebar=false,painted=true}:{sidebar?:boolean;painted?:boolean}){
  const {glass}=useLabSettings(),p=GLASS_PRESETS[glass==='demo'?'open-source':glass],id='liquid-'+useId().replace(/:/g,''),ref=useRef<HTMLSpanElement>(null),[size,setSize]=useState({width:0,height:0});
  useLayoutEffect(()=>{const el=ref.current!;const bounds=el.getBoundingClientRect();setSize({width:bounds.width,height:bounds.height});const observer=new ResizeObserver(([entry])=>{const {width,height}=entry.contentRect;setSize(old=>Math.abs(old.width-width)<1&&Math.abs(old.height-height)<1?old:{width,height})});observer.observe(el);return()=>observer.disconnect()},[]);
- return <span ref={ref} className="s-glass-material" aria-hidden="true" data-material={glass}>
-  {size.width>0&&size.height>0&&<GlassFilter gentle={painted} id={id} mode={p.mode} displacementScale={Math.min(p.scale,size.height*.4)} aberrationIntensity={.25} width={size.width} height={size.height}/>}
-  <span className="s-glass-optics" style={{filter:painted?`url(#${id}) blur(${p.blur}px) saturate(${p.saturation}%)`:`url(#${id})`,backdropFilter:painted?'none':`blur(${p.blur}px) saturate(${p.saturation}%)`}}>{painted&&<SidebarBackdrop/>}</span>
+ // Chromium supports SVG backdrop references; WebKit and Gecko use native CSS
+ // filters so scrolling never depends on a JavaScript-painted page replica.
+ const svgBackdrop=/(Chrome|Chromium|Edg)\//.test(navigator.userAgent)&&!CSS.supports('-webkit-touch-callout','none');
+ const effect=(svgBackdrop?`url(#${id}) `:'')+`blur(${p.blur}px) saturate(${p.saturation}%)`;
+ useLayoutEffect(()=>{const surface=ref.current?.closest<HTMLElement>('.s-liquid');if(!surface)return;surface.dataset.nativeGlass='true';surface.style.setProperty('--native-glass-effect',effect);return()=>{delete surface.dataset.nativeGlass;surface.style.removeProperty('--native-glass-effect')}},[effect]);
+ return <span ref={ref} className="s-glass-material" aria-hidden="true" data-renderer={svgBackdrop?'native-svg':'native-css'} data-material={glass}>
+  {svgBackdrop&&size.width>0&&size.height>0&&<GlassFilter gentle id={id} mode={p.mode} displacementScale={Math.min(p.scale,size.height*.4)} aberrationIntensity={.25} width={size.width} height={size.height}/>}
+  <span className="s-glass-native-edge"/>
   <span className="s-glass-tint" style={{background:`rgba(var(--liquid-tint-rgb),${p.tint})`}}/>
  </span>;
 }
