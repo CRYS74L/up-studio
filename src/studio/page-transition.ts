@@ -17,13 +17,15 @@ const decode=warmCover;
 async function prefetch(route:StudioRoute,signal:AbortSignal){
  const ensure=(key:unknown[],path:string)=>{const cached=client.getQueryData<any>(key);const options={queryKey:key,queryFn:()=>request<any>(path),staleTime:30000};if(cached!==undefined){void client.prefetchQuery(options);return Promise.resolve(cached)}return client.fetchQuery(options)};
  const work=async()=>{
+  if(route.page==='settings'){await ensure(['service-settings'],'/api/local/settings');return;}
+  if(route.page==='sources'){await Promise.allSettled([ensure(['bili-status'],'/api/bilibili/status'),ensure(['local-status'],'/api/local/status'),ensure(['acquisition-history',''],'/api/acquisition/runs'),ensure(['cloud-backups'],'/api/backups/status'),ensure(['account-profile'],'/api/account/profile')]);return;}
   const summary=await ensure(['summary'],'/api/dashboard/summary');if(signal.aborted)return;
   const captured=summary.summary?.fresh;
   const videos=summary.configured?(await ensure(['videos',captured??null],'/api/videos'+(captured?'?capturedAt='+encodeURIComponent(captured):''))).videos:[];
   if(signal.aborted)return;
-  const jobs:Promise<unknown>[]=[loadFonts(chartFont)],covers:Promise<unknown>[]=[];
-  if(route.page==='settings')jobs.push(ensure(['service-settings'],'/api/local/settings'));
-  if(route.page==='sources')jobs.push(ensure(['bili-status'],'/api/bilibili/status'),ensure(['local-status'],'/api/local/status'),ensure(['acquisition-history'],'/api/acquisition/runs'));
+  const jobs:Promise<unknown>[]=[],covers:Promise<unknown>[]=[];
+  if(route.page==='overview'||route.page==='analysis'&&route.tab!=='ai'||route.video)jobs.push(loadFonts(chartFont));
+  if(route.page==='sources')jobs.push(ensure(['bili-status'],'/api/bilibili/status'),ensure(['local-status'],'/api/local/status'),ensure(['acquisition-history',''],'/api/acquisition/runs'));
   if(route.page==='analysis'&&route.tab==='ai')jobs.push(import('./AIAnalysis'),ensure(['ai-status'],'/api/ai/status').then(status=>ensure(['ai-conversations',status.accountId??'local',false],'/api/ai/conversations')));
   else if(route.page==='analysis')jobs.push(ensure(['account-history'],'/api/account/history'));
   if(route.video){const video=videos.find((v:any)=>v.id===route.video);if(video){covers.push(decode(coverSrc(video,'card')));jobs.push(ensure(['timeseries',video.id],`/api/videos/${video.id}/timeseries`),ensure(['video-history',video.id,video.captured_at],`/api/videos/${video.id}/history`));}}

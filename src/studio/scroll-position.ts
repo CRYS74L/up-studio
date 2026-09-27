@@ -1,0 +1,2 @@
+/** Force an immediate restoration even when the document uses smooth scrolling. */
+export function restoreScroll(top=0){const html=document.documentElement,body=document.body,a=html.style.scrollBehavior,b=body.style.scrollBehavior;html.style.scrollBehavior='auto';body.style.scrollBehavior='auto';window.scrollTo({top,left:0,behavior:'auto'});if(document.scrollingElement)document.scrollingElement.scrollTop=top;html.style.scrollBehavior=a;body.style.scrollBehavior=b;}

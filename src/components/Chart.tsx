@@ -17,7 +17,7 @@ function themedOption(option: any, element: HTMLElement | null) {
   const radial=Array.isArray(option.series)&&option.series.every((s:any)=>['pie','map'].includes(s.type));
   return {...option,grid:radial?undefined:option.grid,textStyle:label(option.textStyle),xAxis:radial?undefined:map(option.xAxis,axis),yAxis:radial?undefined:map(option.yAxis,axis),
     legend:map(option.legend,(v:any)=>({...v,textStyle:label(v.textStyle),inactiveColor:muted,formatter:fmt(v.formatter)})),
-    tooltip:map(option.tooltip,(v:any)=>({...v,className:'s-chart-tooltip',renderMode:'html',appendTo:document.body,backgroundColor:'transparent',borderWidth:0,borderColor:'transparent',textStyle:label(v.textStyle),...(v.formatter?{formatter:fmt(v.formatter)}:{})})),
+    tooltip:map(option.tooltip,(v:any)=>({...v,className:'s-chart-tooltip',...(matchMedia('(pointer:coarse)').matches?{triggerOn:'click'}:{}),renderMode:'html',appendTo:document.body,backgroundColor:'transparent',borderWidth:0,borderColor:'transparent',textStyle:label(v.textStyle),...(v.formatter?{formatter:fmt(v.formatter)}:{})})),
     series:map(option.series,(v:any)=>({...v,...(v.type==='pie'?{padAngle:1,minAngle:2.5,itemStyle:{...v.itemStyle,borderRadius:7},data:v.data?.map((d:any)=>({...d,itemStyle:{...d.itemStyle,borderRadius:7}}))}:{}),...(v.type==='line'?{symbol:'circle',lineStyle:{...v.lineStyle,color:v.lineStyle?.color??v.itemStyle?.color,width:v.lineStyle?.width??2.2},itemStyle:{...v.itemStyle,color:surface,borderColor:v.lineStyle?.color??v.itemStyle?.color,borderWidth:2},smooth:.5,smoothMonotone:'x',connectNulls:false,areaStyle:v.areaStyle??{opacity:.5,color:{type:'linear',x:0,y:0,x2:0,y2:1,colorStops:[{offset:0,color:(v.lineStyle?.color??v.itemStyle?.color??'#FF73AC')+'28'},{offset:1,color:(v.lineStyle?.color??v.itemStyle?.color??'#FF73AC')+'00'}]}}}:{}),label:label(v.label),endLabel:label(v.endLabel),emphasis:{...v.emphasis,label:label(v.emphasis?.label)},markLine:v.markLine?{...v.markLine,label:label(v.markLine.label)}:v.markLine}))};
 }
 
@@ -28,7 +28,7 @@ export function Chart({ option, className, events, animateChanges=false }: { opt
   latest.current = { option, events };
   const bound = useRef<Record<string, (p: any) => void>>({});
   const dirty = useRef(true);
-  const signature=useRef('');
+  const signature=useRef('');const restoringPicture=useRef(false);
   const schedule = useRef<() => void>(() => {});
   const update = () => {
     const chart = instance.current;
@@ -49,9 +49,9 @@ export function Chart({ option, className, events, animateChanges=false }: { opt
       for(const key of ['xAxis','yAxis'] as const){const axes=resolved[key];const normalize=(axis:any,index:number)=>({min:null,max:null,...axis,id:axis.id??key+'-'+index});resolved[key]=Array.isArray(axes)?axes.map(normalize):axes?normalize(axes,0):axes;}
     }
     const nextSignature=JSON.stringify({...resolved,tooltip:undefined});
-    if(nextSignature!==signature.current){chart.setOption({...resolved,animation:!reduced&&document.documentElement.dataset.transitionKind!=='theme'&&current.option.animation!==false,animationDuration:650,animationDurationUpdate:450,animationEasingUpdate:'cubicInOut'},{notMerge:!animateChanges, ...(animateChanges?{replaceMerge:['series','xAxis','yAxis','dataZoom']}: {})});signature.current=nextSignature;}
+    if(nextSignature!==signature.current){chart.setOption({...resolved,animation:!restoringPicture.current&&!reduced&&document.documentElement.dataset.transitionKind!=='theme'&&current.option.animation!==false,animationDuration:650,animationDurationUpdate:450,animationEasingUpdate:'cubicInOut'},{notMerge:!animateChanges, ...(animateChanges?{replaceMerge:['series','xAxis','yAxis','dataZoom']}: {})});signature.current=nextSignature;}
     else chart.setOption({tooltip:resolved.tooltip});
-    dirty.current=false;
+    dirty.current=false;restoringPicture.current=false;
     for (const [name, callback] of Object.entries(bound.current)) chart.off(name, callback);
     bound.current = current.events ?? {};
     for (const [name, callback] of Object.entries(bound.current)) chart.on(name, callback);
@@ -59,16 +59,16 @@ export function Chart({ option, className, events, animateChanges=false }: { opt
   useLayoutEffect(() => {
     if (!element.current) return;
     const pictureKey=className+':'+(document.documentElement.dataset.theme??'light')+':'+JSON.stringify({...latest.current.option,tooltip:undefined});
-    const picture=chartPictures.get(pictureKey);if(picture){element.current.innerHTML='<div style="position:relative;width:100%;height:100%;overflow:hidden">'+picture+'</div>';element.current.dataset.chartPreview="true";}
+    const picture=chartPictures.get(pictureKey);restoringPicture.current=!!picture;if(picture){element.current.innerHTML='<div style="position:relative;width:100%;height:100%;overflow:hidden">'+picture+'</div>';element.current.dataset.chartPreview="true";}
     let live = true;
     let fontsReady = false;
     let visible = false;
-    let width = 0, height = 0;
+    let width = 0, height = 0,touchSuppressUntil=0;
     const resize = () => {
       const bounds=element.current?.getBoundingClientRect();visible=!!bounds&&bounds.bottom>0&&bounds.top<innerHeight+120;
       if (!live || !fontsReady || !visible || !element.current?.clientWidth || !element.current.clientHeight) return;
       if(picture&&!instance.current&&document.documentElement.dataset.transitionKind==='page')return;
-      if (!instance.current) { element.current.innerHTML='';delete element.current.dataset.chartPreview;instance.current = echarts.init(element.current,undefined,{renderer:'svg'});instance.current.on('finished',()=>document.dispatchEvent(new Event('up:chart-painted')));element.current.querySelector('svg')?.setAttribute('data-chart-renderer','svg'); update(); }
+      if (!instance.current) { element.current.innerHTML='';delete element.current.dataset.chartPreview;instance.current = echarts.init(element.current,undefined,{renderer:'svg'});instance.current.on('showtip',()=>{if(performance.now()<touchSuppressUntil)queueMicrotask(()=>instance.current?.dispatchAction({type:'hideTip'}))});instance.current.on('finished',()=>document.dispatchEvent(new Event('up:chart-painted')));element.current.querySelector('svg')?.setAttribute('data-chart-renderer','svg'); update(); }
       else if(width!==element.current.clientWidth||height!==element.current.clientHeight) { instance.current.resize(); update(); }
       else if(dirty.current)update();
       width=element.current.clientWidth;height=element.current.clientHeight;
@@ -83,12 +83,13 @@ export function Chart({ option, className, events, animateChanges=false }: { opt
       if (live && element.current) element.current.textContent = '图表字体加载失败，请刷新页面。';
     });
     const prepare=()=>{const r=element.current?.getBoundingClientRect();if(r&&r.bottom>0&&r.top<innerHeight){visible=true;dirty.current=true;cancelRender(element);resize();}};document.addEventListener('up:prepare-view',prepare);
+    const hideTip=()=>instance.current?.dispatchAction({type:'hideTip'});let touchStart:{x:number;y:number}|null=null;const down=(e:PointerEvent)=>{if(e.pointerType==='touch'){touchSuppressUntil=0;touchStart={x:e.clientX,y:e.clientY};if(!element.current?.contains(e.target as Node))hideTip()}};const move=(e:PointerEvent)=>{if(e.pointerType==='touch'&&touchStart&&Math.hypot(e.clientX-touchStart.x,e.clientY-touchStart.y)>8){touchSuppressUntil=performance.now()+400;hideTip()}};document.addEventListener('pointerdown',down,{passive:true});document.addEventListener('pointermove',move,{passive:true});window.addEventListener('scroll',hideTip,{passive:true});
     const settled=()=>queueRender(element,resize);document.addEventListener('up:route-settled',settled);window.addEventListener('scroll',settled,{passive:true});
     const refresh=()=>schedule.current();
     reduced.addEventListener('change', refresh);
     const themeObserver=new MutationObserver(refresh);
     themeObserver.observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
-    return () => { const svg=element.current?.querySelector('svg[data-chart-renderer]');if(svg){chartPictures.set(className+':'+(document.documentElement.dataset.theme??'light')+':'+JSON.stringify({...latest.current.option,tooltip:undefined}),svg.outerHTML);if(chartPictures.size>24)chartPictures.delete(chartPictures.keys().next().value!);}document.removeEventListener('up:route-settled',settled);window.removeEventListener('scroll',settled);live = false; document.removeEventListener('up:prepare-view',prepare);cancelRender(element);intersection.disconnect();observer.disconnect(); themeObserver.disconnect(); reduced.removeEventListener('change', refresh); instance.current?.dispose(); instance.current = null; signature.current=""; bound.current = {}; };
+    return () => { document.removeEventListener('pointerdown',down);document.removeEventListener('pointermove',move);window.removeEventListener('scroll',hideTip);const svg=element.current?.querySelector('svg[data-chart-renderer]');if(svg){chartPictures.set(className+':'+(document.documentElement.dataset.theme??'light')+':'+JSON.stringify({...latest.current.option,tooltip:undefined}),svg.outerHTML);if(chartPictures.size>24)chartPictures.delete(chartPictures.keys().next().value!);}document.removeEventListener('up:route-settled',settled);window.removeEventListener('scroll',settled);live = false; document.removeEventListener('up:prepare-view',prepare);cancelRender(element);intersection.disconnect();observer.disconnect(); themeObserver.disconnect(); reduced.removeEventListener('change', refresh); instance.current?.dispose(); instance.current = null; signature.current=""; bound.current = {}; };
   }, []);
   useEffect(()=>schedule.current(), [option, events]);
   const category=option.xAxis?.type==='category'&&option.xAxis?.axisLabel?.interval===0;const count=category?option.xAxis.data?.length??0:0;const minimum=count*9+(Number(option.grid?.left)||50)+(Number(option.grid?.right)||25);

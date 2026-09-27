@@ -1,3 +1,4 @@
+import {acceptsGzip,compressedJson} from './http-compression.mjs';
 import {ServiceSettings,loopback} from './service-settings.mjs';
 import {CloudBackups} from './cloud-backups.mjs';
 import {captureBackup,installRestoredDatabase,recoverRestore} from './cloud-backup-data.mjs';
@@ -29,7 +30,7 @@ const env = {...config, DB:db, ASSETS:{ async fetch(request) {
   const client = path.join(release,'client'); let file = path.resolve(client,'.'+pathname);
   if (!file.startsWith(client+path.sep)) file=path.join(client,'index.html');
   if (!fs.existsSync(file) || !fs.statSync(file).isFile()) file=path.join(client,'index.html');
-  return new Response(fs.readFileSync(file), {headers:{'Content-Type':mime[path.extname(file)]??'application/octet-stream','Cache-Control':/^\/fonts\/[a-z-]+-[a-f0-9]{12}\.woff2$/.test(pathname)?'public, max-age=31536000, immutable':'no-cache'}});
+  const zipped=acceptsGzip(request.headers.get('accept-encoding'))&&fs.existsSync(file+'.gz');return new Response(fs.readFileSync(zipped?file+'.gz':file), {headers:{...(zipped?{'Content-Encoding':'gzip','Vary':'Accept-Encoding'}:{}),... {'Content-Type':mime[path.extname(file)]??'application/octet-stream','Cache-Control':/^\/(?:fonts\/[a-z-]+-[a-f0-9]{12}\.woff2|assets\/[^/]+)$/.test(pathname)?'public, max-age=31536000, immutable':'no-cache'}}});
 }}};
 let intervalMinutes=[0,5,10,15,30,60,180].includes(config.COLLECT_INTERVAL_MINUTES)?config.COLLECT_INTERVAL_MINUTES:15;let timer;
 let collecting=false, lastCollection=null, stopping=false, retryCount=0, retryTimer;
@@ -68,7 +69,8 @@ const handler=async(req,res)=>{
     const controller=new AbortController();res.on('close',()=>controller.abort());
     const request=new Request(url,{method:req.method,headers:req.headers,signal:controller.signal,...(!['GET','HEAD'].includes(req.method)?{body:Buffer.concat(chunks)}:{})});
     activeRequests++;counted=true;
-    const response=!db?await env.ASSETS.fetch(request):await worker.fetch(request,{...env,APP_ORIGIN:url.origin},{waitUntil(p){backgroundWrites++;Promise.resolve(p).catch(()=>log({event:'background_failed'})).finally(()=>backgroundWrites--);},passThroughOnException(){}});
+    const rawResponse=!db?await env.ASSETS.fetch(request):await worker.fetch(request,{...env,APP_ORIGIN:url.origin},{waitUntil(p){backgroundWrites++;Promise.resolve(p).catch(()=>log({event:'background_failed'})).finally(()=>backgroundWrites--);},passThroughOnException(){}});
+    const response=await compressedJson(rawResponse,req.headers['accept-encoding']);
     res.writeHead(response.status,Object.fromEntries(response.headers));
     if(response.body){const reader=response.body.getReader();const cancel=()=>{void reader.cancel().catch(()=>{})};res.on('close',cancel);try{while(!res.destroyed){const {value,done}=await reader.read();if(done)break;if(!res.write(Buffer.from(value)))await new Promise(resolve=>{const done=()=>{res.off('drain',done);res.off('close',done);resolve()};res.once('drain',done);res.once('close',done)});}}finally{res.off('close',cancel);reader.releaseLock();}}
     res.end();

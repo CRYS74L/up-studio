@@ -25,7 +25,7 @@ export type LocalStatus={ok:boolean;pid:number;version:string;uptime:number;auto
 export function uptimeLabel(seconds:number){const minutes=Math.floor(seconds/60);return minutes>=60?`${Math.floor(minutes/60)} 小时 ${minutes%60} 分钟`:`${minutes} 分钟`;}
 const runNames:Record<string,string>={success:'采集完成',partial:'部分完成',failed:'采集失败',running:'正在采集'};
 export function Sources({sync}:{sync:ReturnType<typeof useSync>}){
-  const client=useQueryClient();const {summary,summaryPending}=useDashboardData();const profile=useProfile(),backup=useBackupStatus(),initialReady=useRef(false);
+  const client=useQueryClient();const {summary,summaryPending}=useDashboardData({loadVideos:false});const profile=useProfile(),backup=useBackupStatus(),initialReady=useRef(false);
   const connection=useQuery({queryKey:['bili-status'],queryFn:()=>request<any>('/api/bilibili/status'),refetchInterval:15000});
   const local=useQuery({queryKey:['local-status'],queryFn:()=>request<LocalStatus>('/api/local/status'),retry:false,refetchInterval:15000});
   const schedule=useMutation({mutationFn:(intervalMinutes:number)=>request('/api/local/schedule',{method:'PUT',body:JSON.stringify({intervalMinutes})}),onSuccess:()=>client.invalidateQueries({queryKey:['local-status']})});

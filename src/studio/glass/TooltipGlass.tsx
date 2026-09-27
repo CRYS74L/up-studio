@@ -9,7 +9,7 @@ export function TooltipGlass(){
  useEffect(()=>{let frame=0,live=true;
   const read=()=>{frame=0;if(!live)return;let next:Bounds|null=null;
    for(const tooltip of document.querySelectorAll<HTMLElement>(selector)){const style=getComputedStyle(tooltip),r=tooltip.getBoundingClientRect();if(style.display==='none'||style.visibility==='hidden'||Number(style.opacity)===0||!r.width||!r.height)continue;next={left:r.left,top:r.top,width:r.width,height:r.height,opacity:Number(style.opacity),zIndex:(Number(style.zIndex)||10000)-1,radius:style.borderRadius};}
-   setBounds(old=>JSON.stringify(old)===JSON.stringify(next)?old:next);if(next)frame=requestAnimationFrame(read);
+   setBounds(old=>JSON.stringify(old)===JSON.stringify(next)?old:next);if(next&&(document.documentElement.dataset.transitionKind||document.querySelector('.ui-popover')?.getAnimations().some(a=>a.playState==='running')))frame=requestAnimationFrame(read);
   };
   const wake=()=>{if(!frame)frame=requestAnimationFrame(read)};
   const observer=new MutationObserver(records=>{if(records.some(record=>record.target instanceof Element&&(record.target.closest(selector)||[...record.addedNodes].some(node=>node instanceof Element&&(node.matches(selector)||node.querySelector(selector))))))wake()});

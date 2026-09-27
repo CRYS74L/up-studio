@@ -1,3 +1,4 @@
+import {gzipSync} from 'node:zlib';
 import {stripTypeScriptTypes} from 'node:module';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -26,7 +27,8 @@ const id=new Date().toISOString().replace(/[:.]/g,'-'); const release=path.join(
 fs.copyFileSync(path.join(project,'dist/up_studio/index.js'),path.join(release,'worker.mjs'));
 function copyTree(source,target){fs.mkdirSync(target,{recursive:true});for(const entry of fs.readdirSync(source,{withFileTypes:true})){const from=path.join(source,entry.name),to=path.join(target,entry.name);if(entry.isDirectory())copyTree(from,to);else if(entry.isFile())fs.copyFileSync(from,to);}}
 copyTree(path.join(project,'dist/client'),path.join(release,'client'));
-for(const file of ['server.mjs','lan-firewall.mjs','lan-firewall.ps1','service-settings.mjs','startup-settings.ps1','d1.mjs','launch.ps1','cloud-backups.mjs','cloud-backup-tools.mjs','cloud-backup-data.mjs','webdav-folder.mjs'])fs.copyFileSync(path.join(project,'runtime',file),path.join(root,file));
+function compressAssets(dir){for(const item of fs.readdirSync(dir,{withFileTypes:true})){const file=path.join(dir,item.name);if(item.isDirectory())compressAssets(file);else if(/\.(?:js|css|svg|html|json)$/.test(item.name))fs.writeFileSync(file+'.gz',gzipSync(fs.readFileSync(file),{level:9}));}}compressAssets(path.join(release,'client'));
+for(const file of ['server.mjs','http-compression.mjs','lan-firewall.mjs','lan-firewall.ps1','service-settings.mjs','startup-settings.ps1','d1.mjs','launch.ps1','cloud-backups.mjs','cloud-backup-tools.mjs','cloud-backup-data.mjs','webdav-folder.mjs'])fs.copyFileSync(path.join(project,'runtime',file),path.join(root,file));
 fs.writeFileSync(path.join(root,'snapshot-storage.mjs'),stripTypeScriptTypes(fs.readFileSync(path.join(project,'shared/snapshot-storage.ts'),'utf8')));
 fs.writeFileSync(path.join(root,'backup-schema.json'),JSON.stringify(fs.readdirSync(path.join(project,'migrations')).filter(name=>name.endsWith('.sql'))));
 const csc=path.join(process.env.SystemRoot,'Microsoft.NET','Framework64','v4.0.30319','csc.exe');
