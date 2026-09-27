@@ -431,3 +431,13 @@ button:focus-visible,a:focus-visible,summary:focus-visible,[role=button]:focus-v
 @media(max-width:699px),(orientation:portrait){.s-mobile-dock{bottom:max(8px,env(safe-area-inset-bottom));left:12px;right:12px}.s-back-top{bottom:calc(max(8px,env(safe-area-inset-bottom)) + 76px)}.studio button,.studio a,.studio [role=button]{touch-action:manipulation;-webkit-tap-highlight-color:transparent}.studio button{-webkit-user-select:none;user-select:none}@media(hover:none){.s-media-cover:hover img{transform:none}.s-media-cover:hover{box-shadow:none}.s-chart-viewport{touch-action:pan-y pinch-zoom}.studio .s-history-dots button{min-width:20px}.s-history-dots button:not([aria-current=page])>span{width:8px}.studio .s-mobile-nav>button:active{background:color-mix(in srgb,var(--text) 8%,transparent)}}
 @media(max-width:699px),(orientation:portrait){:root{--dock-bottom:max(8px,calc(env(safe-area-inset-bottom) - 12px))}.s-mobile-dock{bottom:var(--dock-bottom)}.s-back-top{bottom:calc(var(--dock-bottom) + 76px)}.studio>.s-main{padding-bottom:calc(var(--dock-bottom) + 84px)}}
 @media(pointer:coarse){.studio .s-secondary:active:not(:disabled),.studio .s-select:active:not(:disabled){background:var(--surface-2);transition-duration:70ms!important}.studio .s-mobile-nav>button:active{transition-duration:70ms!important}.s-chart-viewport{touch-action:pan-x pan-y pinch-zoom}.s-chart-no-scroll{touch-action:pan-y pinch-zoom}.ui-popover .ui-menu-list>button{min-height:44px}.s-history-day button{position:relative}.s-history-day button::before{content:'';position:absolute;inset:-8px}.studio .s-connection .s-account-action,.studio .s-connection .s-account-row .s-account-action{min-height:44px}.studio .s-connection .s-account-row .s-account-logout{width:44px;height:44px;flex-basis:44px}}
+.s-mobile-dock>.s-mobile-nav{touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+.s-mobile-nav[data-scrubbing=true] .s-nav-indicator{box-shadow:inset 0 1px 1px var(--liquid-edge-highlight);background:color-mix(in srgb,var(--text) 13%,transparent)}
+@media(max-width:699px),(orientation:portrait){
+ .studio .s-library .s-media-stats .s-stat>span{font-size:11px;line-height:1.4}
+ .studio .s-library .s-media-stats .s-stat>strong{font-size:13px}
+ .s-analysis-header-tabs>.ui-segments{width:max-content;max-width:100%}
+ .s-analysis-header-tabs>.ui-segments>button{font-size:13px;padding-inline:14px!important}
+}
+.s-analysis-header-tabs>.ui-segments{flex-wrap:nowrap}
+@media(max-width:359px){.s-analysis-header-tabs>.ui-segments>button{font-size:12px;padding-inline:7px!important}}

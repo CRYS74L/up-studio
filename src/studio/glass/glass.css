@@ -24,3 +24,7 @@
 .studio .s-liquid[data-native-glass=true],.s-liquid.s-tooltip-glass[data-native-glass=true]{-webkit-backdrop-filter:var(--native-glass-effect)!important;backdrop-filter:var(--native-glass-effect)!important}
 @supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){.s-glass-material[data-renderer]>.s-glass-tint{background:var(--surface)!important}}
 @media(prefers-reduced-transparency:reduce){.studio .s-liquid[data-native-glass=true],.s-liquid.s-tooltip-glass[data-native-glass=true]{-webkit-backdrop-filter:none!important;backdrop-filter:none!important}.s-glass-material[data-renderer]>.s-glass-tint{background:var(--surface)!important}}
+/* Keep text and glass in one composited box; no independently tracked backing. */
+.s-chart-tooltip,.ui-popover[role=tooltip]{background:rgba(var(--liquid-tint-rgb),.6)!important;-webkit-backdrop-filter:blur(1.8px) saturate(110%)!important;backdrop-filter:blur(1.8px) saturate(110%)!important;box-shadow:inset 0 1px 1px var(--liquid-edge-highlight),0 4px 18px #00000012!important;isolation:isolate;overflow:hidden;overflow-wrap:anywhere;max-width:calc(100vw - 24px);box-sizing:border-box}
+.s-chart-tooltip{white-space:normal!important;transition:opacity .12s ease!important;pointer-events:none!important}
+@media(prefers-reduced-transparency:reduce){.s-chart-tooltip,.ui-popover[role=tooltip]{background:var(--surface)!important;backdrop-filter:none!important}}
