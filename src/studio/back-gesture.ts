@@ -22,7 +22,7 @@ export function installBackGesture(options:{read:()=>StudioRoute;preview:(route:
   if(!scene&&Math.abs(dy)>Math.abs(dx)&&Math.abs(dy)>8)touch.vertical=true;
   if(touch.vertical){restoreScroll(Math.max(0,touch.scroll-dy));return}
   if(!touch.route.video||touch.x>24||dx<8&&!scene)return;
-  if(!scene){const old=capturePage();if(!old)return;const parent={page:touch.route.page,video:null,ids:[]};options.preview(parent);restoreScroll(options.parentScroll(parent));const main=document.querySelector<HTMLElement>('.studio>.s-main')!;scene={old,main,parent,style:main.getAttribute('style')};old.style.zIndex='23';old.style.backgroundColor=getComputedStyle(document.documentElement).getPropertyValue('--bg');main.style.willChange='transform';document.documentElement.dataset.backGesture='true';document.dispatchEvent(new Event('up:route-motion'));}
+  if(!scene){const old=capturePage();if(!old)return;const parent={page:touch.route.page,video:null,ids:[]};document.documentElement.dataset.backGesture='true';options.preview(parent);restoreScroll(options.parentScroll(parent));const main=document.querySelector<HTMLElement>('.studio>.s-main')!;scene={old,main,parent,style:main.getAttribute('style')};old.style.zIndex='23';old.style.backgroundColor=getComputedStyle(document.documentElement).getPropertyValue('--bg');main.style.willChange='transform';document.documentElement.dataset.backGesture='true';document.dispatchEvent(new Event('up:route-motion'));}
   touch.distance=Math.max(0,Math.min(innerWidth,dx));scene.old.style.transform=`translateX(${touch.distance}px)`;scene.main.style.transform=`translateX(${(touch.distance-innerWidth)*.22}px)`;
  };
  const end=async()=>{

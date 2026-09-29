@@ -4,7 +4,7 @@ import {ServiceSettingsPage} from './ServiceSettingsPage';
 import {SyncFreshness} from './FreshnessAge';
 import {GlassMaterial} from './glass/GlassMaterial';
 import {useLabSettings,applyLabSettings} from './lab-settings';
-import {warmSnapshotStyles} from './page-snapshot';
+
 import {client} from './query-client';
 import {chartFont,loadFonts} from '../fonts';
 import {ThemeSwitch,BackToTop} from './ShellControls';
@@ -29,7 +29,7 @@ import {NavButton,NavSelection} from './NavButton';
 import {Account,Brand} from './Account';
 import './studio.css';
 const pages=[['overview','概览',LayoutDashboard],['videos','稿件',SquarePlay],['analysis','分析',ChartNoAxesCombined],['sources','数据源',DatabaseZap],['settings','设置',Settings]] as const;
-function Studio(){const lab=useLabSettings();useLayoutEffect(()=>applyLabSettings(lab),[lab]);const route=useStudioRoute();const {summary,videos,summaryPending}=useDashboardData({loadVideos:!['settings','sources'].includes(route.page)});const [theme,setTheme]=useState(getInitialTheme),[menu,setMenu]=useState(false),sync=useSync();const page=route.page==='matrix'?'analysis':route.page;useEffect(()=>{applyTheme(getInitialTheme());const idle=globalThis.requestIdleCallback?.(()=>warmSnapshotStyles());return()=>{if(idle!=null)cancelIdleCallback(idle)}},[]);
+function Studio(){const lab=useLabSettings();useLayoutEffect(()=>applyLabSettings(lab),[lab]);const route=useStudioRoute();const {summary,videos,summaryPending}=useDashboardData({loadVideos:!['settings','sources'].includes(route.page)});const [theme,setTheme]=useState(getInitialTheme),[menu,setMenu]=useState(false),sync=useSync();const page=route.page==='matrix'?'analysis':route.page;useEffect(()=>{applyTheme(getInitialTheme());},[]);
   useEffect(()=>{if(route.page==='overview'||route.page==='analysis'&&route.tab!=='ai')void loadFonts(chartFont).catch(()=>{})},[route.page,route.tab]);
   useEffect(()=>{if(!videos.length||!['overview','videos'].includes(route.page)&&!(route.page==='analysis'&&route.tab==='videos'))return;const warm=()=>{videos.slice(0,8).forEach(v=>void warmCover(coverSrc(v,'card')));};warm()},[videos.map(v=>v.id).join(','),route.page,route.tab]);
   useEffect(()=>setMenu(false),[route.page,route.video]);

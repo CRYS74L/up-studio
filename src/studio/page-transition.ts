@@ -3,7 +3,7 @@ import {warmCover} from './cover-loading';
 import {chartFont,loadFonts} from '../fonts';
 import {request,coverSrc} from '../format';
 import {client} from './query-client';
-import {capturePage,warmSnapshotStyles} from './page-snapshot';
+import {capturePage} from './page-snapshot';
 import type {StudioRoute} from './route';
 import {animateSwap,releaseSwap,type SlideDirection} from './transition-motion';
 let revision=0;
@@ -35,12 +35,13 @@ async function prefetch(route:StudioRoute,signal:AbortSignal){
  await bounded(work(),signal,2000);
 }
 export async function transitionPage(update:()=>void,route?:StudioRoute,restore?:()=>void,axis:'x'|'y'='y',selector?:string,direction:SlideDirection=1){
+ const presented=cleanup&&!selector?capturePage(null,true):null;
  cancelPageTransition();const token=revision,controller=new AbortController();preparing=controller;
  if(route)void prefetch(route,controller.signal);
  if(controller.signal.aborted||token!==revision)return;
- if(matchMedia('(prefers-reduced-motion: reduce)').matches){flushSync(update);restore?.();preparing=undefined;return;}
+ if(matchMedia('(prefers-reduced-motion: reduce)').matches){presented?.remove();flushSync(update);restore?.();preparing=undefined;return;}
  const main=document.querySelector<HTMLElement>('.studio > .s-main')!;
- const old=capturePage(selector?main.querySelector<HTMLElement>(selector):null);
+ const old=presented??capturePage(selector?main.querySelector<HTMLElement>(selector):null);
  document.documentElement.dataset.transitionKind='page';
  document.documentElement.dataset.routePhase='preparing';
 
@@ -58,4 +59,4 @@ export async function transitionPage(update:()=>void,route?:StudioRoute,restore?
  if(token===revision){cleanup?.();cleanup=undefined;preparing=undefined;delete document.documentElement.dataset.transitionKind;delete document.documentElement.dataset.routePhase;document.dispatchEvent(new Event('up:route-settled'));}
 }
 
-export function warmRoute(page:string){warmSnapshotStyles();void prefetch({page,video:null,ids:[]},new AbortController().signal)}
+export function warmRoute(page:string){void prefetch({page,video:null,ids:[]},new AbortController().signal)}

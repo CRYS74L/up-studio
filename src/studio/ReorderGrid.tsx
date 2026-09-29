@@ -11,10 +11,10 @@ export class ReorderGrid extends Component<Props>{
    const originals=[...e.querySelectorAll('img')],copies=[...copy.querySelectorAll('img')];originals.forEach((img,i)=>{if(!img.complete||!img.naturalWidth||img.dataset.decoded==='false')return;const size=img.getBoundingClientRect(),canvas=document.createElement('canvas'),dpr=Math.min(devicePixelRatio,2);canvas.width=Math.max(1,Math.round(size.width*dpr));canvas.height=Math.max(1,Math.round(size.height*dpr));canvas.className=img.className;canvas.dataset.decoded='true';Object.assign(canvas.style,{width:'100%',height:'100%',display:'block'});canvas.getContext('2d')?.drawImage(img,0,0,canvas.width,canvas.height);copies[i]?.replaceWith(canvas)});ghosts.set(e.dataset.reorder!,copy);
   }return {boxes,ghosts,layer};
  }
- componentDidMount(){if(!document.documentElement.dataset.transitionKind)this.animate(null);}
+ componentDidMount(){if(!document.documentElement.dataset.transitionKind&&!document.documentElement.dataset.backGesture)this.animate(null);}
  componentDidUpdate(_props:Props,_state:unknown,before:Snapshot|null){if(before)this.animate(before);}
  animate(before:Snapshot|null){
-  if(document.documentElement.dataset.contentSwitch||matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+  if(document.documentElement.dataset.backGesture||document.documentElement.dataset.transitionKind==='page'||document.documentElement.dataset.contentSwitch||matchMedia('(prefers-reduced-motion: reduce)').matches)return;
   const nodes=[...this.root!.querySelectorAll<HTMLElement>('[data-reorder]')],ids=new Set(nodes.map(e=>e.dataset.reorder));const removed=before?[...before.ghosts].filter(([id])=>!ids.has(id)):[];
   if(before&&removed.length){removed.forEach(([,e])=>before.layer.append(e));document.querySelector('.studio')!.append(before.layer);this.layers.add(before.layer);const exits=removed.map(([,e])=>e.animate([{opacity:Number(e.style.opacity||1),transform:'translateY(0)'},{opacity:0,transform:'translateY(-14px)'}],{duration:150,easing:'cubic-bezier(.4,0,.6,1)',fill:'forwards'}));void Promise.allSettled(exits.map(a=>a.finished)).then(()=>{before.layer.remove();this.layers.delete(before.layer)})}
   for(const e of nodes)e.getAnimations().forEach(a=>a.cancel());
