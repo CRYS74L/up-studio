@@ -1,99 +1,20 @@
-/* Portrait scale: one set of relationships for grouped surfaces and controls. */
-@media (max-width:699px),(orientation:portrait){
- :root{--portrait-radius:28px;--portrait-inset:16px;--portrait-control:36px;--portrait-icon:18px}
- .studio>.s-main{padding-inline:20px;padding-top:18px}
- .studio .s-header{gap:12px;margin-bottom:16px}
- .studio .s-header h1{font-size:20px;line-height:28px;font-weight:600;letter-spacing:-.025em}
- .studio .s-header-freshness{font-size:11px}
- .studio .s-panel,.studio .s-detail-hero{border-radius:var(--portrait-radius);padding:var(--portrait-inset);border-color:transparent;box-shadow:none}
- .studio .s-panel h2,.studio .s-source-heading h2,.studio .s-backup-panel>.s-source-heading .s-backup-title h2,.studio .s-service-settings h2{font-size:16px;line-height:1.4;font-weight:550;letter-spacing:0}
- .studio .s-section-head h3{font-size:16px;line-height:1.4;font-weight:550}
- .studio .s-sources,.studio .s-sources>.s-two-col,.studio .s-service-settings,.studio .s-two-col{gap:20px}
- .studio .s-sources .s-panel{height:auto;min-height:0}
- .studio .s-sources .s-service-symbol,.studio .s-service-settings .s-service-symbol{display:grid;place-items:center;width:36px;height:36px;flex:0 0 36px;border-radius:50%}
- .studio .s-sources .s-service-symbol svg,.studio .s-service-settings .s-service-symbol svg{width:20px;height:20px;stroke-width:1.7}
- .studio .s-source-title,.studio .s-source-heading,.studio .s-service-settings header{gap:10px}
- .studio .s-source-heading,.studio .s-backup-panel>.s-source-heading,.studio .s-service-settings header{margin-bottom:16px}
- .studio .s-accounts-toolbar{gap:8px;margin-bottom:16px}
- .studio .s-accounts-toolbar h2{font-size:16px;white-space:nowrap}
- .studio .s-secondary,.studio .s-primary,.studio .s-select{min-height:36px;font-size:14px;line-height:20px;font-weight:500;border-radius:999px;padding:7px 12px;gap:6px}
- .studio .s-secondary svg,.studio .s-primary svg{width:20px;height:20px;stroke-width:1.7}
- .studio .s-icon,.studio .s-round-action,.studio .s-backup-update .s-round-action{width:36px;height:36px;min-height:36px;flex:0 0 36px;padding:0;border-radius:50%}
- .studio .s-icon svg,.studio .s-round-action svg{width:18px;height:18px;stroke-width:1.7}
- .studio .s-connection .s-account-row{min-height:54px;padding:8px;gap:8px;border-radius:999px;border-color:color-mix(in srgb,var(--line) 75%,transparent)}
- .studio .s-connection .s-account-row>.s-avatar{width:28px;height:28px;flex:0 0 28px}
- .studio .s-connection .s-account-identity b{font-size:14px;line-height:20px;font-weight:500}
- .studio .s-connection .s-account-action{font-size:13px;line-height:18px;padding:6px 9px;min-height:36px;gap:6px;font-weight:500}
- .studio .s-connection .s-account-action svg{width:17px;height:17px}
- .studio .s-connection .s-account-row .s-account-logout{width:36px;height:36px;flex:0 0 36px;padding:0}
- .studio .s-connection .s-account-list{gap:10px}
- .studio .s-sources .s-update-summary{display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:10px;row-gap:4px;padding-bottom:16px;align-items:center}
- .studio .s-sources .s-update-summary>div:first-child{display:contents}
- .studio .s-sources .s-update-summary strong{grid-column:1;grid-row:1;font-size:22px;line-height:30px;font-weight:600;white-space:nowrap}
- .studio .s-sources .s-update-summary small{grid-column:1/-1;grid-row:2;font-size:13px;line-height:20px;white-space:normal}
- .studio .s-sources .s-update-summary>.s-sync-actions{grid-column:2;grid-row:1;display:flex;gap:6px;flex-wrap:nowrap}
- .studio .s-sources .s-update-summary .s-sync-actions>.s-secondary:not(.s-round-action){font-size:13px;min-height:36px;padding:7px 10px;gap:6px}
- .studio .s-sources .s-update-schedule{padding:16px 0 0;gap:12px;min-height:52px}
- .studio .s-sources .s-update-schedule b,.studio .s-sources .s-update-schedule .s-select{font-size:15px;line-height:22px;font-weight:400}
- .studio .s-sources .s-update-schedule .s-select{width:136px}
- .studio .s-sync-records-panel{gap:18px;padding-bottom:18px}
- .studio .s-sync-records-panel .s-record-row-heading h3,.studio .s-sync-records-panel .s-history-heading h3{font-size:15px;font-weight:600}
- .studio .s-service-settings p{font-size:15px;line-height:1.55}
- .studio .s-service-settings small{font-size:13px;line-height:1.45}
- .studio .s-setting-switch{width:51px;height:31px;min-height:31px;padding:2px;border:0}
- .studio .s-setting-switch>span{width:27px;height:27px}
- .studio .s-setting-switch[aria-checked=true]>span{transform:translateX(20px)}
- .studio .s-setting-switch:after{content:'';position:absolute;inset:-7px -2px}
- .studio .s-mobile-dock>.s-mobile-nav>button{font-size:11px;font-weight:500}
- .studio .s-mobile-dock>.s-mobile-nav>button svg{width:24px;height:24px}
+/* Retain only the accepted corner changes; all sizing and layout use dev.118. */
+@media(max-width:699px),(orientation:portrait){
+ :root{--portrait-radius:28px}
+ .studio .s-panel,.studio .s-detail-hero{border-radius:var(--portrait-radius)}
+ .studio .s-sources .s-service-symbol,.studio .s-service-settings .s-service-symbol{border-radius:50%}
+ .studio .s-secondary,.studio .s-primary,.studio .s-select{border-radius:999px}
+ .studio .s-icon,.studio .s-round-action,.studio .s-backup-update .s-round-action{border-radius:50%}
+ .studio .s-connection .s-account-row{border-radius:999px}
  .s-sheet{border-radius:28px 28px 0 0}
- .s-sheet input:not([type=checkbox]):not([type=radio]),.s-sheet textarea{font-size:16px;line-height:22px;min-height:44px;border-radius:16px}
- .s-sheet .s-secondary,.s-sheet .s-primary{min-height:44px;font-size:15px;border-radius:999px}
- .ui-popover .ui-menu-list>button{font-size:15px;min-height:44px}
+ .s-sheet input:not([type=checkbox]):not([type=radio]),.s-sheet textarea{border-radius:16px}
+ .s-sheet .s-secondary,.s-sheet .s-primary{border-radius:999px}
 }
-@media(max-width:374px){
- .studio>.s-main{padding-inline:16px}
- .studio .s-panel{padding:16px;border-radius:24px}
- .studio .s-accounts-toolbar{flex-wrap:wrap}.studio .s-accounts-toolbar>.s-account-action{margin-left:auto}
- .studio .s-connection .s-account-row{gap:5px;padding-inline:8px}
- .studio .s-connection .s-account-identity b{font-size:14px}
- .studio .s-connection .s-account-action{padding-inline:8px}
- .studio .s-sources .s-update-summary strong{font-size:23px}
- .studio .s-sources .s-update-summary>.s-sync-actions{gap:4px}
- .studio .s-sources .s-update-summary .s-sync-actions>.s-secondary:not(.s-round-action){font-size:13px;padding-inline:8px}
-}
+@media(max-width:374px){.studio .s-panel{border-radius:24px}}
 @media(max-width:699px),(orientation:portrait){
- .studio .s-connection .s-account-list{min-width:0;grid-template-columns:minmax(0,1fr)}
- .studio .s-connection .s-account-row{width:100%;min-width:0;box-sizing:border-box}
- .studio .s-library .s-media-copy h2{font-size:14px;line-height:1.45}
-}
-@media(max-width:374px){
- .studio .s-sources .s-update-summary{row-gap:8px}
- .studio .s-sources .s-update-summary strong{grid-column:1/-1}
- .studio .s-sources .s-update-summary>.s-sync-actions{grid-column:1/-1;grid-row:3;justify-self:end}
- .studio .s-connection .s-account-row .s-account-action{font-size:12px;padding-inline:6px;gap:4px}
- .studio .s-connection .s-account-row .s-account-logout{padding:0}
- .studio .s-connection .s-account-identity{flex:1 1 0;min-width:0}
-}
-@media(max-width:699px),(orientation:portrait){
- .studio .s-overview-kpis,.studio .s-realtime-plays{border-radius:var(--portrait-radius);border-color:transparent;box-shadow:none}
+ .studio .s-overview-kpis,.studio .s-realtime-plays{border-radius:var(--portrait-radius)}
  .studio .s-media-cover,.studio .s-recent-item>img,.studio .s-detail-cover{border-radius:16px}
- .studio .s-sources .s-update-summary strong{font-size:22px}
- .studio .s-sources .s-update-summary .s-sync-actions>.s-secondary:not(.s-round-action){font-size:13px;padding-inline:10px;gap:5px}
- .studio .s-service-settings>.s-panel{min-height:0}
  .ui-popover{border-radius:24px}
  .ui-popover[role=tooltip],.s-chart-tooltip{border-radius:18px!important}
  .s-sheet[data-compact=true]{border-radius:28px}
-}
-
-@media(max-width:699px),(orientation:portrait){
- .studio .s-secondary,.studio .s-primary,.studio .s-select,.studio .s-round-action{position:relative}
- @media(pointer:coarse){
- .studio .s-secondary::after,.studio .s-primary::after,.studio .s-select::after{content:'';position:absolute;inset:-4px 0;border-radius:inherit}
- .studio .s-round-action::after,.studio .s-account-logout::after{content:'';position:absolute;inset:-4px;border-radius:50%}
- }
- .studio .s-sync-actions{gap:8px!important}
- .studio .s-connection .s-account-row .s-account-action{min-height:36px}
- .studio .s-connection .s-account-row .s-account-logout{min-height:36px;width:36px;height:36px;flex-basis:36px}
- .studio .s-header{margin-bottom:20px}
 }
