@@ -49,7 +49,7 @@ export async function transitionPage(update:()=>void,route?:StudioRoute,restore?
  flushSync(update);restore?.();
  const target=(selector?main.querySelector<HTMLElement>(selector):main)??main;
  target.style.zIndex='21';target.style.willChange='transform,opacity';
- cleanup=()=>{for(const a of animations)a.cancel();old?.remove();releaseSwap(target);target.style.removeProperty('opacity');target.style.removeProperty('transform');target.style.removeProperty('will-change');target.style.removeProperty('z-index')};
+ cleanup=()=>{for(const a of animations)a.cancel();if(old?.classList.contains('s-route-snapshot'))old.remove();releaseSwap(target);target.style.removeProperty('opacity');target.style.removeProperty('transform');target.style.removeProperty('will-change');target.style.removeProperty('z-index')};
  if(controller.signal.aborted||token!==revision)return;
  document.documentElement.dataset.routePhase='animating';
  // No network, decode timer, or extra frame is awaited on the click path.

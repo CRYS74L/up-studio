@@ -1,3 +1,4 @@
+import {useSelectionBox} from './use-selection-box';
 import {useRef,useState,useLayoutEffect,type CSSProperties,type ReactNode} from 'react';
 import {warmRoute} from './page-transition';
 import {motion,useReducedMotion} from 'motion/react';
@@ -12,7 +13,6 @@ export function NavButton({id,label,active,preview,onClick,children}:{id:string;
 }
 // Local offsets stay stable when the document restores a different scroll position.
 export function NavSelection({page}:{page:string}){
- const ref=useRef<HTMLSpanElement>(null),reduced=useReducedMotion(),[box,setBox]=useState<{x:number;y:number;width:number;height:number}|null>(null);
- useLayoutEffect(()=>{const nav=ref.current!.closest('nav')!;const measure=()=>{const button=nav.querySelector<HTMLElement>('[data-nav-target=true]');if(button)setBox({x:button.offsetLeft,y:button.offsetTop,width:button.offsetWidth,height:button.offsetHeight})};const prepare=document.documentElement.dataset.routePhase==='preparing';if(!prepare)measure();document.addEventListener('up:route-motion',measure);const resize=()=>{if(document.documentElement.dataset.routePhase!=='preparing')measure()};const observer=new ResizeObserver(resize);observer.observe(nav);nav.querySelectorAll('button').forEach(b=>observer.observe(b));return()=>{observer.disconnect();document.removeEventListener('up:route-motion',measure)}},[page]);
+ const ref=useRef<HTMLSpanElement>(null),reduced=useReducedMotion(),box=useSelectionBox(ref,'[data-nav-target=true]',page,'nav');
  return <motion.span ref={ref} aria-hidden="true" className="s-nav-indicator" initial={false} animate={box?{...box,opacity:1}:{opacity:0}} style={{visibility:box?'visible':'hidden','--nav-x':(box?.x??0)+'px','--nav-y':(box?.y??0)+'px'} as CSSProperties} transition={reduced?{duration:0}:controlSpring}/>;
 }
