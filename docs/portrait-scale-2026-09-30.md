@@ -12,3 +12,9 @@
 Apple HIG 的 [Layout](https://developer.apple.com/design/human-interface-guidelines/layout) 与 [Buttons](https://developer.apple.com/design/human-interface-guidelines/buttons) 提供布局及控件指导；上述 CSS 数值是对此项目和截图的设计适配，不宣称是 iOS 27 对网页的强制规范。
 
 验证：构建通过；Chromium、WebKit、Firefox 的五个主页面检查无脚本错误、无页面横向溢出；检查浅色与深色截图。320/390/428px 数据源的时间文字与动作按钮无交叠，1280px 横屏卡片高度、圆角、内边距与 dev.118 一致。
+
+## dev.120：按反馈收回偏大的视觉尺寸
+
+dev.119 的标题和部分触控控件放大过多，用户要求更接近所给设置截图。本轮将页面标题由 28px 收到 20px、卡片标题收到 16px、标题图标底盘 36px/图样 20px、常规圆形操作 36px、账号行约 54px、摘要数字 22px，卡片内边距 16px。卡片圆角仍为 28px（窄屏 24px），按钮保留胶囊形。
+
+仅触控设备通过透明命中范围补足点击面积，精细指针不扩大悬停范围。辅助信息保持可读字号，没有整体缩放网页或改动字体文件。320/390/428px 的时间和按钮不重叠，三个引擎的五个主页面无脚本错误，横屏卡片尺寸保持一致。
