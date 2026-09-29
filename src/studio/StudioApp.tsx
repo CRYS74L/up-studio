@@ -28,6 +28,7 @@ import {spring,Sheet,Segments} from './ui';
 import {NavButton,NavSelection} from './NavButton';
 import {Account,Brand} from './Account';
 import './studio.css';
+import './portrait-scale.css';
 const pages=[['overview','概览',LayoutDashboard],['videos','稿件',SquarePlay],['analysis','分析',ChartNoAxesCombined],['sources','数据源',DatabaseZap],['settings','设置',Settings]] as const;
 function Studio(){const lab=useLabSettings();useLayoutEffect(()=>applyLabSettings(lab),[lab]);const route=useStudioRoute();const {summary,videos,summaryPending}=useDashboardData({loadVideos:!['settings','sources'].includes(route.page)});const [theme,setTheme]=useState(getInitialTheme),[menu,setMenu]=useState(false),sync=useSync();const page=route.page==='matrix'?'analysis':route.page;useEffect(()=>{applyTheme(getInitialTheme());},[]);
   useEffect(()=>{if(route.page==='overview'||route.page==='analysis'&&route.tab!=='ai')void loadFonts(chartFont).catch(()=>{})},[route.page,route.tab]);
