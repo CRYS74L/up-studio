@@ -60,15 +60,15 @@ export function Chart({ option, className, events, animateChanges=false }: { opt
   useLayoutEffect(() => {
     if (!element.current) return;
     const pictureKey=className+':'+(document.documentElement.dataset.theme??'light')+':'+JSON.stringify({...latest.current.option,tooltip:undefined});
-    const picture=chartPictures.get(pictureKey);restoringPicture.current=!!picture;if(picture){element.current.innerHTML='<div style="position:relative;width:100%;height:100%;overflow:hidden">'+picture+'</div>';element.current.dataset.chartPreview="true";}
+    const picture=document.documentElement.dataset.backGesture?chartPictures.get(pictureKey):undefined;restoringPicture.current=!!picture;if(picture){element.current.innerHTML='<div style="position:relative;width:100%;height:100%;overflow:hidden">'+picture+'</div>';element.current.dataset.chartPreview="true";}
     let live = true;
     let fontsReady = false;
     let visible = false;
     let width = 0, height = 0,touchSuppressUntil=0;
     const resize = () => {
-      const bounds=element.current?.getBoundingClientRect();visible=!!bounds&&bounds.bottom>0&&bounds.top<innerHeight+120;
+      const bounds=element.current?.getBoundingClientRect();visible=!!bounds&&bounds.bottom>0&&bounds.top<innerHeight&&bounds.right>0&&bounds.left<innerWidth;
       if (!live || !fontsReady || !visible || !element.current?.clientWidth || !element.current.clientHeight) return;
-      if(picture&&!instance.current&&document.documentElement.dataset.transitionKind==='page')return;
+
       if (!instance.current) { element.current.innerHTML='';delete element.current.dataset.chartPreview;instance.current = echarts.init(element.current,undefined,{renderer:'svg'});instance.current.on('showtip',()=>{if(performance.now()<touchSuppressUntil)queueMicrotask(()=>instance.current?.dispatchAction({type:'hideTip'}))});instance.current.on('finished',()=>document.dispatchEvent(new Event('up:chart-painted')));element.current.querySelector('svg')?.setAttribute('data-chart-renderer','svg'); update(); }
       else if(width!==element.current.clientWidth||height!==element.current.clientHeight) { instance.current.resize(); update(); }
       else if(dirty.current)update();
@@ -77,7 +77,7 @@ export function Chart({ option, className, events, animateChanges=false }: { opt
     schedule.current=()=>{dirty.current=true;queueRender(element,()=>{if(!live)return;resize();});};
     const observer = new ResizeObserver(()=>queueRender(element,resize));
     observer.observe(element.current);
-    const intersection=new IntersectionObserver(entries=>{visible=entries[0].isIntersecting;if(visible)queueRender(element,resize);},{rootMargin:'120px'});
+    const intersection=new IntersectionObserver(entries=>{visible=entries[0].isIntersecting;if(visible)queueRender(element,resize);},{rootMargin:'0px',threshold:[0,.01]});
     intersection.observe(element.current);
     const reduced = matchMedia('(prefers-reduced-motion: reduce)');
     loadFonts(chartFont).then(() => { fontsReady = true; queueRender(element,resize); }).catch(() => {
