@@ -7,6 +7,20 @@ import { chartFont, loadFonts } from '../fonts';
 import {queueRender,cancelRender} from '../studio/render-queue';
 
 const chartPictures=new Map<string,string>();
+function positionTooltip(point:number[],element:HTMLElement|null,dom:HTMLElement){
+  const chart=element?.getBoundingClientRect()??{left:0,top:0},viewport=visibleViewport();
+  const dock=document.querySelector('.s-mobile-dock')?.getBoundingClientRect();
+  const bottomInset=dock?.height?Math.max(0,viewport.top+viewport.height-dock.top):0;
+  dom.style.maxWidth=Math.max(1,Math.min(300,viewport.width-24))+'px';
+  dom.style.maxHeight=Math.max(1,viewport.height-bottomInset-24)+'px';
+  dom.style.overflowY='auto';
+  const position=tooltipPosition(point,chart,{width:dom.offsetWidth,height:dom.offsetHeight},viewport,bottomInset);
+  // ECharts otherwise confines the result to the plot and converts it through
+  // body coordinates. Fixed CSS coordinates keep the final box in the viewport.
+  dom.style.setProperty('--chart-tooltip-left',chart.left+position[0]+'px');
+  dom.style.setProperty('--chart-tooltip-top',chart.top+position[1]+'px');
+  return position;
+}
 // Theme only chart typography and chrome; series/item colors carry metric identity.
 function themedOption(option: any, element: HTMLElement | null) {
   const style=getComputedStyle(element??document.documentElement);
@@ -19,7 +33,7 @@ function themedOption(option: any, element: HTMLElement | null) {
   const radial=Array.isArray(option.series)&&option.series.every((s:any)=>['pie','map'].includes(s.type));
   return {...option,grid:radial?undefined:option.grid,textStyle:label(option.textStyle),xAxis:radial?undefined:map(option.xAxis,axis),yAxis:radial?undefined:map(option.yAxis,axis),
     legend:map(option.legend,(v:any)=>({...v,textStyle:label(v.textStyle),inactiveColor:muted,formatter:fmt(v.formatter)})),
-    tooltip:map(option.tooltip,(v:any)=>({...v,className:'s-chart-tooltip',...(matchMedia('(pointer:coarse)').matches?{triggerOn:'click',enterable:true}:{}),renderMode:'html',appendTo:document.body,transitionDuration:0,position:(point:number[],_params:unknown,dom:HTMLElement)=>{const r=element?.getBoundingClientRect()??{left:0,top:0},v=visibleViewport(),inset=matchMedia('(pointer:coarse) and (orientation:portrait)').matches?88:0;dom.style.maxWidth=Math.max(1,v.width-24)+'px';dom.style.maxHeight=Math.max(32,v.height-inset-24)+'px';dom.style.overflowY='auto';return tooltipPosition(point,r,{width:dom.offsetWidth,height:dom.offsetHeight},v,inset)},backgroundColor:'transparent',borderWidth:0,borderColor:'transparent',textStyle:label(v.textStyle),...(v.formatter?{formatter:fmt(v.formatter)}:{})})),
+    tooltip:map(option.tooltip,(v:any)=>({...v,className:'s-chart-tooltip',...(matchMedia('(pointer:coarse)').matches?{triggerOn:'click',enterable:true}:{}),renderMode:'html',appendTo:document.body,confine:false,transitionDuration:0,position:(point:number[],_params:unknown,dom:HTMLElement)=>positionTooltip(point,element,dom),backgroundColor:'transparent',borderWidth:0,borderColor:'transparent',textStyle:label(v.textStyle),...(v.formatter?{formatter:fmt(v.formatter)}:{})})),
     series:map(option.series,(v:any)=>({...v,...(v.type==='pie'?{padAngle:1,minAngle:2.5,itemStyle:{...v.itemStyle,borderRadius:7},data:v.data?.map((d:any)=>({...d,itemStyle:{...d.itemStyle,borderRadius:7}}))}:{}),...(v.type==='line'?{symbol:'circle',lineStyle:{...v.lineStyle,color:v.lineStyle?.color??v.itemStyle?.color,width:v.lineStyle?.width??2.2},itemStyle:{...v.itemStyle,color:surface,borderColor:v.lineStyle?.color??v.itemStyle?.color,borderWidth:2},smooth:.5,smoothMonotone:'x',connectNulls:false,areaStyle:v.areaStyle??{opacity:.5,color:{type:'linear',x:0,y:0,x2:0,y2:1,colorStops:[{offset:0,color:(v.lineStyle?.color??v.itemStyle?.color??'#FF73AC')+'28'},{offset:1,color:(v.lineStyle?.color??v.itemStyle?.color??'#FF73AC')+'00'}]}}}:{}),label:label(v.label),endLabel:label(v.endLabel),emphasis:{...v.emphasis,label:label(v.emphasis?.label)},markLine:v.markLine?{...v.markLine,label:label(v.markLine.label)}:v.markLine}))};
 }
 
@@ -85,13 +99,13 @@ export function Chart({ option, className, events, animateChanges=false }: { opt
       if (live && element.current) element.current.textContent = '图表字体加载失败，请刷新页面。';
     });
     const prepare=()=>{const r=element.current?.getBoundingClientRect();if(r&&r.bottom>0&&r.top<innerHeight){visible=true;dirty.current=true;cancelRender(element);resize();}};document.addEventListener('up:prepare-view',prepare);
-    const hideTip=()=>instance.current?.dispatchAction({type:'hideTip'});let touchStart:{x:number;y:number}|null=null;const down=(e:PointerEvent)=>{if(e.pointerType==='touch'){touchSuppressUntil=0;touchStart=null;if((e.target as Element).closest('.s-chart-tooltip'))return;touchStart={x:e.clientX,y:e.clientY};if(!element.current?.contains(e.target as Node))hideTip()}};const move=(e:PointerEvent)=>{if(e.pointerType==='touch'&&touchStart&&Math.hypot(e.clientX-touchStart.x,e.clientY-touchStart.y)>8){touchSuppressUntil=performance.now()+400;hideTip()}};document.addEventListener('pointerdown',down,{passive:true});document.addEventListener('pointermove',move,{passive:true});window.addEventListener('scroll',hideTip,{passive:true});visualViewport?.addEventListener('resize',hideTip);visualViewport?.addEventListener('scroll',hideTip);
+    const hideTip=()=>instance.current?.dispatchAction({type:'hideTip'});let touchStart:{x:number;y:number}|null=null;const down=(e:PointerEvent)=>{if(e.pointerType==='touch'){touchSuppressUntil=0;touchStart=null;if((e.target as Element).closest('.s-chart-tooltip'))return;touchStart={x:e.clientX,y:e.clientY};if(!element.current?.contains(e.target as Node))hideTip()}};const move=(e:PointerEvent)=>{if(e.pointerType==='touch'&&touchStart&&Math.hypot(e.clientX-touchStart.x,e.clientY-touchStart.y)>8){touchSuppressUntil=performance.now()+400;hideTip()}};document.addEventListener('pointerdown',down,{passive:true});document.addEventListener('pointermove',move,{passive:true});window.addEventListener('scroll',hideTip,{passive:true});window.visualViewport?.addEventListener('resize',hideTip);window.visualViewport?.addEventListener('scroll',hideTip);
     const settled=()=>queueRender(element,resize);document.addEventListener('up:route-settled',settled);window.addEventListener('scroll',settled,{passive:true});
     const refresh=()=>schedule.current();
     reduced.addEventListener('change', refresh);
     const themeObserver=new MutationObserver(refresh);
     themeObserver.observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
-    return () => { document.removeEventListener('pointerdown',down);document.removeEventListener('pointermove',move);window.removeEventListener('scroll',hideTip);visualViewport?.removeEventListener('resize',hideTip);visualViewport?.removeEventListener('scroll',hideTip);const svg=element.current?.querySelector('svg[data-chart-renderer]');if(svg){chartPictures.set(className+':'+(document.documentElement.dataset.theme??'light')+':'+JSON.stringify({...latest.current.option,tooltip:undefined}),svg.outerHTML);if(chartPictures.size>24)chartPictures.delete(chartPictures.keys().next().value!);}document.removeEventListener('up:route-settled',settled);window.removeEventListener('scroll',settled);live = false; document.removeEventListener('up:prepare-view',prepare);cancelRender(element);intersection.disconnect();observer.disconnect(); themeObserver.disconnect(); reduced.removeEventListener('change', refresh); instance.current?.dispose(); instance.current = null; signature.current=""; bound.current = {}; };
+    return () => { document.removeEventListener('pointerdown',down);document.removeEventListener('pointermove',move);window.removeEventListener('scroll',hideTip);window.visualViewport?.removeEventListener('resize',hideTip);window.visualViewport?.removeEventListener('scroll',hideTip);const svg=element.current?.querySelector('svg[data-chart-renderer]');if(svg){chartPictures.set(className+':'+(document.documentElement.dataset.theme??'light')+':'+JSON.stringify({...latest.current.option,tooltip:undefined}),svg.outerHTML);if(chartPictures.size>24)chartPictures.delete(chartPictures.keys().next().value!);}document.removeEventListener('up:route-settled',settled);window.removeEventListener('scroll',settled);live = false; document.removeEventListener('up:prepare-view',prepare);cancelRender(element);intersection.disconnect();observer.disconnect(); themeObserver.disconnect(); reduced.removeEventListener('change', refresh); instance.current?.dispose(); instance.current = null; signature.current=""; bound.current = {}; };
   }, []);
   useEffect(()=>schedule.current(), [option, events]);
   const category=option.xAxis?.type==='category'&&option.xAxis?.axisLabel?.interval===0;const count=category?option.xAxis.data?.length??0:0;const minimum=count*9+(Number(option.grid?.left)||50)+(Number(option.grid?.right)||25);
