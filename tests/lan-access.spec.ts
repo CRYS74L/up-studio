@@ -36,7 +36,7 @@ for(const lan of [false,true]){
  test((lan?'LAN':'local')+' navigation and direct settings links respect available service controls',async({page,baseURL})=>{
   const origin=await app(page,baseURL!,lan);
   await page.goto(origin+'/#settings');
-  await expect(page.locator('.s-main h1')).toHaveText(lan?'创作概览':'设置');
+  await expect(page.locator('.s-main h1')).toHaveText(lan?'概览':'设置');
   await expect(page.locator('[data-nav-id="settings"]')).toHaveCount(lan?0:2);
   await expect(page.locator('.s-service-settings')).toHaveCount(lan?0:1);
   if(lan){
@@ -44,9 +44,9 @@ for(const lan of [false,true]){
    await expect(page.locator('.s-sidebar [data-nav-id]')).toHaveCount(4);
    await expect(page.locator('.s-mobile-nav [data-nav-id]')).toHaveCount(4);
    await page.goto(origin+'/#videos');
-   await expect(page.locator('.s-main h1')).toHaveText('我的稿件');
+   await expect(page.locator('.s-main h1')).toHaveText('稿件');
    await page.evaluate(()=>{location.hash='#settings'});
-   await expect(page.locator('.s-main h1')).toHaveText('创作概览');
+   await expect(page.locator('.s-main h1')).toHaveText('概览');
    await expect(page).toHaveURL(/#overview$/);
   }else{
    await expect(page.getByRole('switch',{name:'开机自启动'})).toBeEnabled();

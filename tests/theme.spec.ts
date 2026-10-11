@@ -13,7 +13,7 @@ test('portrait hides the theme control on every device and only phones follow sy
  const phone=testInfo.project.name==='iphone';
  await page.setViewportSize({width:390,height:844});
  await page.goto('/#videos');
- await expect(page.locator('.s-main h1')).toHaveText('我的稿件');
+ await expect(page.locator('.s-main h1')).toHaveText('稿件');
  await expect(page.locator('.s-theme-anchor')).toBeHidden();
  await expect(page.locator('html')).toHaveAttribute('data-theme',phone?'dark':'light');
  await page.emulateMedia({colorScheme:'light'});
@@ -48,7 +48,7 @@ test('landscape restores manual control and rotation preserves the last manual p
 test('control visibility follows page orientation rather than a width threshold',async({page})=>{
  await page.setViewportSize({width:1000,height:1200});
  await page.goto('/#videos');
- await expect(page.locator('.s-main h1')).toHaveText('我的稿件');
+ await expect(page.locator('.s-main h1')).toHaveText('稿件');
  await expect(page.locator('.s-theme-anchor')).toBeHidden();
  await page.setViewportSize({width:480,height:320});
  await expect(page.locator('.s-theme-anchor')).toBeVisible();
