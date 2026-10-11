@@ -442,3 +442,8 @@ button:focus-visible,a:focus-visible,summary:focus-visible,[role=button]:focus-v
 .s-analysis-header-tabs>.ui-segments{flex-wrap:nowrap}
 @media(max-width:359px){.s-analysis-header-tabs>.ui-segments>button{font-size:12px;padding-inline:7px!important}}
 @media(orientation:portrait){.s-theme-anchor,.s-header-freshness{display:none}}
+@media(orientation:portrait){
+ .s-header[data-page=analysis]{position:relative;display:flex}
+ .s-header[data-page=analysis]>.s-header-actions{display:none}
+ .s-analysis-header-tabs{position:absolute;inset-inline-end:0;top:50%;transform:translateY(-50%);max-width:calc(100% - 60px)}
+}
