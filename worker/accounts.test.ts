@@ -7,7 +7,7 @@ import {createD1} from '../runtime/d1.mjs';
 it('isolates account tables while preserving query aliases and the original dataset',async()=>{
  const db=createD1(':memory:');
  await db.exec('CREATE TABLE settings(key TEXT PRIMARY KEY,value_json TEXT,updated_at TEXT);');
- for(const table of ['videos','video_snapshots','video_trend_points','account_snapshots','account_trends','acquisition_runs'])await db.exec(`CREATE TABLE ${table}(id TEXT PRIMARY KEY)`);
+ for(const table of ['videos','video_snapshots','video_trend_points','account_snapshots','account_trends','acquisition_runs']){const extra=table==='video_snapshots'?',captured_at TEXT,source TEXT':table==='account_snapshots'?',captured_at TEXT':table==='acquisition_runs'?',started_at TEXT':'';await db.exec(`CREATE TABLE ${table}(id TEXT PRIMARY KEY${extra})`);}
  await prepareAccount(db,{uid:'1',name:'First',avatar:''});await db.prepare('INSERT INTO videos VALUES(?)').bind('original').run();
  await prepareAccount(db,{uid:'2',name:'Second',avatar:''});await db.prepare("INSERT INTO settings VALUES('active_account',?,?)").bind('"2"','now').run();
  const scoped=await accountDatabase(db);expect(await scoped.prepare('SELECT COUNT(*) videos FROM videos').first('videos')).toBe(0);

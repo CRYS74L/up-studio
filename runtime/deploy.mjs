@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { DatabaseSync, backup } from 'node:sqlite';
 import { execFileSync } from 'node:child_process';
+import {ensureScopedQueryIndexes} from './query-indexes.mjs';
 const project=path.resolve(import.meta.dirname,'..'), root=path.join(project,'.local-runtime');
 for(const folder of ['bin','releases','logs','backups','audit'])fs.mkdirSync(path.join(root,folder),{recursive:true});
 if(!fs.existsSync(path.join(root,'data.sqlite'))){
@@ -22,7 +23,7 @@ for(const name of fs.readdirSync(path.join(project,'migrations')).filter(name=>/
  try{migrationDb.exec(fs.readFileSync(path.join(project,'migrations',name),'utf8'));migrationDb.prepare('INSERT INTO runtime_migrations(name) VALUES(?)').run(name);migrationDb.exec('COMMIT');}
  catch(error){migrationDb.exec('ROLLBACK');migrationDb.close();throw error;}
 }
-migrationDb.close();
+ensureScopedQueryIndexes(migrationDb);migrationDb.close();
 const id=new Date().toISOString().replace(/[:.]/g,'-'); const release=path.join(root,'releases',id);fs.mkdirSync(release);
 fs.copyFileSync(path.join(project,'dist/up_studio/index.js'),path.join(release,'worker.mjs'));
 function copyTree(source,target){fs.mkdirSync(target,{recursive:true});for(const entry of fs.readdirSync(source,{withFileTypes:true})){const from=path.join(source,entry.name),to=path.join(target,entry.name);if(entry.isDirectory())copyTree(from,to);else if(entry.isFile())fs.copyFileSync(from,to);}}

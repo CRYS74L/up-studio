@@ -26,8 +26,9 @@ export function ManuscriptTitle({title}:{title:string}){
       const first=displayTitle.slice(0,split).trimEnd(),second=displayTitle.slice(split).trimStart();
       setLines(previous=>previous[0]===first&&previous[1]===second?previous:[first,second]);
     };
-    measure();const observer=new ResizeObserver(measure);observer.observe(element);
-    return ()=>observer.disconnect();
+    let live=true;measure();const observer=new ResizeObserver(measure);observer.observe(element);
+    void document.fonts.load('500 13px "UP Studio Manuscript"',displayTitle).then(()=>{if(live)measure()}).catch(()=>{});
+    return ()=>{live=false;observer.disconnect()};
   },[title]);
   return <h2 aria-label={title}><span ref={ref} className="s-title-link"><span className="s-title-line">{lines[0]}</span><span className="s-title-line s-title-line-last">{lines[1]}</span></span></h2>;
 }

@@ -142,12 +142,13 @@ app.get('/api/videos/:id/history', async (c) => {
 });
 app.get('/api/videos', async (c) => {
   const capturedAt = c.req.query('capturedAt');
+  const cards=c.req.query('view')==='cards',dimensions=cards?'':',s.dimensions_json';
   if (capturedAt && !z.string().datetime().safeParse(capturedAt).success) return jsonError(c, 400, 'invalid_snapshot', '快照时间格式无效');
   const query = capturedAt
-    ? c.env.DB.prepare('SELECT v.*,s.views,s.impressions,s.cover_ctr,s.avg_watch_seconds,s.avg_watch_percent,s.followers_gained,s.metrics_json,s.dimensions_json,s.captured_at FROM videos v JOIN video_snapshots s ON s.video_id=v.id WHERE s.captured_at=? ORDER BY v.published_at DESC').bind(capturedAt)
-    : c.env.DB.prepare('SELECT v.*,s.views,s.impressions,s.cover_ctr,s.avg_watch_seconds,s.avg_watch_percent,s.followers_gained,s.metrics_json,s.dimensions_json,s.captured_at FROM videos v LEFT JOIN video_snapshots s ON s.id=(SELECT id FROM video_snapshots WHERE video_id=v.id ORDER BY captured_at DESC LIMIT 1) ORDER BY v.published_at DESC');
+    ? c.env.DB.prepare(`SELECT v.*,s.views,s.impressions,s.cover_ctr,s.avg_watch_seconds,s.avg_watch_percent,s.followers_gained,s.metrics_json${dimensions},s.captured_at FROM videos v JOIN video_snapshots s ON s.video_id=v.id WHERE s.captured_at=? ORDER BY v.published_at DESC`).bind(capturedAt)
+    : c.env.DB.prepare(`SELECT v.*,s.views,s.impressions,s.cover_ctr,s.avg_watch_seconds,s.avg_watch_percent,s.followers_gained,s.metrics_json${dimensions},s.captured_at FROM videos v LEFT JOIN video_snapshots s ON s.id=(SELECT id FROM video_snapshots WHERE video_id=v.id ORDER BY captured_at DESC LIMIT 1) ORDER BY v.published_at DESC`);
   const rows = (await query.all()).results;
-  return c.json({ ok: true, videos: rows.map((row: any) => { const metrics=JSON.parse(row.metrics_json || '{}'); return { ...row, cover_ctr:metrics.coverAttractionScore ?? null, cover_url:`/api/covers/${encodeURIComponent(row.id)}`, metrics, dimensions: JSON.parse(row.dimensions_json || '{}'), metrics_json: undefined, dimensions_json: undefined }; }) });
+  return c.json({ ok: true, videos: rows.map((row: any) => { const metrics=JSON.parse(row.metrics_json || '{}'); return { ...row, cover_ctr:metrics.coverAttractionScore ?? null, cover_url:`/api/covers/${encodeURIComponent(row.id)}`, metrics, dimensions:cards?undefined:JSON.parse(row.dimensions_json || '{}'), metrics_json: undefined, dimensions_json: undefined }; }) });
 });
 app.get('/api/videos/:id', async (c) => {
   const row: any = await c.env.DB.prepare('SELECT v.*,s.views,s.impressions,s.cover_ctr,s.avg_watch_seconds,s.avg_watch_percent,s.followers_gained,s.metrics_json,s.dimensions_json,s.captured_at FROM videos v LEFT JOIN video_snapshots s ON s.id=(SELECT id FROM video_snapshots WHERE video_id=v.id ORDER BY captured_at DESC LIMIT 1) WHERE v.id=?').bind(c.req.param('id')).first();

@@ -9,7 +9,7 @@ import {Cover,Empty,Stat} from './ui';
 import {navigate} from './route';
 
 export function Overview(){
-  const {summary,videos,pending,error,retry}=useDashboardData();
+  const {summary,videos,pending,error,retry}=useDashboardData({compact:true});
   const history=useQuery({queryKey:['overview-history'],staleTime:60000,queryFn:()=>request<{points:Array<Record<string,any>>}>('/api/dashboard/history'),enabled:!!summary?.configured&&!summary?.miniTrends});
   const accountHistory=useQuery({queryKey:['account-history'],queryFn:()=>request<{points:Array<{followers:number|null}>}>('/api/account/history'),enabled:!!summary?.configured&&!summary?.miniTrends});
   if(pending)return <PageSkeleton page={'overview'}/>;

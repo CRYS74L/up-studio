@@ -31,7 +31,7 @@ import {Account,Brand} from './Account';
 import './studio.css';
 import './portrait-scale.css';
 const pages=[['overview','概览',LayoutDashboard],['videos','稿件',SquarePlay],['analysis','分析',ChartNoAxesCombined],['sources','数据源',DatabaseZap],['settings','设置',Settings]] as const;
-function Studio(){const lab=useLabSettings();useLayoutEffect(()=>applyLabSettings(lab),[lab]);const route=useStudioRoute();const {summary,videos,summaryPending}=useDashboardData({loadVideos:!['settings','sources'].includes(route.page)});const [theme,setTheme]=useState(getInitialTheme),[menu,setMenu]=useState(false),sync=useSync();const page=route.page==='matrix'?'analysis':route.page;useLayoutEffect(()=>observeTheme(setTheme),[]);
+function Studio(){const lab=useLabSettings();useLayoutEffect(()=>applyLabSettings(lab),[lab]);const route=useStudioRoute();const {summary,videos,summaryPending}=useDashboardData({loadVideos:!['settings','sources'].includes(route.page),compact:route.page==='overview'||route.page==='videos'&&!route.video});const [theme,setTheme]=useState(getInitialTheme),[menu,setMenu]=useState(false),sync=useSync();const page=route.page==='matrix'?'analysis':route.page;useLayoutEffect(()=>observeTheme(setTheme),[]);
   const visiblePages=isLocalAccess()?pages:pages.filter(([id])=>id!=='settings');
   useEffect(()=>{const preventNativeDrag=(event:DragEvent)=>event.preventDefault();document.addEventListener('dragstart',preventNativeDrag,true);return()=>document.removeEventListener('dragstart',preventNativeDrag,true)},[]);
   useEffect(()=>{if(route.page==='overview'||route.page==='analysis'&&route.tab!=='ai')void loadFonts(chartFont).catch(()=>{})},[route.page,route.tab]);

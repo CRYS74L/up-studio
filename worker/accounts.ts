@@ -26,6 +26,7 @@ export async function prepareAccount(input:D1Database,profile:{uid:string;name:s
  const owner=await db.prepare("SELECT value_json FROM settings WHERE key='original_account'").first<{value_json:string}>();
  if(owner&&JSON.parse(owner.value_json)!==profile.uid){
   for(const table of tables){const row=await db.prepare("SELECT sql FROM sqlite_master WHERE type='table' AND name=?").bind(table).first<{sql:string}>();if(!row)throw Error('Missing account schema');await db.exec(scopeSql(row.sql,profile.uid).replace(/CREATE TABLE /i,'CREATE TABLE IF NOT EXISTS '));}
+  for(const [table,columns] of [['video_snapshots','captured_at DESC,source'],['account_snapshots','captured_at DESC'],['acquisition_runs','started_at DESC']])await db.exec(`CREATE INDEX IF NOT EXISTS up_${profile.uid}_${table}_dashboard_lookup ON up_${profile.uid}_${table}(${columns})`);
  }
  await db.batch([db.prepare("INSERT OR IGNORE INTO settings(key,value_json,updated_at) VALUES('original_account',?,?)").bind(JSON.stringify(profile.uid),now),db.prepare("INSERT INTO settings(key,value_json,updated_at) VALUES(?,?,?) ON CONFLICT(key) DO UPDATE SET value_json=excluded.value_json,updated_at=excluded.updated_at").bind('profile_'+profile.uid,JSON.stringify(profile),now)]);
 }

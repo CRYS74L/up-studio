@@ -21,7 +21,7 @@ import {VideoAudience} from './VideoAudience';
 import {VideoDiagnostics,VideoEngagement} from './VideoDiagnostics';
 
 export function Library({route}:{route:StudioRoute}){
-  const {videos,pending,error,retry}=useDashboardData();const [search,setSearch]=useState(''),[sort,setSort]=useState('最新发布');
+  const {videos,pending,error,retry}=useDashboardData({compact:!route.video});const [search,setSearch]=useState(''),[sort,setSort]=useState('最新发布');
   const shown=filterVideos(videos,search,'全部',sort),current=videos.find(v=>v.id===route.video);
   if(pending)return <PageSkeleton page={route.video?'detail':'videos'}/>;
   if(error)return <Empty title="作品暂时无法读取" body={error.message} action={<button className="s-primary" onClick={retry}>重新加载</button>}/>;

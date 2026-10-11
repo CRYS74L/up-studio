@@ -45,3 +45,5 @@ for old,new in preloads.items():
  prefix=old.rsplit('-',1)[0]
  text=re.sub(r'/fonts/'+re.escape(prefix)+r'-core-[a-f0-9]{12}\.woff2','/fonts/'+new,text)
 p.write_text(text,encoding='utf-8');print(json.dumps(report))
+import subprocess
+subprocess.run([sys.executable,'tools/split-critical-fonts.py'],check=True)
