@@ -310,13 +310,32 @@ test('background snapshots preserve the active detail tab',async({page})=>{
  await page.clock.fastForward(61000);await expect(page.getByRole('button',{name:'观众',exact:true})).toHaveAttribute('aria-pressed','true');
 });
 
-test('explanatory subtitles are absent and cover metrics keep their typography across orientations',async({page})=>{
+test('explanatory subtitles are absent and cover metrics fit narrow cards on one row',async({page})=>{
+ await page.route(/\/api\/videos(?:\?.*)?$/,r=>r.fulfill({json:{ok:true,videos:videos.map(v=>({...v,views:350000,metrics:{...v.metrics,danmaku:988},duration_seconds:2565}))}}));
  await page.goto('/');await expect(page.locator('.s-header p')).toHaveCount(0);await expect(page.locator('.s-overview .s-note')).toHaveCount(0);
  await page.goto('/#videos');await expect(page.locator('.s-cover-numbers svg').first()).toHaveAttribute('viewBox','0 0 24 24');
  const labels=await page.locator('.s-cover-numbers>span').evaluateAll(els=>els.map(e=>({height:e.getBoundingClientRect().height,line:parseFloat(getComputedStyle(e).lineHeight)})));expect(labels).toHaveLength(6);expect(labels.every(v=>v.height<=v.line+1)).toBe(true);
  const measure=()=>page.locator('.s-library .s-cover-numbers').first().evaluate(e=>{const s=getComputedStyle(e),icon=e.querySelector('svg')!,i=getComputedStyle(icon),r=icon.getBoundingClientRect(),item=getComputedStyle(e.firstElementChild!),duration=getComputedStyle(e.closest('.s-media')!.querySelector('.s-duration')!);return {font:s.fontFamily,size:s.fontSize,weight:s.fontWeight,line:s.lineHeight,gap:s.gap,innerGap:item.gap,iconWidth:r.width,iconHeight:r.height,fill:i.fill,stroke:i.stroke,durationSize:duration.fontSize}});
- await page.setViewportSize({width:1280,height:800});const landscape=await measure();
- for(const viewport of [{width:390,height:844},{width:768,height:1024},{width:844,height:390}]){await page.setViewportSize(viewport);expect(await measure()).toEqual(landscape);}
+ const layout=()=>page.locator('.s-library>.s-media').first().evaluate(e=>{const cover=e.querySelector('.s-media-cover')!,n=e.querySelector('.s-cover-numbers')!.getBoundingClientRect(),time=e.querySelector('.s-duration')!.getBoundingClientRect(),meta=e.querySelector('.s-cover-meta')!.getBoundingClientRect();return {width:cover.clientWidth,oneRow:Math.abs(n.top+n.height/2-time.top-time.height/2)<1,fit:n.right+3<=time.left&&time.right<=meta.right+.1}});
+ let wide:Awaited<ReturnType<typeof measure>>|undefined;
+ for(const viewport of [{width:1280,height:800},{width:428,height:926},{width:390,height:844},{width:320,height:740},{width:768,height:1024},{width:844,height:390}]){
+  await page.setViewportSize(viewport);const size=await layout(),m=await measure();expect(size.oneRow).toBe(true);expect(size.fit).toBe(true);expect(m.weight).toBe('400');expect(m.stroke).toBe('none');expect(m.durationSize).toBe(m.size);
+  if(size.width>240){if(wide)expect(m).toEqual(wide);else wide=m;}
+  else {expect(m.size).toBe(size.width<=170?'11px':'12px');expect(m.iconWidth).toBe(size.width<=170?13:14);expect(m.iconHeight).toBe(m.iconWidth);expect(m.gap).toBe(size.width<=170?'6px':'8px');expect(m.innerGap).toBe('3px');}
+ }
+});
+
+test('two-line manuscript titles inset the lower line around both rounded corners',async({page})=>{
+ const title='【独行日本】为什么京都才是我最喜欢的日本城市 👨‍👩‍👧‍👦 | Vlog 02 继续旅行的长标题';
+ await page.route(/\/api\/videos(?:\?.*)?$/,r=>r.fulfill({json:{ok:true,videos:videos.map(v=>({...v,title}))}}));await page.goto('/#videos');
+ for(const viewport of [{width:428,height:926},{width:320,height:740},{width:390,height:844}]){
+  await page.setViewportSize(viewport);const text=page.locator('.s-title-link').first(),last=text.locator('.s-title-line-last');await expect(last).not.toHaveText('');await expect(last).toHaveCSS('text-overflow','ellipsis');
+  // ResizeObserver updates the measured break after the viewport's layout settles.
+  await expect.poll(()=>text.locator('.s-title-line').first().evaluate(e=>e.scrollWidth>e.clientWidth)).toBe(false);
+  const flow=await text.evaluate(e=>{const [first,second]=[...e.children],a=first.getBoundingClientRect(),b=second.getBoundingClientRect(),s=getComputedStyle(e),r=e.getBoundingClientRect();return {left:b.left-a.left,right:a.right-b.right,height:r.height,line:parseFloat(s.lineHeight),gap:getComputedStyle(e.closest('.s-library')!).gap,fullText:[first.textContent,second.textContent].join('').replace(/\s/g,''),secondOverflow:second.scrollWidth>second.clientWidth,firstOverflow:first.scrollWidth>first.clientWidth,emojiIntact:[first,second].some(n=>n.textContent!.includes('👨‍👩‍👧‍👦'))};});
+  expect(flow.left).toBe(viewport.width<374?6:8);expect(flow.right).toBe(flow.left);expect(flow.height).toBeCloseTo(flow.line*2,1);expect(flow.gap).toBe('6px');expect(flow.fullText).toBe(title.replace(/\s/g,''));expect(flow.secondOverflow).toBe(true);expect(flow.firstOverflow).toBe(false);expect(flow.emojiIntact).toBe(true);
+ }
+ await page.locator('.s-title-link').first().click();await expect(page).toHaveURL(/video=1/);await expect(page.locator('.s-detail-hero h2')).toHaveText(title);
 });
 
 test('overview changes are quantities and not percentages',async({page})=>{

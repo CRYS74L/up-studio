@@ -2,6 +2,7 @@ import {PageSkeleton} from './PageSkeleton';
 import {VideoRetention} from './VideoRetention';
 import {RealtimePlays} from './RealtimePlays';
 import {ReorderGrid} from './ReorderGrid';
+import {ManuscriptTitle} from './ManuscriptTitle';
 import {BiliPlay,BiliDanmaku} from './BiliIcons';
 import {Select} from './Select';
 import {useState} from 'react';
@@ -29,7 +30,7 @@ export function Library({route}:{route:StudioRoute}){
     <div className="s-library-toolbar"><label className="s-search"><Search/><input aria-label="搜索稿件" placeholder="搜索标题或 BV 号" value={search} onChange={e=>setSearch(e.target.value)}/>{search&&<button aria-label="清除搜索" onClick={()=>setSearch('')}><X/></button>}</label><Select aria-label="稿件排序" value={sort} onChange={e=>setSort(e.target.value)}>{['最新发布','播放量','涨粉量'].map(v=><option key={v}>{v}</option>)}</Select></div>
     {!shown.length?<Empty title="没有匹配的稿件" body={videos.length?'换个关键词，或者清除筛选条件。':'连接 B 站并同步后，作品会出现在这里。'} action={<button className="s-secondary" onClick={()=>{setSearch('');if(!videos.length)navigate('sources');}}>{videos.length?'清除筛选':'连接数据源'}</button>}/>:
     <ReorderGrid motionKey={sort+search} className="s-library">{shown.map(v=><button type="button" data-reorder={v.id} key={v.id} className="s-media s-panel" aria-label={`查看 ${v.title}`} onClick={()=>navigate('videos',{video:v.id})}>
-      <div className="s-media-open"><div className="s-media-cover"><Cover video={v}/><div className="s-cover-meta"><span className="s-cover-numbers"><span><BiliPlay/>{compact(v.views)}</span><span><BiliDanmaku/>{compact(v.metrics.danmaku)}</span></span><span className="s-duration">{seconds(v.duration_seconds)}</span></div></div><div className="s-media-copy"><h2><span className="s-title-link">{v.title}</span></h2></div></div>
+      <div className="s-media-open"><div className="s-media-cover"><Cover video={v}/><div className="s-cover-meta"><span className="s-cover-numbers"><span><BiliPlay/>{compact(v.views)}</span><span><BiliDanmaku/>{compact(v.metrics.danmaku)}</span></span><span className="s-duration">{seconds(v.duration_seconds)}</span></div></div><div className="s-media-copy"><ManuscriptTitle title={v.title}/></div></div>
     </button>)}</ReorderGrid>}
   </>;
 }
