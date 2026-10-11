@@ -59,6 +59,7 @@ for(const lan of [false,true]){
   await page.goto(origin+'/#analysis?tab=ai');
   await expect(page.locator('.s-chat-message')).toHaveCount(2);
   await expect(page.getByRole('button',{name:'复制消息',exact:true})).toHaveCount(lan?0:2);
+  for(const label of ['从消息创建分支','编辑消息','重新回答'])await expect(page.getByRole('button',{name:label,exact:true})).toHaveCount(0);
   if(lan)await expect(page.getByRole('button',{name:'停止生成',exact:true})).toHaveCount(0);
   else await expect(page.getByRole('button',{name:'停止生成',exact:true})).toBeDisabled();
  });
@@ -81,6 +82,7 @@ for(const lan of [false,true]){
   });
   await page.goto(origin+'/#analysis?tab=ai');
   await expect(page.locator('.s-chat-message')).toHaveCount(2);
+  for(const label of ['从消息创建分支','编辑消息','重新回答'])await expect(page.getByRole('button',{name:label,exact:true})).toHaveCount(0);
   await page.getByRole('textbox',{name:'AI对话消息',exact:true}).fill('测试停止按钮');
   await page.getByRole('button',{name:'发送消息',exact:true}).click();
   await expect(page.getByRole('button',{name:'停止生成',exact:true})).toBeEnabled();

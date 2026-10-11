@@ -68,18 +68,7 @@ export function registerChat(app:any,readKey:(env:any)=>Promise<string|undefined
     await c.env.DB.prepare('UPDATE ai_conversations SET title=?,archived=? WHERE id=? AND account_id=?').bind(value.data.title??row.title,value.data.archived==null?row.archived:Number(value.data.archived),row.id,owner(c.env)).run();
     return c.json({ok:true});
   });
-  app.post('/api/ai/conversations/:id/fork',async(c:any)=>{
-    const value=z.object({messageId:z.string().nullable()}).safeParse(await c.req.json().catch(()=>null));
-    if(!value.success)return fail(c,400,'分支位置无效');
-    const row=await c.env.DB.prepare('SELECT * FROM ai_conversations WHERE id=? AND account_id=?').bind(c.req.param('id'),owner(c.env)).first();
-    if(!row)return fail(c,404,'会话不存在');
-    const previous=decode(row),index=value.data.messageId==null?-1:previous.messages.findIndex(m=>m.id===value.data.messageId);
-    if(value.data.messageId!=null&&index<0)return fail(c,400,'消息不存在');
-    const messages=previous.messages.slice(0,index+1);if(messages.some(m=>m.status==='pending'))return fail(c,409,'请等待回复结束后创建分支');
-    const id=crypto.randomUUID(),now=new Date().toISOString(),title=('分支 · '+row.title).slice(0,100);
-    await c.env.DB.prepare('INSERT INTO ai_conversations(id,account_id,title,messages_json,video_ids_json,created_at,updated_at) VALUES(?,?,?,?,?,?,?)').bind(id,owner(c.env),title,JSON.stringify(messages),row.video_ids_json,now,now).run();
-    return c.json({ok:true,conversation:{id,title,messages,videoIds:previous.videoIds,busy:false,createdAt:now,updatedAt:now}});
-  });
+  app.post('/api/ai/conversations/:id/fork',(c:any)=>fail(c,410,'分支功能已取消'));
   app.get('/api/ai/conversations/:id',async(c:any)=>{
     const row=await c.env.DB.prepare('SELECT * FROM ai_conversations WHERE id=? AND account_id=?').bind(c.req.param('id'),owner(c.env)).first();
     if(!row)return fail(c,404,'会话不存在');

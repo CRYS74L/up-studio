@@ -57,7 +57,7 @@ it('stops an upstream stream and saves the partial answer without holding the co
  await vi.waitFor(()=>{const row=db.database.prepare('SELECT * FROM ai_conversations').get();expect(row.busy_until).toBe(0);const message=JSON.parse(row.messages_json).at(-1);expect(message.status).toBe('stopped');expect(message.content).toBe('已经生成的部分');});db.database.close();
 });
 
-it('renames, archives, restores and branches conversations without losing the original',async()=>{
+it('renames, archives and restores conversations while retired branching preserves history',async()=>{
  const {db,app,env}=setup();vi.stubGlobal('fetch',vi.fn(async()=>response()));
  await(await app.request('/api/ai/chat',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({message:'原始问题',ids:['1']})},env)).text();
  const row=db.database.prepare('SELECT * FROM ai_conversations').get(),messages=JSON.parse(row.messages_json);
@@ -65,7 +65,7 @@ it('renames, archives, restores and branches conversations without losing the or
  expect((await patch({title:'重新命名',archived:true})).status).toBe(200);
  const active:any=await(await app.request('/api/ai/conversations',{},env)).json();expect(active.conversations).toHaveLength(0);
  const archived:any=await(await app.request('/api/ai/conversations?archived=1',{},env)).json();expect(archived.conversations[0].title).toBe('重新命名');
- await patch({archived:false});const fork:any=await(await app.request('/api/ai/conversations/'+row.id+'/fork',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({messageId:messages[0].id})},env)).json();expect(fork.conversation.messages).toHaveLength(1);expect(fork.conversation.id).not.toBe(row.id);expect(JSON.parse(db.database.prepare('SELECT messages_json FROM ai_conversations WHERE id=?').get(row.id).messages_json)).toHaveLength(2);
+ await patch({archived:false});const fork=await app.request('/api/ai/conversations/'+row.id+'/fork',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({messageId:messages[0].id})},env);expect(fork.status).toBe(410);expect(db.database.prepare('SELECT COUNT(*) n FROM ai_conversations').get().n).toBe(1);expect(JSON.parse(db.database.prepare('SELECT messages_json FROM ai_conversations WHERE id=?').get(row.id).messages_json)).toEqual(messages);
  expect((await patch({title:'越权'},{...env,DB:{...db,accountUid:'other'}})).status).toBe(404);db.database.close();
 });
 

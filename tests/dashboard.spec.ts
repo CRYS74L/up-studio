@@ -80,18 +80,24 @@ test('overview follows the reference composition and does not invent CTR or mont
  await expect(page.locator('.s-recent-item')).toHaveCount(3);
 });
 
-test('library supports BV search, duration filters and a real list view',async({page})=>{
+test('library shows all durations in a grid without external quality metrics and keeps search and sort',async({page})=>{
+ await page.route(url=>url.pathname==='/api/videos',r=>r.fulfill({json:{ok:true,videos:videos.map((v,i)=>({...v,views:[1000,3000,2000][i]}))}}));
  await page.goto('/#videos');
  await expect(page.locator('.s-media')).toHaveCount(3);
  await page.getByRole('textbox',{name:'搜索稿件'}).fill('BV_TEST_2');
  await expect(page.locator('.s-media')).toHaveCount(1);
  await page.getByRole('button',{name:'清除搜索',exact:true}).click();
- await page.getByRole('button',{name:'中长视频',exact:true}).click();
- await expect(page.locator('.s-media')).toHaveCount(1);
- await page.getByRole('button',{name:'列表',exact:true}).click();
- await expect(page.locator('.s-library')).toHaveClass(/list/);
+ await expect(page.locator('.s-media')).toHaveCount(3);
+ await expect(page.getByRole('group',{name:'稿件时长',exact:true})).toHaveCount(0);
+ await expect(page.getByRole('group',{name:'浏览方式',exact:true})).toHaveCount(0);
+ for(const label of ['封标点击率','平均播放时长','平均播放百分比'])await expect(page.locator('.s-library').getByText(label,{exact:true})).toHaveCount(0);
+ expect(await page.locator('.s-library').evaluate(e=>getComputedStyle(e).display)).toBe('grid');
+ await choose(page,'稿件排序','播放量');
+ await expect(page.locator('.s-media h2').first()).toHaveText('海边日记');
  await page.getByRole('textbox',{name:'搜索稿件'}).fill('no-match');
  await expect(page.getByRole('heading',{name:'没有匹配的稿件'})).toBeVisible();
+ await page.getByRole('button',{name:'清除筛选',exact:true}).click();
+ await expect(page.locator('.s-media')).toHaveCount(3);
 });
 
 test('a video opens a separate detail with audience and retention tabs',async({page})=>{
@@ -100,6 +106,7 @@ test('a video opens a separate detail with audience and retention tabs',async({p
  await expect(page).toHaveURL(/video=2/);
  await expect(page.locator('.s-detail-hero h2')).toHaveText('海边日记');
  await expect(page.locator('.s-library')).toHaveCount(0);
+ for(const label of ['封标点击率','平均播放时长','平均播放百分比'])await expect(page.locator('.s-detail-kpis').getByText(label,{exact:true})).toBeVisible();
  await page.getByRole('button',{name:'观众',exact:true}).click();
  await expect(page.getByRole('heading',{name:'地域分布'})).toBeVisible();
  await expect(page.getByText('上海',{exact:true})).toBeVisible();
@@ -259,9 +266,10 @@ test('analysis uses two categories and displays multiple charts together',async(
  await expect(page.locator('.s-analysis-grid>.s-combinations')).toHaveCount(4);await expect(page.getByRole('button',{name:'选择稿件',exact:true})).toHaveCount(0);
  await page.getByRole('button',{name:'稿件分析',exact:true}).click();await expect(page.getByRole('button',{name:'选择稿件',exact:true})).toBeVisible();await expect(page.getByRole('heading',{name:'自定义组合图'})).toBeVisible();
 });
-test('video metrics are inert while cover and title navigate',async({page})=>{
- await page.goto('/#videos');await page.locator('.s-media-stats').first().click();await expect(page).toHaveURL(/#videos$/);
+test('video cover and title navigate from the compact grid',async({page})=>{
+ await page.goto('/#videos');await expect(page.locator('.s-media-stats')).toHaveCount(0);
  await page.locator('.s-title-link').first().click();await expect(page).toHaveURL(/video=1/);
+ await page.getByRole('button',{name:'所有稿件'}).click();await page.getByRole('button',{name:'查看 海边日记',exact:true}).click();await expect(page).toHaveURL(/video=2/);
 });
 
 test('background snapshots preserve the active detail tab',async({page})=>{
@@ -270,10 +278,10 @@ test('background snapshots preserve the active detail tab',async({page})=>{
  await page.clock.fastForward(61000);await expect(page.getByRole('button',{name:'观众',exact:true})).toHaveAttribute('aria-pressed','true');
 });
 
-test('explanatory subtitles are absent and library metrics stay on one line',async({page})=>{
+test('explanatory subtitles are absent and cover numbers stay on one line',async({page})=>{
  await page.goto('/');await expect(page.locator('.s-header p')).toHaveCount(0);await expect(page.locator('.s-overview .s-note')).toHaveCount(0);
  await page.goto('/#videos');await expect(page.locator('.s-cover-numbers svg').first()).toHaveAttribute('viewBox','0 0 24 24');
- const labels=await page.locator('.s-media-stats .s-stat>span').evaluateAll(els=>els.map(e=>({height:e.getBoundingClientRect().height,line:parseFloat(getComputedStyle(e).lineHeight)})));expect(labels.every(v=>v.height<=v.line+1)).toBe(true);
+ const labels=await page.locator('.s-cover-numbers>span').evaluateAll(els=>els.map(e=>({height:e.getBoundingClientRect().height,line:parseFloat(getComputedStyle(e).lineHeight)})));expect(labels).toHaveLength(6);expect(labels.every(v=>v.height<=v.line+1)).toBe(true);
 });
 
 test('overview changes are quantities and not percentages',async({page})=>{
@@ -286,10 +294,10 @@ test('unselected segment hover only changes text color',async({page})=>{
  await page.emulateMedia({reducedMotion:'no-preference'});await page.goto('/#analysis');const target=page.getByRole('button',{name:'稿件分析',exact:true});await target.hover();await expect(target).toHaveCSS('background-color','rgba(0, 0, 0, 0)');await expect(target).toHaveCSS('transition-timing-function','cubic-bezier(0.23, 1, 0.32, 1)');
 });
 
-test('rapid library switches do not scale cards and metric hover is inert',async({page})=>{
+test('rapid library sorting does not scale cards and title area hover is inert',async({page})=>{
  await page.emulateMedia({reducedMotion:'no-preference'});await page.goto('/#videos');
- for(const name of ['列表','网格','中长视频','全部','短视频','全部']){await page.getByRole('button',{name,exact:true}).click();expect(await page.locator('.s-media').evaluateAll(els=>els.every(e=>{const m=new DOMMatrix(getComputedStyle(e).transform);return Math.abs(m.a-1)<.001&&Math.abs(m.d-1)<.001&&m.b===0&&m.c===0}))).toBe(true);}
- await page.locator('.s-media-stats').first().hover();await expect(page.locator('.s-media-cover img').first()).toHaveCSS('transform','none');
+ for(const name of ['播放量','涨粉量','最新发布']){await choose(page,'稿件排序',name);expect(await page.locator('.s-media').evaluateAll(els=>els.every(e=>{const m=new DOMMatrix(getComputedStyle(e).transform);return Math.abs(m.a-1)<.001&&Math.abs(m.d-1)<.001&&m.b===0&&m.c===0}))).toBe(true);}
+ await page.locator('.s-media-copy').first().hover();await expect(page.locator('.s-media-cover img').first()).toHaveCSS('transform','none');
 });
 test('freshness is in the header and relation points have a visible manuscript key',async({page})=>{
  await page.goto('/');await expect(page.locator('.s-header-actions .s-header-freshness')).toBeVisible();await expect(page.getByRole('button',{name:'查看数据状态'})).toHaveCount(0);
@@ -323,7 +331,8 @@ test('sync icon settles while the pointer remains on the button',async({page})=>
 });
 
 test('reordering has real positional animation without scaling',async({page})=>{
- await page.emulateMedia({reducedMotion:'no-preference'});await page.goto('/#videos');await expect(page.locator('.s-media')).toHaveCount(3);await page.getByRole('button',{name:'列表',exact:true}).click();const moving=await page.locator('.s-media').evaluateAll(els=>els.some(e=>e.getAnimations().some(a=>a.playState==='running')));expect(moving).toBe(true);await expect.poll(()=>page.locator('.s-media').evaluateAll(els=>els.every(e=>e.getAnimations().every(a=>a.playState!=='running')))).toBe(true);
+ await page.route(url=>url.pathname==='/api/videos',r=>r.fulfill({json:{ok:true,videos:videos.map((v,i)=>({...v,views:[1000,3000,2000][i]}))}}));
+ await page.emulateMedia({reducedMotion:'no-preference'});await page.goto('/#videos');await expect(page.locator('.s-media')).toHaveCount(3);await choose(page,'稿件排序','播放量');const moving=await page.locator('.s-media').evaluateAll(els=>els.some(e=>e.getAnimations().some(a=>a.playState==='running')));expect(moving).toBe(true);await expect.poll(()=>page.locator('.s-media').evaluateAll(els=>els.every(e=>e.getAnimations().every(a=>a.playState!=='running')))).toBe(true);
 });
 
 test('saved AI reports remain in chat history and account connection opens a QR code',async({page})=>{
@@ -415,15 +424,15 @@ test('shared reasoning slider tracks a drag and sync hover equals selected styli
  await page.emulateMedia({reducedMotion:'no-preference'});await page.goto('/#analysis?tab=ai');await page.getByRole('button',{name:'选择模型与推理强度'}).click();const slider=page.getByRole('slider',{name:'推理强度'});await expect(slider).toBeVisible();const r=await slider.boundingBox();await page.mouse.move(r!.x+14,r!.y+14);await page.mouse.down();await page.mouse.move(r!.x+r!.width-14,r!.y+14,{steps:8});await page.mouse.up();await expect(slider).toHaveAttribute('aria-valuetext','最高');expect((await page.locator('.ui-slider-thumb').boundingBox())!.width).toBeCloseTo(28,2);await page.keyboard.press('Escape');await page.goto('/#sources');const cell=page.locator('.s-sync-plot rect').first();await cell.hover();await expect(page.getByRole('tooltip')).toBeVisible();await expect(cell).toHaveCSS('fill','rgb(31, 163, 130)');const hovered=await cell.evaluate(e=>({fill:getComputedStyle(e).fill,stroke:getComputedStyle(e).stroke}));await cell.click();await page.mouse.move(2,2);await expect(page.getByRole('tooltip')).toBeVisible();expect(await cell.evaluate(e=>({fill:getComputedStyle(e).fill,stroke:getComputedStyle(e).stroke}))).toEqual(hovered);expect(hovered.stroke).toBe('none');
 });
 
-test('chat history can be renamed archived restored and branched and accepts image attachments',async({page})=>{
- let record:any={id:'manage',title:'原始对话',updatedAt:'2026-09-11',videoIds:['1'],busy:false,messages:[{id:'u1',role:'user',content:'问题'},{id:'a1',role:'assistant',content:'原始回复',status:'complete'}]},archived=false,sent:any;
+test('chat history keeps messages and image attachments without branching actions and supports desktop rename',async({page})=>{
+ let record:any={id:'manage',title:'原始对话',updatedAt:'2026-09-11',videoIds:['1'],busy:false,messages:[{id:'u1',role:'user',content:'问题'},{id:'a1',role:'assistant',content:'原始回复',status:'complete'}]},sent:any;
  await page.route('**/api/ai/status',r=>r.fulfill({json:{ok:true,configured:true,model:'deepseek-flash',effort:'high'}}));
- await page.route('**/api/ai/conversations*',r=>r.fulfill({json:{ok:true,conversations:new URL(r.request().url()).searchParams.get('archived')===(archived?'1':null)?[record]:[]}}));
- await page.route('**/api/ai/conversations/manage',r=>{if(r.request().method()==='PATCH'){const body=r.request().postDataJSON();record={...record,title:body.title??record.title};archived=body.archived??archived;return r.fulfill({json:{ok:true}})}return r.fulfill({json:{ok:true,conversation:record}})});
- await page.route('**/api/ai/conversations/manage/fork',r=>r.fulfill({json:{ok:true,conversation:{...record,id:'branch',title:'分支'}}}));await page.route('**/api/ai/conversations/branch',r=>r.fulfill({json:{ok:true,conversation:{...record,id:'branch',title:'分支'}}}));
+ await page.route('**/api/ai/conversations*',r=>r.fulfill({json:{ok:true,conversations:[record]}}));
+ await page.route('**/api/ai/conversations/manage',r=>{if(r.request().method()==='PATCH'){const body=r.request().postDataJSON();record={...record,title:body.title??record.title};return r.fulfill({json:{ok:true}})}return r.fulfill({json:{ok:true,conversation:record}})});
  await page.route('**/api/ai/chat',r=>{sent=r.request().postDataJSON();return r.fulfill({status:429,json:{ok:false,error:{message:'测试截获'}}})});
- await page.goto('/#analysis?tab=ai');if(page.viewportSize()!.width<1000)await page.getByRole('button',{name:'切换对话记录'}).click();await page.locator('.ai-session-row>button').first().click();await page.getByRole('button',{name:'重命名对话'}).click();await page.getByRole('textbox',{name:'对话名称'}).fill('修改后的对话');await page.getByRole('button',{name:'保存名称'}).click();await expect(page.locator('.s-chat-header')).toContainText('修改后的对话');
- if(page.viewportSize()!.width<1000)await page.getByRole('button',{name:'切换对话记录'}).click();await page.locator('.ai-session-row').hover();await page.getByRole('button',{name:'归档对话 修改后的对话'}).click();await page.getByRole('button',{name:'已归档',exact:true}).click();await page.locator('.ai-session-row').hover();await page.getByRole('button',{name:'恢复对话 修改后的对话'}).click();await page.getByRole('button',{name:'返回对话',exact:true}).click();await page.locator('.ai-session-row>button').first().click();await page.getByRole('button',{name:'从消息创建分支'}).last().click();await expect(page.locator('.s-chat-header')).toContainText('分支');
+ await page.goto('/#analysis?tab=ai');if(page.viewportSize()!.width<1000)await page.getByRole('button',{name:'切换对话记录'}).click();await page.locator('.ai-session-row>button').first().click();await expect(page.locator('.s-chat-message')).toHaveCount(2);
+ for(const label of ['从消息创建分支','编辑消息','重新回答'])await expect(page.getByRole('button',{name:label,exact:true})).toHaveCount(0);
+ if(page.viewportSize()!.width>=1000){await page.getByRole('button',{name:'重命名对话'}).click();await page.getByRole('textbox',{name:'对话名称'}).fill('修改后的对话');await page.getByRole('button',{name:'保存名称'}).click();await expect(page.locator('.ai-toolbar-title')).toContainText('修改后的对话');}
  await page.getByLabel('上传分析图片').setInputFiles({name:'reference.png',mimeType:'image/png',buffer:Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Wl6X1cAAAAASUVORK5CYII=','base64')});await expect(page.locator('.ai-attachments img')).toHaveCount(1);await page.getByRole('textbox',{name:'AI对话消息'}).fill('分析附图');await page.getByRole('button',{name:'发送消息',exact:true}).click();await expect.poll(()=>sent?.attachments?.length).toBe(1);expect(sent.attachments[0].dataUrl).toContain('data:image/png;base64,');
 });
 

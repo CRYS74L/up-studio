@@ -1,18 +1,17 @@
 import {PageSkeleton} from './PageSkeleton';
-import {cancelPageTransition} from './page-transition';
 import {VideoRetention} from './VideoRetention';
 import {RealtimePlays} from './RealtimePlays';
 import {ReorderGrid} from './ReorderGrid';
 import {BiliPlay,BiliDanmaku} from './BiliIcons';
 import {Select} from './Select';
 import {useState} from 'react';
-import {ArrowLeft,ArrowRight,Check,LayoutGrid,List,Search,SlidersHorizontal,X,ExternalLink,Play,MessageSquare} from 'lucide-react';
+import {ArrowLeft,ArrowRight,Search,X,ExternalLink} from 'lucide-react';
 import {useQuery} from '@tanstack/react-query';
 import type {Video} from '../types';
-import {date,seconds,watchTime,score,compact,percent,request,coverSrc} from '../format';
+import {date,seconds,compact,percent,request,coverSrc} from '../format';
 import {useDashboardData} from '../use-dashboard-data';
 import {filterVideos,metrics,valueOf,formatMetric,metricById} from './model';
-import {Cover,Empty,Segments,Stat,motion,AnimatePresence,spring} from './ui';
+import {Cover,Empty,Segments,Stat,motion} from './ui';
 import {navigate,type StudioRoute} from './route';
 import {Chart} from '../components/Chart';
 import {chartBase} from './charts';
@@ -21,16 +20,16 @@ import {VideoAudience} from './VideoAudience';
 import {VideoDiagnostics,VideoEngagement} from './VideoDiagnostics';
 
 export function Library({route}:{route:StudioRoute}){
-  const {videos,pending,error,retry}=useDashboardData();const [search,setSearch]=useState(''),[length,setLength]=useState('全部'),[sort,setSort]=useState('最新发布'),[view,setView]=useState('网格');
-  const shown=filterVideos(videos,search,length,sort),current=videos.find(v=>v.id===route.video);
+  const {videos,pending,error,retry}=useDashboardData();const [search,setSearch]=useState(''),[sort,setSort]=useState('最新发布');
+  const shown=filterVideos(videos,search,'全部',sort),current=videos.find(v=>v.id===route.video);
   if(pending)return <PageSkeleton page={route.video?'detail':'videos'}/>;
   if(error)return <Empty title="作品暂时无法读取" body={error.message} action={<button className="s-primary" onClick={retry}>重新加载</button>}/>;
   if(route.video&&current)return <VideoDetail video={current} previous={videos[(videos.indexOf(current)+videos.length-1)%videos.length]} next={videos[(videos.indexOf(current)+1)%videos.length]}/>;
   return <>
-    <div className="s-library-toolbar"><label className="s-search"><Search/><input aria-label="搜索稿件" placeholder="搜索标题或 BV 号" value={search} onChange={e=>setSearch(e.target.value)}/>{search&&<button aria-label="清除搜索" onClick={()=>setSearch('')}><X/></button>}</label><Select aria-label="稿件排序" value={sort} onChange={e=>setSort(e.target.value)}>{['最新发布','播放量','涨粉量'].map(v=><option key={v}>{v}</option>)}</Select><Segments items={['全部','短视频','中长视频']} value={length} onChange={v=>{cancelPageTransition();setLength(v)}} label="稿件时长"/><Segments items={['网格','列表']} value={view} onChange={v=>{cancelPageTransition();setView(v)}} label="浏览方式"/></div>
-    {!shown.length?<Empty title="没有匹配的稿件" body={videos.length?'换个关键词，或者清除筛选条件。':'连接 B 站并同步后，作品会出现在这里。'} action={<button className="s-secondary" onClick={()=>{setSearch('');setLength('全部');if(!videos.length)navigate('sources');}}>{videos.length?'清除筛选':'连接数据源'}</button>}/>:
-    <ReorderGrid motionKey={length+view+sort+search} className={`s-library ${view==='列表'?'list':''}`}>{shown.map(v=><article data-reorder={v.id} key={v.id} className="s-media">
-      <div className="s-media-open"><button className="s-media-cover" aria-label={`查看 ${v.title}`} onClick={()=>navigate('videos',{video:v.id})}><Cover video={v}/><span className="s-cover-numbers"><span><BiliPlay/>{compact(v.views)}</span><span><BiliDanmaku/>{compact(v.metrics.danmaku)}</span></span><span className="s-duration">{seconds(v.duration_seconds)}</span></button><div className="s-media-copy"><h2><button className="s-title-link" onClick={()=>navigate('videos',{video:v.id})}>{v.title}</button></h2><div className="s-media-stats"><Stat label="封标点击率" value={score(v.cover_ctr)}/><Stat label="平均播放时长" value={watchTime(v.avg_watch_seconds)}/><Stat label="平均播放百分比" value={percent(v.avg_watch_percent)}/></div></div></div>
+    <div className="s-library-toolbar"><label className="s-search"><Search/><input aria-label="搜索稿件" placeholder="搜索标题或 BV 号" value={search} onChange={e=>setSearch(e.target.value)}/>{search&&<button aria-label="清除搜索" onClick={()=>setSearch('')}><X/></button>}</label><Select aria-label="稿件排序" value={sort} onChange={e=>setSort(e.target.value)}>{['最新发布','播放量','涨粉量'].map(v=><option key={v}>{v}</option>)}</Select></div>
+    {!shown.length?<Empty title="没有匹配的稿件" body={videos.length?'换个关键词，或者清除筛选条件。':'连接 B 站并同步后，作品会出现在这里。'} action={<button className="s-secondary" onClick={()=>{setSearch('');if(!videos.length)navigate('sources');}}>{videos.length?'清除筛选':'连接数据源'}</button>}/>:
+    <ReorderGrid motionKey={sort+search} className="s-library">{shown.map(v=><article data-reorder={v.id} key={v.id} className="s-media">
+      <div className="s-media-open"><button className="s-media-cover" aria-label={`查看 ${v.title}`} onClick={()=>navigate('videos',{video:v.id})}><Cover video={v}/><span className="s-cover-numbers"><span><BiliPlay/>{compact(v.views)}</span><span><BiliDanmaku/>{compact(v.metrics.danmaku)}</span></span><span className="s-duration">{seconds(v.duration_seconds)}</span></button><div className="s-media-copy"><h2><button className="s-title-link" onClick={()=>navigate('videos',{video:v.id})}>{v.title}</button></h2></div></div>
     </article>)}</ReorderGrid>}
   </>;
 }
