@@ -266,10 +266,39 @@ test('analysis uses two categories and displays multiple charts together',async(
  await expect(page.locator('.s-analysis-grid>.s-combinations')).toHaveCount(4);await expect(page.getByRole('button',{name:'选择稿件',exact:true})).toHaveCount(0);
  await page.getByRole('button',{name:'稿件分析',exact:true}).click();await expect(page.getByRole('button',{name:'选择稿件',exact:true})).toBeVisible();await expect(page.getByRole('heading',{name:'自定义组合图'})).toBeVisible();
 });
-test('video cover and title navigate from the compact grid',async({page})=>{
+test('the full manuscript card navigates from its padding, cover, title and keyboard',async({page})=>{
  await page.goto('/#videos');await expect(page.locator('.s-media-stats')).toHaveCount(0);
+ const card=page.locator('.s-media').first(),box=await card.boundingBox();await card.click({position:{x:box!.width/2,y:box!.height-6}});await expect(page).toHaveURL(/video=1/);
+ await page.getByRole('button',{name:'所有稿件'}).click();
  await page.locator('.s-title-link').first().click();await expect(page).toHaveURL(/video=1/);
- await page.getByRole('button',{name:'所有稿件'}).click();await page.getByRole('button',{name:'查看 海边日记',exact:true}).click();await expect(page).toHaveURL(/video=2/);
+ await page.getByRole('button',{name:'所有稿件'}).click();await page.locator('.s-media-cover').nth(1).click();await expect(page).toHaveURL(/video=2/);
+ await page.getByRole('button',{name:'所有稿件'}).click();await card.focus();await card.press('Enter');await expect(page).toHaveURL(/video=1/);
+});
+
+test('pressing cover title or padding scales the entire card without an inner white rim',async({page})=>{
+ await page.emulateMedia({reducedMotion:'no-preference'});await page.goto('/#videos');
+ const card=page.locator('.s-library>.s-media').first();
+ await expect.poll(()=>card.evaluate(e=>e.getAnimations().every(a=>a.playState!=='running'))).toBe(true);
+ for(const region of ['cover','title','padding']){
+  const before=await card.boundingBox(),image=await card.locator('img').boundingBox(),target=region==='cover'?await card.locator('.s-media-cover').boundingBox():region==='title'?await card.locator('.s-title-link').boundingBox():before;
+  await page.mouse.move(target!.x+target!.width/2,region==='padding'?target!.y+target!.height-6:target!.y+target!.height/2);await page.mouse.down();
+  await expect(card).toHaveCSS('scale','0.975');
+  const held=await card.boundingBox(),heldImage=await card.locator('img').boundingBox();
+  expect(held!.width/before!.width).toBeCloseTo(.975,3);expect(heldImage!.width/image!.width).toBeCloseTo(.975,3);
+  expect(heldImage!.x-held!.x).toBeLessThanOrEqual(image!.x-before!.x+.1);
+  await expect(card.locator('.s-media-cover')).toHaveCSS('transform','none');await expect(card.locator('.s-title-link')).toHaveCSS('transform','none');await expect(card.locator('img')).toHaveCSS('transform','none');
+  await page.mouse.move(1,1);await page.mouse.up();await expect(page).toHaveURL(/#videos$/);await expect(card).toHaveCSS('scale','none');
+ }
+ await page.emulateMedia({reducedMotion:'reduce'});await card.hover();const before=await card.boundingBox();await page.mouse.down();await expect(card).toHaveCSS('scale','1');expect((await card.boundingBox())!.width).toBeCloseTo(before!.width,2);await page.mouse.move(1,1);await page.mouse.up();
+});
+
+test('native asset dragging is cancelled while the reasoning slider keeps pointer dragging',async({page})=>{
+ await page.goto('/#videos');await expect(page.locator('.s-media')).toHaveCount(3);
+ for(const selector of ['.s-brand-logo','.s-media-cover img','.s-media svg'])expect(await page.locator(selector).first().evaluate(e=>!e.dispatchEvent(new DragEvent('dragstart',{bubbles:true,cancelable:true})))).toBe(true);
+ expect(await page.evaluate(()=>{const img=document.createElement('img');document.body.append(img);const cancelled=!img.dispatchEvent(new DragEvent('dragstart',{bubbles:true,cancelable:true}));img.remove();return cancelled;})).toBe(true);
+ await page.getByRole('button',{name:'查看 海边日记',exact:true}).click();await expect(page.locator('.s-detail')).toBeVisible();expect(await page.locator('.s-detail-actions a').evaluate(e=>!e.dispatchEvent(new DragEvent('dragstart',{bubbles:true,cancelable:true})))).toBe(true);
+ await page.goto('/#analysis?tab=ai');await page.getByRole('button',{name:'选择模型与推理强度'}).click();const slider=page.getByRole('slider',{name:'推理强度'}),r=await slider.boundingBox();
+ await page.mouse.move(r!.x+14,r!.y+14);await page.mouse.down();await page.mouse.move(r!.x+r!.width-14,r!.y+14,{steps:8});await page.mouse.up();await expect(slider).toHaveAttribute('aria-valuetext','最高');
 });
 
 test('background snapshots preserve the active detail tab',async({page})=>{
@@ -456,7 +485,7 @@ test('sheet and backdrop disappear together, without a lingering shaded page',as
 });
 
 test('returning from a scrolled detail restores the list once and does not replay a fade',async({page})=>{
- await page.emulateMedia({reducedMotion:'no-preference'});await page.route('**/api/videos*',r=>r.fulfill({json:{ok:true,videos:Array.from({length:18},(_,i)=>({...videos[i%3],id:String(i+1)}))}}));await page.goto('/#videos');await page.locator('.s-media').nth(4).scrollIntoViewIfNeeded();const original=await page.evaluate(()=>scrollY);await page.locator('.s-media').nth(4).getByRole('button',{name:/查看/}).click();await expect(page.locator('.s-detail')).toBeVisible();await page.evaluate(()=>scrollTo(0,700));await page.goBack();await expect(page.locator('.s-library')).toBeVisible();await expect.poll(()=>page.evaluate(()=>document.documentElement.dataset.transitionKind??'')).toBe('');await expect.poll(()=>page.evaluate(()=>scrollY)).toBeCloseTo(original,0);const nav=page.locator('.s-mobile-nav');if(await nav.isVisible()){const selected=await nav.locator('[aria-current=page]').boundingBox(),indicator=await nav.locator('.s-nav-indicator').boundingBox();expect(indicator!.y).toBeCloseTo(selected!.y,0);expect(indicator!.x).toBeCloseTo(selected!.x,0);await expect(nav.locator('.s-nav-indicator')).toHaveCSS('opacity','1')}const left=page.viewportSize()!.width>page.viewportSize()!.height?240:0;const clip={x:left,y:100,width:page.viewportSize()!.width-left-16,height:250};const first=await page.screenshot({clip,path:'.local-runtime/qa30/return-first-'+page.viewportSize()!.width+'.png'});await page.waitForTimeout(350);const last=await page.screenshot({clip,path:'.local-runtime/qa30/return-last-'+page.viewportSize()!.width+'.png'});expect(last.equals(first),'Page changed after transition finished').toBe(true);expect(await page.evaluate(()=>scrollY)).toBeCloseTo(original,0);
+ await page.emulateMedia({reducedMotion:'no-preference'});await page.route('**/api/videos*',r=>r.fulfill({json:{ok:true,videos:Array.from({length:18},(_,i)=>({...videos[i%3],id:String(i+1)}))}}));await page.goto('/#videos');await page.locator('.s-media').nth(4).scrollIntoViewIfNeeded();const original=await page.evaluate(()=>scrollY);await page.locator('.s-media').nth(4).click();await expect(page.locator('.s-detail')).toBeVisible();await page.evaluate(()=>scrollTo(0,700));await page.goBack();await expect(page.locator('.s-library')).toBeVisible();await expect.poll(()=>page.evaluate(()=>document.documentElement.dataset.transitionKind??'')).toBe('');await expect.poll(()=>page.evaluate(()=>scrollY)).toBeCloseTo(original,0);const nav=page.locator('.s-mobile-nav');if(await nav.isVisible()){const selected=await nav.locator('[aria-current=page]').boundingBox(),indicator=await nav.locator('.s-nav-indicator').boundingBox();expect(indicator!.y).toBeCloseTo(selected!.y,0);expect(indicator!.x).toBeCloseTo(selected!.x,0);await expect(nav.locator('.s-nav-indicator')).toHaveCSS('opacity','1')}const left=page.viewportSize()!.width>page.viewportSize()!.height?240:0;const clip={x:left,y:100,width:page.viewportSize()!.width-left-16,height:250};const first=await page.screenshot({clip,path:'.local-runtime/qa30/return-first-'+page.viewportSize()!.width+'.png'});await page.waitForTimeout(350);const last=await page.screenshot({clip,path:'.local-runtime/qa30/return-last-'+page.viewportSize()!.width+'.png'});expect(last.equals(first),'Page changed after transition finished').toBe(true);expect(await page.evaluate(()=>scrollY)).toBeCloseTo(original,0);
 });
 
 test('sync cells show only issues from that run and have no black focus outline',async({page})=>{
