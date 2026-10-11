@@ -451,12 +451,11 @@ button:focus-visible,a:focus-visible,summary:focus-visible,[role=button]:focus-v
 /* The cover and title share the panel's existing corners and surface. */
 .studio .s-library{gap:12px}
 /* Separate the base transform reset from press scale; sorting animates transform. */
-.studio .s-library .s-media{display:block;padding:0;overflow:hidden;box-shadow:none;text-align:left;min-height:0;cursor:pointer;transform:none;transition:scale 130ms var(--ui-ease)}
+.studio .s-library .s-media{display:block;padding:0;overflow:hidden;box-shadow:none;text-align:left;min-height:0;cursor:pointer;transform:none}
 .studio .s-library .s-media:active:not(:disabled){scale:.975}
 .studio .s-library .s-media:active:focus-visible{scale:1}
 .studio .s-library .s-media-open,.studio .s-library .s-media-copy h2,.studio .s-library .s-title-link{cursor:inherit}
 .studio .s-library .s-media-cover{border-radius:0}
-.studio .s-library .s-media-cover img{transform:none}
 .studio .s-library .s-media-copy{padding:12px 14px 14px}
 .studio .s-library .s-media-copy h2{display:block;min-height:2lh}
 .studio .s-library .s-title-link{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;width:100%;height:auto;max-height:2lh;overflow:hidden;text-overflow:ellipsis;white-space:normal;overflow-wrap:anywhere;font:inherit;line-height:inherit;font-weight:550}
@@ -467,6 +466,11 @@ button:focus-visible,a:focus-visible,summary:focus-visible,[role=button]:focus-v
  .studio .s-library .s-title-link{font-weight:inherit}
 }
 @media(max-width:699px){.studio .s-library .s-media-copy h2{line-height:1.5}}
+/* Card scale needs its own transition instead of the generic button property list. */
+@media(prefers-reduced-motion:no-preference){
+ .studio .s-library .s-media{transition:scale 240ms cubic-bezier(.16,1,.3,1)!important}
+ .studio .s-library .s-media:active:not(:disabled){transition-duration:160ms!important}
+}
 @media(prefers-reduced-motion:reduce){.studio .s-library .s-media:active:not(:disabled){scale:1}}
 
 /* Native asset dragging must not export page content to the desktop. */

@@ -280,13 +280,16 @@ test('pressing cover title or padding scales the entire card without an inner wh
  const card=page.locator('.s-library>.s-media').first();
  await expect.poll(()=>card.evaluate(e=>e.getAnimations().every(a=>a.playState!=='running'))).toBe(true);
  for(const region of ['cover','title','padding']){
-  const before=await card.boundingBox(),image=await card.locator('img').boundingBox(),target=region==='cover'?await card.locator('.s-media-cover').boundingBox():region==='title'?await card.locator('.s-title-link').boundingBox():before;
-  await page.mouse.move(target!.x+target!.width/2,region==='padding'?target!.y+target!.height-6:target!.y+target!.height/2);await page.mouse.down();
+  const target=region==='cover'?await card.locator('.s-media-cover').boundingBox():region==='title'?await card.locator('.s-title-link').boundingBox():await card.boundingBox();
+  await page.mouse.move(target!.x+target!.width/2,region==='padding'?target!.y+target!.height-6:target!.y+target!.height/2);
+  await expect.poll(()=>card.locator('img').evaluate(e=>e.getAnimations().every(a=>a.playState!=='running'))).toBe(true);
+  const before=await card.boundingBox(),image=await card.locator('img').boundingBox(),imageTransform=await card.locator('img').evaluate(e=>getComputedStyle(e).transform);await page.mouse.down();
+  const animation=await card.evaluate(e=>{const scale=e.getAnimations().find(a=>a instanceof CSSTransition&&a.transitionProperty==='scale');const s=getComputedStyle(e);return {running:!!scale,duration:scale?.effect?.getTiming().duration,easing:s.transitionTimingFunction}});expect(animation.running).toBe(true);expect(animation.duration).toBe(160);expect(animation.easing).toBe('cubic-bezier(0.16, 1, 0.3, 1)');
   await expect(card).toHaveCSS('scale','0.975');
   const held=await card.boundingBox(),heldImage=await card.locator('img').boundingBox();
   expect(held!.width/before!.width).toBeCloseTo(.975,3);expect(heldImage!.width/image!.width).toBeCloseTo(.975,3);
   expect(heldImage!.x-held!.x).toBeLessThanOrEqual(image!.x-before!.x+.1);
-  await expect(card.locator('.s-media-cover')).toHaveCSS('transform','none');await expect(card.locator('.s-title-link')).toHaveCSS('transform','none');await expect(card.locator('img')).toHaveCSS('transform','none');
+  await expect(card.locator('.s-media-cover')).toHaveCSS('transform','none');await expect(card.locator('.s-title-link')).toHaveCSS('transform','none');await expect(card.locator('img')).toHaveCSS('transform',imageTransform);
   await page.mouse.move(1,1);await page.mouse.up();await expect(page).toHaveURL(/#videos$/);await expect(card).toHaveCSS('scale','none');
  }
  await page.emulateMedia({reducedMotion:'reduce'});await card.hover();const before=await card.boundingBox();await page.mouse.down();await expect(card).toHaveCSS('scale','1');expect((await card.boundingBox())!.width).toBeCloseTo(before!.width,2);await page.mouse.move(1,1);await page.mouse.up();
@@ -327,6 +330,7 @@ test('rapid library sorting does not scale cards and title area hover is inert',
  await page.emulateMedia({reducedMotion:'no-preference'});await page.goto('/#videos');
  for(const name of ['播放量','涨粉量','最新发布']){await choose(page,'稿件排序',name);expect(await page.locator('.s-media').evaluateAll(els=>els.every(e=>{const m=new DOMMatrix(getComputedStyle(e).transform);return Math.abs(m.a-1)<.001&&Math.abs(m.d-1)<.001&&m.b===0&&m.c===0}))).toBe(true);}
  await page.locator('.s-media-copy').first().hover();await expect(page.locator('.s-media-cover img').first()).toHaveCSS('transform','none');
+ await page.locator('.s-media-cover').first().hover();const canHover=await page.evaluate(()=>matchMedia('(hover:hover)').matches);await expect.poll(()=>page.locator('.s-media-cover img').first().evaluate(e=>new DOMMatrix(getComputedStyle(e).transform).a)).toBeCloseTo(canHover?1.025:1,3);
 });
 test('freshness is in the header and relation points have a visible manuscript key',async({page})=>{
  await page.goto('/');await expect(page.locator('.s-header-actions .s-header-freshness')).toBeVisible();await expect(page.getByRole('button',{name:'查看数据状态'})).toHaveCount(0);
