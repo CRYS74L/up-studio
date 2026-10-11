@@ -89,5 +89,18 @@
     "sourceSha256": "356da57585463ab3a55d79a61789459003014bfc32cd6b9297697013dbc4f53e",
     "collectionIndex": 0,
     "glyphCount": 50159
+  },
+  {
+    "id": "ui-manuscript",
+    "source": "ping-Regular",
+    "family": "UP Studio Manuscript",
+    "weight": "500",
+    "file": "ui-manuscript-6e91eb267439.woff2",
+    "sha256": "6e91eb2674396853760dd86154621e9fe129b7fa562225d97d84610105b23edd",
+    "bytes": 5584772,
+    "sourceFile": "PingFangSC-Regular_1.ttf",
+    "sourceSha256": "b869cf204e9ac1cfa405505a2bf33f85e474cd0ba954dc9c09ad2cb6e62bd82b",
+    "collectionIndex": null,
+    "glyphCount": 42199
   }
 ]

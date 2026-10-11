@@ -5,10 +5,13 @@
 | 使用位置 | CSS 名称 | 原字体 |
 | --- | --- | --- |
 | 页面文字 | UP Studio UI | 当前安装的 PingFang SC |
+| 稿件卡片标题 | UP Studio Manuscript | 同款苹方的中间字重 |
 | 图表文字 | UP Studio Chart | Microsoft YaHei UI |
 | 兴趣词云 | UP Studio Cloud | Microsoft YaHei |
 
 本机这组苹方的文件名与字重不一致：实际常规来自 `PingFangSC-Light_1.ttf`，实际粗体来自 `PingFangSC-Medium_1.ttf`，特粗来自 `PingFangSC-Semibold_1.ttf`。不能按文件名重新分配字体；当前应用使用的 400、450、500、520 对应常规，550–730 对应粗体。这一对应关系经过浏览器实际渲染比对。
+
+稿件卡片标题单独使用 `PingFangSC-Regular_1.ttf` 的中间字重，映射到 `UP Studio Manuscript` 的 500。该文件的字形粗细位于上述常规与粗体之间，用于稍微减轻原卡片标题；其他页面仍使用原有字体映射。常用字子集与完整字体分别提供，原字宽与版权元数据保持一致，并在首屏排版前加载。
 
 图表与词云原来分别使用 `system-ui` 和 `sans-serif`，本机实际解析为微软雅黑 UI 和微软雅黑。两者分别保留，避免中文字形相同但垂直指标不同造成位移。
 

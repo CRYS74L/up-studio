@@ -31,6 +31,7 @@ for item in manifest:
  print(item['id']+' starting',flush=True)
  f=TTFont(native or root/item['file'],fontNumber=item.get('collectionIndex') or 0,recalcTimestamp=False);cmap=f.getBestCmap();selected=core&set(cmap);original={cp:f['hmtx'][cmap[cp]] for cp in selected}
  options=subset.Options();options.layout_features=['*'];options.recalc_timestamp=False;options.no_subset_tables+=['trak','meta']
+ options.name_IDs=['*'];options.name_legacy=True;options.name_languages=['*']
  sub=subset.Subsetter(options=options);sub.populate(unicodes=selected);sub.subset(f);f.flavor='woff2'
  temp=root/(item['id']+'-core.tmp');f.save(temp);data=temp.read_bytes();name=item['id']+'-core-'+hashlib.sha256(data).hexdigest()[:12]+'.woff2';target=root/name;temp.replace(target)
  check=TTFont(target);cc=check.getBestCmap();assert all(check['hmtx'][cc[cp]]==original[cp] for cp in selected)

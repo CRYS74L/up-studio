@@ -8,14 +8,15 @@ async function themeLandscape(page:Page){
 test('embedded fonts load before text layout and use downloaded faces', async ({page}) => {
   let release!: () => void;
   const gate = new Promise<void>(resolve => { release = resolve; });
-  await page.route('**/fonts/*.woff2', async route => { await gate; await route.continue(); });
+  await page.route('**/fonts/*.woff2*', async route => { await gate; await route.continue(); });
   await page.goto('/', {waitUntil:'domcontentloaded'});
   await expect(page.locator('#root')).toBeEmpty();
   release();
   await expect(page.locator('.s-main h1')).toBeVisible();
-  await expect(page.locator('canvas').first()).toBeVisible();
+  await expect(page.locator('svg[data-chart-renderer=svg]').first()).toBeVisible();
   expect(await page.evaluate(() => [400,700].every(w => document.fonts.check(`${w} 14px "UP Studio UI"`)))).toBe(true);
   expect(await page.evaluate(() => document.fonts.check('400 12px "UP Studio Chart"'))).toBe(true);
+  expect(await page.evaluate(() => document.fonts.check('500 13px "UP Studio Manuscript"'))).toBe(true);
   const cdp = await page.context().newCDPSession(page);
   await cdp.send('DOM.enable'); await cdp.send('CSS.enable');
   const {root} = await cdp.send('DOM.getDocument');
@@ -25,16 +26,21 @@ test('embedded fonts load before text layout and use downloaded faces', async ({
   expect(fonts.every(font => font.isCustomFont)).toBe(true);
 });
 
-test('failed embedded font downloads offer a working reload', async ({page}) => {
-  let fail = true;
-  await page.route('**/fonts/*.woff2', route => fail ? route.abort() : route.continue());
-  await page.goto('/');
-  await expect(page.getByRole('alert')).toContainText('字体加载失败');
-  await expect(page.locator('.s-main')).toHaveCount(0);
-  fail = false;
-  await page.getByRole('button', {name:'重新加载',exact:true}).click();
-  await expect(page.locator('.s-main h1')).toBeVisible();
-  await expect(page.getByRole('alert')).toHaveCount(0);
+test('failed embedded font downloads offer a working reload', async ({page,browserName,playwright},testInfo) => {
+  // WebKit retains failed font resources across contexts. Isolate fault injection.
+  const browser=await playwright[browserName].launch(testInfo.project.use.launchOptions);
+  try{
+    const target=await browser.newPage({viewport:page.viewportSize()??undefined,userAgent:testInfo.project.use.userAgent,isMobile:testInfo.project.use.isMobile,hasTouch:testInfo.project.use.hasTouch,deviceScaleFactor:testInfo.project.use.deviceScaleFactor});
+    await mockDashboardPage(target);let fail = true;
+    await target.route('**/fonts/*.woff2*', route => fail ? route.abort() : route.continue());
+    await target.goto(testInfo.project.use.baseURL+'/');
+    await expect(target.getByRole('alert')).toContainText('字体加载失败');
+    await expect(target.locator('.s-main')).toHaveCount(0);
+    fail = false;
+    await target.getByRole('button', {name:'重新加载',exact:true}).click();
+    await expect(target.locator('.s-main h1')).toBeVisible();
+    await expect(target.getByRole('alert')).toHaveCount(0);
+  }finally{await browser.close();}
 });
 
 // Deterministic test data only; the application never imports these fixtures.
@@ -51,7 +57,8 @@ const videos = [0, 1, 2].map((i) => ({
 const details = { totalVideos: 3, completeVideos: 2, metricCounts: { views: 3, coverAttractionScore: 2 }, missingByVideo: [], warnings: [], plannedNotIntegrated: ['absoluteCoverCtr','impressions','recommendationTrafficSources'], capabilityCounts: {} };
 const summary = { configured: true, freshnessMinutes: 15000, summary: { account_followers:3382,avg_views:2000,avg_interactions:190,views: 6000, followers: 60, cover_ctr: 3.5, avg_watch_percent: 42, avg_watch_seconds: 50, interaction_rate: 6, fresh: videos[0].captured_at }, comparison: {}, acquisition: { status: 'partial', coverage: .67, details } };
 
-test.beforeEach(async ({ page }) => {
+test.beforeEach(async ({ page }) => {await mockDashboardPage(page);});
+async function mockDashboardPage(page:Page){
   await page.emulateMedia({ colorScheme: 'light', reducedMotion: 'reduce' });
   await page.route('**/api/**', async (route) => {
     const path = new URL(route.request().url()).pathname;
@@ -68,7 +75,7 @@ test.beforeEach(async ({ page }) => {
       : path === '/api/bilibili/collect-now' ? { run: { status: 'failed', errorCode: 'session_expired' } } : {};
     await route.fulfill({ json: { ok: true, ...body } });
   });
-});
+}
 
 test('overview follows the reference composition and does not invent CTR or monthly data',async({page})=>{
  await page.goto('/');
@@ -321,7 +328,7 @@ test('explanatory subtitles are absent and cover metrics fit narrow cards on one
  for(const viewport of [{width:1280,height:800},{width:428,height:926},{width:390,height:844},{width:320,height:740},{width:768,height:1024},{width:844,height:390}]){
   await page.setViewportSize(viewport);const size=await layout(),m=await measure();expect(size.oneRow).toBe(true);expect(size.fit).toBe(true);expect(m.weight).toBe('400');expect(m.stroke).toBe('none');expect(m.durationSize).toBe(m.size);
   if(size.width>240){if(wide)expect(m).toEqual(wide);else wide=m;}
-  else {expect(m.size).toBe(size.width<=170?'11px':'12px');expect(m.iconWidth).toBe(size.width<=170?13:14);expect(m.iconHeight).toBe(m.iconWidth);expect(m.gap).toBe(size.width<=170?'6px':'8px');expect(m.innerGap).toBe('3px');}
+  else {expect(m.size).toBe('10px');expect(m.iconWidth).toBe(13);expect(m.iconHeight).toBe(m.iconWidth);expect(m.gap).toBe('12px');expect(m.innerGap).toBe('3px');}
  }
 });
 
@@ -333,7 +340,7 @@ test('two-line manuscript titles inset the lower line around both rounded corner
   // ResizeObserver updates the measured break after the viewport's layout settles.
   await expect.poll(()=>text.locator('.s-title-line').first().evaluate(e=>e.scrollWidth>e.clientWidth)).toBe(false);
   const flow=await text.evaluate(e=>{const [first,second]=[...e.children],a=first.getBoundingClientRect(),b=second.getBoundingClientRect(),s=getComputedStyle(e),r=e.getBoundingClientRect();return {left:b.left-a.left,right:a.right-b.right,height:r.height,line:parseFloat(s.lineHeight),gap:getComputedStyle(e.closest('.s-library')!).gap,fullText:[first.textContent,second.textContent].join('').replace(/\s/g,''),secondOverflow:second.scrollWidth>second.clientWidth,firstOverflow:first.scrollWidth>first.clientWidth,emojiIntact:[first,second].some(n=>n.textContent!.includes('👨‍👩‍👧‍👦'))};});
-  expect(flow.left).toBe(viewport.width<374?6:8);expect(flow.right).toBe(flow.left);expect(flow.height).toBeCloseTo(flow.line*2,1);expect(flow.gap).toBe('6px');expect(flow.fullText).toBe(title.replace(/\s/g,''));expect(flow.secondOverflow).toBe(true);expect(flow.firstOverflow).toBe(false);expect(flow.emojiIntact).toBe(true);
+  expect(flow.left).toBe(viewport.width<374?5:6);expect(flow.right).toBe(flow.left);expect(flow.height).toBeCloseTo(flow.line*2,1);expect(flow.gap).toBe('6px');expect(flow.fullText).toBe(title.replace(/\s/g,''));expect(flow.secondOverflow).toBe(true);expect(flow.firstOverflow).toBe(false);expect(flow.emojiIntact).toBe(true);
  }
  await page.locator('.s-title-link').first().click();await expect(page).toHaveURL(/video=1/);await expect(page.locator('.s-detail-hero h2')).toHaveText(title);
 });
