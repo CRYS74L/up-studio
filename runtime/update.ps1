@@ -40,7 +40,7 @@ try {
   & $node (Join-Path $PSScriptRoot 'deploy.mjs') $Version
   if($LASTEXITCODE -ne 0){throw 'Deployment failed'}
   & (Join-Path $PSScriptRoot 'manage.ps1') -Action Start
-  $deadline=(Get-Date).AddSeconds(30)
+  $deadline=(Get-Date).AddSeconds(90)
   do {
     Start-Sleep -Milliseconds 500
     try{$status=Invoke-RestMethod 'http://127.0.0.1:5173/api/local/status' -TimeoutSec 2}catch{$status=$null}
