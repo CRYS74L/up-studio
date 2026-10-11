@@ -1,5 +1,10 @@
 import { expect, test, type Page } from '@playwright/test';
 
+async function themeLandscape(page:Page){
+ const viewport=page.viewportSize();
+ if(viewport&&viewport.height>=viewport.width)await page.setViewportSize({width:viewport.height,height:viewport.width});
+}
+
 test('embedded fonts load before text layout and use downloaded faces', async ({page}) => {
   let release!: () => void;
   const gate = new Promise<void>(resolve => { release = resolve; });
@@ -176,6 +181,7 @@ test('sources marks cached runtime status unavailable after connection loss',asy
 });
 
 test('theme changes are persistent and mobile navigation reaches every page',async({page})=>{
+ await themeLandscape(page);
  await page.goto('/');
  await page.getByRole('button',{name:'深色模式'}).click();
  await expect(page.locator('html')).toHaveAttribute('data-theme','dark');
@@ -381,6 +387,7 @@ test('navigation never blanks and root width stays fixed when scrollbars change'
 });
 
 test('theme slider, back to top and account modal provide the shell controls',async({page})=>{
+ await themeLandscape(page);
  await page.route('**/api/videos*',r=>r.fulfill({json:{ok:true,videos:Array.from({length:18},(_,i)=>({...videos[i%3],id:String(i+1)}))}}));
  await page.goto('/#videos');await page.getByRole('button',{name:'深色模式',exact:true}).click();await expect(page.locator('html')).toHaveAttribute('data-theme','dark');await page.getByRole('button',{name:'浅色模式',exact:true}).click();await page.evaluate(()=>window.scrollTo(0,500));await expect(page.getByRole('button',{name:'回到顶部'})).toBeVisible();await page.getByRole('button',{name:'回到顶部'}).click();await expect.poll(()=>page.evaluate(()=>scrollY)).toBe(0);await openAccount(page);await expect(page.getByRole('dialog',{name:'UP主账号',exact:true})).toBeVisible();await expect(page.locator('.s-version')).toContainText('v0.1.0-dev.14');await expect(page.locator('.s-sidebar nav').getByRole('button',{name:'设置',exact:true})).toHaveCount(0);
 });
@@ -421,6 +428,7 @@ test('chat history can be renamed archived restored and branched and accepts ima
 });
 
 test('page motion prepares first-screen images and theme reveal starts at its control',async({page})=>{
+ await themeLandscape(page);
  await page.emulateMedia({reducedMotion:'no-preference'});
  let release!:()=>void;const gate=new Promise<void>(r=>{release=r});await page.route('**/api/covers/**',async route=>{await gate;await route.fallback()});
  await page.goto('/#sources');await expect(page.locator('.s-sources')).toHaveAttribute('data-page-pending','false');await (await navigationButton(page,'稿件')).click();release();await expect(page.locator('.s-media-cover img').first()).toHaveAttribute('data-decoded','true');await expect.poll(()=>page.evaluate(()=>document.documentElement.dataset.transitionKind??'')).toBe('');
@@ -428,6 +436,7 @@ test('page motion prepares first-screen images and theme reveal starts at its co
 });
 
 test('header controls align, segment labels fit, and profile hover never floats',async({page})=>{
+ await themeLandscape(page);
  await page.emulateMedia({reducedMotion:'no-preference'});await page.goto('/#videos');await expect(page.locator('.s-library')).toBeVisible();await expect(page.locator('.s-header-actions>.s-sync')).toHaveCount(0);await expect(page.locator('.s-theme-switch')).toBeVisible();
  const fit=await page.locator('.ui-segments>button').evaluateAll(buttons=>buttons.every(b=>{const r=b.getBoundingClientRect();const label=b.querySelector('span,svg');if(!label)return true;const t=label.getBoundingClientRect();return t.width<=r.width-8&&t.height<=r.height-6}));expect(fit).toBe(true);
  if(await page.locator('.s-sidebar').isVisible()){const profile=page.locator('.s-sidebar-footer'),before=await profile.boundingBox();await profile.hover();await page.waitForTimeout(280);expect((await profile.boundingBox())!.y).toBeCloseTo(before!.y,1)}

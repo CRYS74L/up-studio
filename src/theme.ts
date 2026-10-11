@@ -2,11 +2,37 @@ import {cancelPageTransition} from './studio/page-transition';
 import {captureTheme} from './studio/theme-snapshot';
 import {flushSync} from 'react-dom';
 export type Theme = 'light' | 'dark';
-export function getInitialTheme(): Theme {
- const stored=localStorage.getItem('insights-theme');return stored==='light'||stored==='dark'?stored:matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';
+const portraitQuery='(orientation: portrait)',systemThemeQuery='(prefers-color-scheme: dark)';
+function isPhone(){
+ const agent=navigator.userAgent;
+ if(/iPad|Tablet/i.test(agent))return false;
+ const mobile=(navigator as Navigator&{userAgentData?:{mobile:boolean}}).userAgentData?.mobile;
+ return mobile??/iPhone|iPod|Android.*\bMobile\b|Windows Phone/i.test(agent);
 }
-export function applyTheme(theme:Theme){document.documentElement.dataset.theme=theme;localStorage.setItem('insights-theme',theme);document.querySelector('meta[name="theme-color"]')?.setAttribute('content',theme==='dark'?'#19191b':'#f5f5f7');}
+function preferredTheme(systemDark:boolean):Theme{
+ const stored=localStorage.getItem('insights-theme');return stored==='light'||stored==='dark'?stored:systemDark?'dark':'light';
+}
+export function getInitialTheme(): Theme {
+ const dark=matchMedia(systemThemeQuery).matches;
+ return isPhone()&&matchMedia(portraitQuery).matches?(dark?'dark':'light'):preferredTheme(dark);
+}
+export function applyTheme(theme:Theme,{persist=true}:{persist?:boolean}={}){document.documentElement.dataset.theme=theme;if(persist)localStorage.setItem('insights-theme',theme);document.querySelector('meta[name="theme-color"]')?.setAttribute('content',theme==='dark'?'#19191b':'#f5f5f7');}
 let stop:(()=>void)|undefined;
+export function observeTheme(onChange:(theme:Theme)=>void){
+ const phone=isPhone(),portrait=matchMedia(portraitQuery),system=matchMedia(systemThemeQuery);
+ const update=()=>{
+  const followsSystem=phone&&portrait.matches;
+  const theme=followsSystem?(system.matches?'dark':'light'):preferredTheme(system.matches);
+  const changed=document.documentElement.dataset.theme!==theme;
+  if(changed){cancelPageTransition();stop?.();}
+  // Automatic colors must not replace the manual preference restored in landscape.
+  applyTheme(theme,{persist:!followsSystem});onChange(theme);
+  if(changed)document.dispatchEvent(new Event('up:prepare-view'));
+ };
+ const systemChanged=()=>{if(phone&&portrait.matches)update()};
+ portrait.addEventListener('change',update);system.addEventListener('change',systemChanged);update();
+ return()=>{portrait.removeEventListener('change',update);system.removeEventListener('change',systemChanged)};
+}
 export async function transitionTheme(theme:Theme,origin?:{x:number;y:number},commit?:()=>void){
  cancelPageTransition();stop?.();
  const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches,old=reduced?null:captureTheme();
