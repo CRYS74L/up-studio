@@ -310,10 +310,13 @@ test('background snapshots preserve the active detail tab',async({page})=>{
  await page.clock.fastForward(61000);await expect(page.getByRole('button',{name:'观众',exact:true})).toHaveAttribute('aria-pressed','true');
 });
 
-test('explanatory subtitles are absent and cover numbers stay on one line',async({page})=>{
+test('explanatory subtitles are absent and cover metrics keep their typography across orientations',async({page})=>{
  await page.goto('/');await expect(page.locator('.s-header p')).toHaveCount(0);await expect(page.locator('.s-overview .s-note')).toHaveCount(0);
  await page.goto('/#videos');await expect(page.locator('.s-cover-numbers svg').first()).toHaveAttribute('viewBox','0 0 24 24');
  const labels=await page.locator('.s-cover-numbers>span').evaluateAll(els=>els.map(e=>({height:e.getBoundingClientRect().height,line:parseFloat(getComputedStyle(e).lineHeight)})));expect(labels).toHaveLength(6);expect(labels.every(v=>v.height<=v.line+1)).toBe(true);
+ const measure=()=>page.locator('.s-library .s-cover-numbers').first().evaluate(e=>{const s=getComputedStyle(e),icon=e.querySelector('svg')!,i=getComputedStyle(icon),r=icon.getBoundingClientRect(),item=getComputedStyle(e.firstElementChild!),duration=getComputedStyle(e.closest('.s-media')!.querySelector('.s-duration')!);return {font:s.fontFamily,size:s.fontSize,weight:s.fontWeight,line:s.lineHeight,gap:s.gap,innerGap:item.gap,iconWidth:r.width,iconHeight:r.height,fill:i.fill,stroke:i.stroke,durationSize:duration.fontSize}});
+ await page.setViewportSize({width:1280,height:800});const landscape=await measure();
+ for(const viewport of [{width:390,height:844},{width:768,height:1024},{width:844,height:390}]){await page.setViewportSize(viewport);expect(await measure()).toEqual(landscape);}
 });
 
 test('overview changes are quantities and not percentages',async({page})=>{
