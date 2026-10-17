@@ -7,24 +7,43 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { backup } from 'node:sqlite';
-import { createD1 } from './d1.mjs';
+import { createD1, retryTransientDatabaseStartup, serializeStartupError } from './d1.mjs';
 
 const root = path.resolve(process.argv[2]);
 const port=Number(process.env.UP_STUDIO_PORT??5173);if(!Number.isInteger(port)||port<1||port>65535)throw Error('Invalid port');
 const current = JSON.parse(fs.readFileSync(path.join(root, 'current.json'), 'utf8'));
-const release = path.join(root, 'releases', current.id);
-const worker = (await import(pathToFileURL(path.join(release, 'worker.mjs')))).default;
-recoverRestore(root);
-let db=null;try{db=createD1(path.join(root,'data.sqlite'));if(Object.values(db.database.prepare('PRAGMA quick_check').get())[0]!=='ok'||!db.database.prepare("SELECT 1 FROM sqlite_master WHERE type='table' AND name='video_snapshots'").get())throw Error('Database unavailable');}catch{try{db?.database.close()}catch{}db=null;}
-let maintenance=false,activeRequests=0,backgroundWrites=0,localBacking=false;
-const config = JSON.parse(fs.readFileSync(path.join(root, 'config.json'), 'utf8'));
-const started = Date.now();
-const mime = {'.html':'text/html; charset=utf-8','.js':'text/javascript','.css':'text/css','.svg':'image/svg+xml','.png':'image/png','.ico':'image/x-icon','.woff2':'font/woff2'};
 const log = event => {
   const file = path.join(root, 'logs', 'service.log');
   if (fs.existsSync(file) && fs.statSync(file).size > 2_000_000) { for (let i=3;i>0;i--) {const from=i===1?file:`${file}.${i-1}`;if(fs.existsSync(from))fs.renameSync(from,`${file}.${i}`);} }
   fs.appendFileSync(file, JSON.stringify({time:new Date().toISOString(),...event})+'\n');
 };
+const release = path.join(root, 'releases', current.id);
+const worker = (await import(pathToFileURL(path.join(release, 'worker.mjs')))).default;
+recoverRestore(root);
+let db=null,dbAttempts=0;
+try{
+  const initialized=await retryTransientDatabaseStartup(()=>{
+    dbAttempts++;
+    let candidate;
+    try{
+      candidate=createD1(path.join(root,'data.sqlite'));
+      const quickCheck=Object.values(candidate.database.prepare('PRAGMA quick_check').get()??{})[0];
+      if(quickCheck!=='ok'){const error=Error('Database quick_check failed: '+String(quickCheck));error.code='UP_STUDIO_DATABASE_CHECK_FAILED';throw error;}
+      if(!candidate.database.prepare("SELECT 1 FROM sqlite_master WHERE type='table' AND name='video_snapshots'").get()){
+        const error=Error('Required database table is missing: video_snapshots');error.code='UP_STUDIO_DATABASE_SCHEMA_MISSING';throw error;
+      }
+      return candidate;
+    }catch(error){try{candidate?.database.close()}catch{}throw error;}
+  },{onRetry:({error,attempt,delayMs})=>log({event:'database_init_retry',attempt,delayMs,...serializeStartupError(error)})});
+  db=initialized.value;
+  log({event:'database_ready',attempts:initialized.attempts});
+}catch(error){
+  log({event:'database_init_failed',attempts:dbAttempts,...serializeStartupError(error)});
+}
+let maintenance=false,activeRequests=0,backgroundWrites=0,localBacking=false;
+const config = JSON.parse(fs.readFileSync(path.join(root, 'config.json'), 'utf8'));
+const started = Date.now();
+const mime = {'.html':'text/html; charset=utf-8','.js':'text/javascript','.css':'text/css','.svg':'image/svg+xml','.png':'image/png','.ico':'image/x-icon','.woff2':'font/woff2'};
 const env = {...config, DB:db, ASSETS:{ async fetch(request) {
   let pathname; try { pathname = decodeURIComponent(new URL(request.url).pathname); } catch { return new Response('Invalid URL',{status:400}); }
   const client = path.join(release,'client'); let file = path.resolve(client,'.'+pathname);
@@ -78,7 +97,7 @@ const handler=async(req,res)=>{
 };
 const serviceSettings=new ServiceSettings({root,port,handler});
 const server=http.createServer(handler);
-server.on('error',error=>{log({event:'listen_failed',code:error.code});db?.database.close();process.exit(1);});
+server.on('error',error=>{log({event:'listen_failed',...serializeStartupError(error),address:error.address??'127.0.0.1',port:error.port??port});db?.database.close();process.exit(1);});
 server.listen(port,'127.0.0.1',()=>{fs.writeFileSync(path.join(root,'service.json'),JSON.stringify({pid:process.pid,started,release:current.id}));log({event:'started',pid:process.pid,version:current.version});});
 if(intervalMinutes>0)timer=setInterval(collect,intervalMinutes*60_000);
 const initial=setTimeout(collect,60_000);

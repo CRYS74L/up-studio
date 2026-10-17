@@ -44,7 +44,7 @@ try {
   do {
     Start-Sleep -Milliseconds 500
     try{$status=Invoke-RestMethod 'http://127.0.0.1:5173/api/local/status' -TimeoutSec 2}catch{$status=$null}
-    if($status.version -eq $Version){Write-Output ('Release active: '+$Version);exit 0}
+    if($status.version -eq $Version -and $status.ok -eq $true -and $status.recoveryOnly -eq $false){Write-Output ('Release active and database ready: '+$Version);exit 0}
   }while((Get-Date) -lt $deadline)
   throw 'New release did not pass its health check'
 } catch {

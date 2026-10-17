@@ -22,3 +22,36 @@ export function createD1(path) {
     },
   };
 }
+
+const transientSqliteCodes = new Set(['SQLITE_BUSY','SQLITE_LOCKED','EBUSY']);
+
+function isTransientDatabaseLock(error) {
+  if(transientSqliteCodes.has(String(error?.code??'').toUpperCase()))return true;
+  const sqliteCode=Number(error?.errcode);
+  if(Number.isInteger(sqliteCode)&&[5,6].includes(Math.abs(sqliteCode)&0xff))return true;
+  return /\b(?:database|table) is (?:busy|locked)\b/i.test([error?.errstr,error?.message].filter(Boolean).join(' '));
+}
+
+export function serializeStartupError(error) {
+  const fields=['name','message','code','errno','syscall','address','port','errcode','errstr'];
+  const result={};
+  for(const field of fields){
+    const value=error?.[field];
+    if(value!==undefined&&value!==null&&['string','number','boolean'].includes(typeof value))result[field]=value;
+  }
+  if(!('message' in result))result.message=String(error);
+  return result;
+}
+
+export async function retryTransientDatabaseStartup(operation,{maxAttempts=3,delaysMs=[250,1000],sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms)),onRetry=()=>{}}={}) {
+  if(!Number.isSafeInteger(maxAttempts)||maxAttempts<1)throw new RangeError('maxAttempts must be a positive integer');
+  for(let attempt=1;;attempt++){
+    try{return{value:await operation(),attempts:attempt};}
+    catch(error){
+      if(!isTransientDatabaseLock(error)||attempt>=maxAttempts)throw error;
+      const delayMs=Math.max(0,Number(delaysMs[Math.min(attempt-1,delaysMs.length-1)]??0)||0);
+      onRetry({error,attempt,delayMs});
+      if(delayMs>0)await sleep(delayMs);
+    }
+  }
+}

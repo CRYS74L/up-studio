@@ -19,6 +19,8 @@ node runtime/deploy.mjs v0.1.0-dev.15
 
 服务每 15 分钟采集；启动 60 秒后首次采集。只有网络失败额外重试最多两次（1、2 分钟），登录过期与风控不立即重试。常驻监督进程按 4、8、16、32、60 秒退避恢复异常子进程，不依赖计划任务的失败重启；正常停止标记取消运行或退避状态。服务日志每份 2 MB、三个历史文件；只轮换备份清单登记的最近七份每日备份。`/api/local/status` 提供 PID、版本、运行秒数与采集状态。
 
+SQLite 启动遇到明确的 BUSY/LOCKED 错误时，最多重试三次（间隔 250 ms、1 s）；其他初始化异常会写入 `logs/service.log` 的 `database_init_failed` 事件并保持恢复模式，不自动覆盖或恢复数据库。端口绑定错误写入 `listen_failed`，包含系统错误、地址和端口；监督进程继续按上述退避策略重试。升级脚本只有在版本正确且数据库正常载入时才报告成功。
+
 安装前后 `.local-runtime/audit` 的清单记录其他计划任务 XML、Run/RunOnce 注册值与 Startup 文件 SHA-256；不输出这些项目的原始启动命令。安装、移除、启动、停止均只操作核验 action 路径、描述及 owner SID 的唯一任务。此工具不修改其他自启项、Clash、Codex 或 Explorer。
 
 SQLite 适配器验证涵盖批量写入事务原子性；Node SQLite 为当前 Node 的实验性 API，运行时已固定版本。Windows 登录触发和关机后恢复仍须实际登录周期验收。

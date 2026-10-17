@@ -15,7 +15,7 @@
     "local:start": "powershell -NoProfile -ExecutionPolicy Bypass -File runtime/manage.ps1 -Action Start",
     "local:stop": "powershell -NoProfile -ExecutionPolicy Bypass -File runtime/manage.ps1 -Action Stop",
     "local:update": "powershell -NoProfile -ExecutionPolicy Bypass -File runtime/update.ps1",
-    "test:runtime": "node runtime/d1.test.mjs",
+    "test:runtime": "node --test runtime/d1.test.mjs runtime/startup-diagnostics.test.mjs",
     "test:storage:worker": "npm run build && node runtime/test-snapshot-worker.mjs",
     "test:cloud-backups": "npm run build && node --test runtime/cloud-backup.test.mjs runtime/webdav-folder.test.mjs && node runtime/test-cloud-backups.mjs"
   },
